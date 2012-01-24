@@ -342,9 +342,9 @@ function SettingsMessage(name, value) {
 }
 
 // Bug 709015
-if (true) {
+if (false) {
   window.navigator.mozApps = {
-    enumerate: function mozAppsEnumerate(callback) {
+    enumerateAll: function mozAppsEnumerate(callback) {
       var webapps = [
         { // browser
           installOrigin: 'http://gaiamobile.org:8888',

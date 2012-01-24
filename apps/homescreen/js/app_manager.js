@@ -3,31 +3,42 @@
 
 'use strict';
 
+var URL = {
+  _a: document.createElement('a'),
+  newURL: function url_newURL(spec) {
+    var a = this._a;
+    a.href = spec;
+    
+    return {
+      'protocol': a.protocol,
+      'host': a.host,
+      'hostname': a.hostname,
+      'port': a.port,
+      'pathname': a.pathname,
+      'search': a.search,
+      'hash': a.hash,
+      'equals': function url_equals(url) {
+        return this.protocol == url.protocol &&
+               this.host == url.host &&
+               this.port == url.port &&
+               this.pathname == url.pathname;
+      }
+    }
+  }
+};
+
 if (!window['Gaia'])
   var Gaia = {};
 
 (function() {
 
   Gaia.AppManager = {
-    _makeUrlObject: function GAM_makeUrlObject(u) {
-      var a = document.createElement('a');
-      a.href = u;
-      return a;
-    },
-
     // Return true iff the strings u1 and u2 are equal up the first
     // occurrence of '?', which is assumed to be the start of a URL
     // query string and ignored.
     _urlsEqualToQueryString: function GAM_urlsEqualToQueryString(u1, u2) {
-      var uo1 = this._makeUrlObject(u1);
-      var uo2 = this._makeUrlObject(u2);
-      return (uo1.protocol === uo2.protocol
-              && uo1.host === uo2.host
-              && uo1.hostname === uo2.hostname
-              && uo1.port === uo2.port
-              && uo1.pathname === uo2.pathname
-              /* ignore .search.  Should we also ignore .hash? */
-              && uo1.hash === uo2.hash);
+      var url = URL.newURL(u1);
+      return url.equals(URL.newURL(u2));
     },
 
     _appIdCounter: 0,
@@ -118,18 +129,15 @@ if (!window['Gaia'])
     installedApps: [],
 
     getInstalledApps: function(callback) {
-      var homescreenOrigin = document.location.protocol + '//' +
-                             document.location.host +
-                             document.location.pathname;
-      homescreenOrigin = homescreenOrigin.replace(/[a-zA-Z.0-9]+$/, '');
-
+      var location = document.location.toString().replace(/[a-zA-Z.0-9]+$/, '');
+      var homescreenOrigin = URL.newURL(location);
 
       var self = this;
-      window.navigator.mozApps.enumerate(function enumerateApps(apps) {
+      window.navigator.mozApps.enumerateAll(function enumerateApps(apps) {
         var cache = [];
         apps.forEach(function(app) {
           var manifest = app.manifest;
-          if (app.origin == homescreenOrigin)
+          if (homescreenOrigin.equals(URL.newURL(app.origin)))
             return;
 
           var icon = manifest.icons ? app.origin + manifest.icons['120'] : '';
@@ -144,7 +152,7 @@ if (!window['Gaia'])
           // of pre-installed apps that does not have any icons defined
           // in offline storage.
           if (icon && !window.localStorage.getItem(icon))
-            icon = homescreenOrigin + manifest.icons['120'];
+            icon =location + manifest.icons['120'];
 
           var url = app.origin + manifest.launch_path;
           cache.push({

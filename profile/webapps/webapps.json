@@ -1,61 +1,61 @@
 {
   "browser": {
-    "installOrigin":"http://gaiamobile.org:8888",
-      "origin":"http://browser.gaiamobile.org:8888",
-      "receipt":null,
-      "installTime":1323339869000
+    "installOrigin":"http://homescreen.localhost.org:6666",
+     "origin":"http://browser.localhost.org:6666",
+     "receipt":null,
+     "installTime":1323339869000
   },
   "camera": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://camera.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://camera.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "dialer": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://dialer.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://dialer.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "gallery": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://gallery.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://gallery.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "homescreen": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://homescreen.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://homescreen.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "settings": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://settings.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://settings.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "sms": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://sms.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://sms.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "clock": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://clock.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://clock.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "music": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://sms.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://music.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   },
   "market": {
-    "installOrigin":"http://gaiamobile.org:8888",
-    "origin":"http://sms.gaiamobile.org:8888",
+    "installOrigin":"http://homescreen.localhost.org:6666",
+    "origin":"http://market.localhost.org:6666",
     "receipt":null,
     "installTime":1323339869000
   }

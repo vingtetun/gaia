@@ -124,9 +124,10 @@ textarea:focus {
 
 #conversation {
   color: black;
-  height: -moz-calc(100% - 90px);
-  overflow: scroll;
-  background-color: rgba(0,0,0,0.03);
+  background-color: blue;
+  outline: 1px solid red;
+  outline-offset: -1px;
+  overflow: visible;
 }
 
 @media all and (orientation: landscape) {
@@ -147,7 +148,6 @@ textarea:focus {
   box-shadow: -1px 1px 3px #000;
   font-size: 1.2em;
   clear: both;
-  float: right;
   text-align: right;
 }
 
@@ -159,7 +159,6 @@ textarea:focus {
 
 #conversation .message.sender {
   box-shadow: 1px 1px 3px #000;
-  float: left;
   text-align: left;
   left: 10px;
 }

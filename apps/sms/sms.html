@@ -17,7 +17,7 @@
       <form id="conversationForm" onsubmit="ConversationView.sendMessage(); return false;">
         <input id="contact" class="filtered" type="tel" required="true" placeholder="To:" list="contacts"></input>
         <datalist id="contacts"></datalist>
-        <div id="conversation" onclick="ConversationView.deleteMessage(event);"></div>
+        <div id="conversation" class="scrollable vertical" onclick="ConversationView.deleteMessage(event);"></div>
 
         <div id="text-container">
           <textarea id="text" type="textbox" placeholder="Type your message" onkeypress="onKeyPress(event);"></textarea>

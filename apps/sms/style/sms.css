@@ -122,12 +122,13 @@ textarea:focus {
   height: 100%;
 }
 
+#conversation-wrapper {
+  height: -moz-calc(100% - 80px);
+}
+
 #conversation {
   color: black;
-  background-color: blue;
-  outline: 1px solid red;
-  outline-offset: -1px;
-  overflow: visible;
+  overflow: scroll;
 }
 
 @media all and (orientation: landscape) {

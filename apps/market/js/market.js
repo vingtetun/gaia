@@ -78,8 +78,8 @@
     
     Gaia.AppManager.loadInstalledApps(function() {
       appsData.forEach(function(app) {
-        var drillDownCell = document.createElement('a');
-        drillDownCell.className = 'push slideHorizontal';
+        var drillDownCell = document.createElement('span');
+        drillDownCell.className = 'clickable push slideHorizontal';
         drillDownCell.href = '#detailView';
         drillDownCell.app = app;
       

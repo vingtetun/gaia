@@ -17,7 +17,8 @@ h1 {
   display: none;
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 800px;
+  overflow: hidden;
   top: 0;
   left: 0;
 }
@@ -103,7 +104,6 @@ ul.tableView {
   list-style: none;
   margin: 0.75em;
   padding: 0;
-  overflow: hidden;
   border-radius: 0.6em;
   -moz-border-radius: 0.6em;
   box-shadow: inset 0 0.05em 0.15em rgba(0, 0, 0, 0.6);
@@ -119,7 +119,7 @@ ul.tableView > li:last-child {
   border-bottom: 0;
 }
 
-ul.tableView > li > a {
+ul.tableView > li > span {
   color: #000;
   display: block;
   margin: -0.6em;
@@ -129,7 +129,11 @@ ul.tableView > li > a {
   box-sizing: border-box;
 }
 
-ul.tableView > li > a:active {
+ul.tableView > li > span * {
+  pointer-events: none;
+}
+
+ul.tableView > li > span:active {
   background: -moz-linear-gradient(top, rgb(109, 179, 242) 0%, rgb(84, 163, 238) 50%, rgb(54, 144, 240) 51%, rgb(30, 105, 222) 100%);
   background: linear-gradient(top, rgb(109, 179, 242) 0%, rgb(84, 163, 238) 50%, rgb(54, 144, 240) 51%, rgb(30, 105, 222) 100%);
   color: #fff;

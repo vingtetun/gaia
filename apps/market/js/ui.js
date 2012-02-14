@@ -37,11 +37,11 @@ if (!window['Gaia'])
         case 'click':
           var target = evt.originalTarget;
 
-          if (target.tagName !== 'A')
+          var classList = target.classList;
+          if (!classList.contains('clickable'))
             return;
 
-          var href = target.getAttribute('href');
-          var classList = target.classList;
+          var href = target.href;
           var isPop = classList.contains('pop');
 
           if (!isPop && !classList.contains('push'))
@@ -262,7 +262,7 @@ if (!window['Gaia'])
     if (element) {
       element.view = this;
       this.element = element;
-      this.title = element.getAttribute('data-title') || '';
+      this.title = element.dataset.title || '';
     }
   };
 

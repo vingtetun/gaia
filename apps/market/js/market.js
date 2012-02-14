@@ -63,53 +63,36 @@
       detailName.innerHTML = app.manifest.name;
       detailDescription.innerHTML = app.manifest.description;
       
-      if (Gaia.AppManager.getInstalledAppForURL(app.src_url)) {
-        installButton.classList.add('hide');
-        uninstallButton.classList.remove('hide');
-        uninstallButton.app = app;
-      } else {
-        installButton.classList.remove('hide');
-        uninstallButton.classList.add('hide');
-        installButton.app = app;
-      }
+      installButton.classList.remove('hide');
+      uninstallButton.classList.add('hide');
+      installButton.app = app;
       
       evt.preventDefault();
     });
     
-    Gaia.AppManager.loadInstalledApps(function() {
-      appsData.forEach(function(app) {
-        var drillDownCell = document.createElement('span');
-        drillDownCell.className = 'clickable push slideHorizontal';
-        drillDownCell.href = '#detailView';
-        drillDownCell.app = app;
+    appsData.forEach(function(app) {
+      var drillDownCell = document.createElement('span');
+      drillDownCell.className = 'clickable push slideHorizontal';
+      drillDownCell.href = '#detailView';
+      drillDownCell.app = app;
       
-        var icon = document.createElement('img');
-        icon.src = app.origin + app.manifest.icons['128'];
+      var icon = document.createElement('img');
+      icon.src = app.origin + app.manifest.icons['128'];
       
-        var title = document.createElement('h1');
-        title.innerHTML = app.manifest.name;
+      var title = document.createElement('h1');
+      title.innerHTML = app.manifest.name;
       
-        var arrow = document.createElement('span');
-        arrow.className = 'arrowRight';
+      var arrow = document.createElement('span');
+      arrow.className = 'arrowRight';
       
-        var cell = document.createElement('li');
-        cell.appendChild(drillDownCell);
+      var cell = document.createElement('li');
+      cell.appendChild(drillDownCell);
       
-        drillDownCell.appendChild(icon);
-        drillDownCell.appendChild(title);
-        drillDownCell.appendChild(arrow);
+      drillDownCell.appendChild(icon);
+      drillDownCell.appendChild(title);
+      drillDownCell.appendChild(arrow);
       
-        if (Gaia.AppManager.getInstalledAppForURL(app.src_url)) {
-          var installedBadge = document.createElement('span');
-        
-          installedBadge.className = 'badge';
-          installedBadge.innerHTML = 'Installed';
-        
-          drillDownCell.appendChild(installedBadge);
-        }
-      
-        appsTableView.appendChild(cell);
-      });
+      appsTableView.appendChild(cell);
     });
   };
   

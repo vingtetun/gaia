@@ -51,7 +51,7 @@ body {
 
 #lockscreen {
   position: absolute;
-  z-index: 10000;
+  z-index: 20000;
   top: 0px;
   width: -moz-calc(100%);
   height: -moz-calc(100%);
@@ -104,7 +104,7 @@ body {
 
 #notificationsScreen {
   position: absolute;
-  z-index: 9998;
+  z-index: 9996;
   top: -moz-calc(-100% + 64px);
   width: -moz-calc(100%);
   height: -moz-calc(100% - 32px);
@@ -131,6 +131,7 @@ body {
   height: -moz-calc(100% - 32px);
   border-radius: 8px;
   background: url(backgrounds/default.png);
+  z-index: 9994;
 }
 
 #home > div {
@@ -214,15 +215,14 @@ body {
 #windows {
   position: absolute;
   left: 0px;
-  top: 32px;
+  top: 100%;
   width: 100%;
-  height: 0;
-  overflow: hidden;
+  height: 100%;
+  overflow: visible;
 }
 
 #windows.active {
-  height: -moz-calc(100% - 32px);
-  overflow: visible;
+  top: 0;
 }
 
 iframe.appWindow {
@@ -233,10 +233,9 @@ iframe.appWindow {
   padding: 0;
   overflow: auto;
   left: 0;
-  top: 0;
   width: 100%;
-  height: 100%;
-  display: none;
+  top: 32px;
+  z-index: 1;
 /*
  * Disable this for now because it forces an expensive fallback path in
  * Gecko.  The performance issue should be fixed by
@@ -247,7 +246,15 @@ iframe.appWindow {
 }
 
 iframe.appWindow.active {
-  display: block;
+  z-index: 9995;
+}
+
+#screen.fullscreen iframe.appWindow {
+  top: 0;
+}
+
+#screen.fullscreen iframe.appWindow.active {
+  z-index: 9998;
 }
 
 iframe.appWindow.keyboardOn {
@@ -305,7 +312,7 @@ iframe.landscape-secondary {
   display: -moz-box;
   overflow: hidden;
   position: relative;
-  z-index: 9999;
+  z-index: 9997;
   -moz-box-orient: horizontal;
 
   width: 100%;
@@ -324,10 +331,6 @@ iframe.landscape-secondary {
 
 #screen.fullscreen > :-moz-any(#statusbar,#notificationsScreen) {
   display: none;
-}
-
-#screen.fullscreen > #windows {
-  top: 0px;
 }
 
 #statusbar > #padding {
@@ -432,6 +435,7 @@ iframe.landscape-secondary {
   -moz-user-select: none;
   overflow: scroll;
   background-color: rgba(0, 0, 0, 0.8);
+  z-index: 10001;
 }
 
 #taskManager.active {
@@ -484,7 +488,7 @@ iframe.landscape-secondary {
   position: absolute;
   font-family: 'Open Sans', sans-serif;
   font-weight: bold;
-  z-index: 9997;
+  z-index: 9999;
   bottom: 0;
   overflow: visible;
   background-color: #f0f1f2;

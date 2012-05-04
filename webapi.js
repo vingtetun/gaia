@@ -1191,21 +1191,18 @@
   // load and parse the specified resource file
   function loadResource(href, lang, onSuccess, onFailure) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', href, true);
+    xhr.open('GET', href, false);
     xhr.overrideMimeType('text/plain; charset=utf-8');
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4) {
-        if (xhr.status == 200 || xhr.status == 0) {
-          parse(xhr.responseText, lang);
-          if (onSuccess)
-            onSuccess();
-        } else {
-          if (onFailure)
-            onFailure();
-        }
-      }
-    };
     xhr.send(null);
+
+    if (xhr.status == 200 || xhr.status == 0) {
+      parse(xhr.responseText, lang);
+      if (onSuccess)
+        onSuccess();
+    } else {
+      if (onFailure)
+        onFailure();
+    }
   }
 
   // load and parse all resources for the specified locale
@@ -1226,11 +1223,6 @@
         // execute the [optional] callback
         if (callback)
           callback();
-        // fire a 'localized' DOM event
-        var evtObject = document.createEvent('Event');
-        evtObject.initEvent('localized', false, false);
-        evtObject.language = lang;
-        window.dispatchEvent(evtObject);
       }
     }
 
@@ -1347,21 +1339,23 @@
     gLanguage = '';
   }
 
-  // load the default locale on startup
-  window.addEventListener('DOMContentLoaded', function() {
-    var lang = navigator.language;
-    if (navigator.mozSettings) {
-      var req = navigator.mozSettings.getLock().get('language.current');
-      req.onsuccess = function() {
-        loadLocale(req.result['language.current'] || lang, translateFragment);
-      };
-      req.onerror = function() {
-        loadLocale(lang, translateFragment);
-      };
-    } else {
-      loadLocale(lang, translateFragment);
-    }
+  // Load the default locale
+  loadLocale(navigator.language, translateFragment);
+
+  // Translate element on the fly
+  var observer = new MozMutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      var nodes = mutation.addedNodes;
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        if (node.querySelectorAll) {
+          translateFragment(node);
+          observer.observe(node, { 'childList': true });
+        }
+      }
+    })
   });
+  observer.observe(document.documentElement, { 'childList': true });
 
   // Public API
   document.mozL10n = {

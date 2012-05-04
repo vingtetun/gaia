@@ -149,15 +149,12 @@ window.addEventListener('keyup', function goBack(event) {
 });
 
 // set the 'lang' and 'dir' attributes to <html> when the page is translated
-window.addEventListener('localized', function showPanel() {
-  document.documentElement.lang = document.mozL10n.language.code;
-  document.documentElement.dir = document.mozL10n.language.direction;
+document.documentElement.lang = document.mozL10n.language.code;
+document.documentElement.dir = document.mozL10n.language.direction;
 
-  // <body> children are hidden until the UI is translated
-  if (document.body.classList.contains('hidden')) {
-    // first run: show main page
-    document.location.hash = 'root';
-    document.body.classList.remove('hidden');
+// first run: show main page
+document.location.hash = 'root';
+/*
   } else {
     // we were in #languages and selected another locale:
     // reset the hash to prevent weird focus bugs when switching LTR/RTL
@@ -166,6 +163,7 @@ window.addEventListener('localized', function showPanel() {
     });
   }
 });
+*/
 
 // translate Settings UI if a new locale is selected
 if ('mozSettings' in navigator && navigator.mozSettings) {

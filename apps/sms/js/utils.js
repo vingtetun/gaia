@@ -5,6 +5,16 @@
 
 // Based on Resig's pretty date
 function prettyDate(time) {
+
+  switch (time.constructor) {
+    case String:
+      time = parseInt(time);
+      break;
+    case Date:
+      time = time.getTime();
+      break;
+  }
+
   var diff = (Date.now() - time) / 1000;
   var day_diff = Math.floor(diff / 86400);
 
@@ -49,36 +59,14 @@ function prettyDate(time) {
   });
 })();
 
-window.addEventListener('message', function visibleApp(evt) {
-  var data = evt.data;
-  if (data.message == 'visibilitychange' && !data.hidden) {
-    visibilityChanged(data.url);
-  }
-});
+/* ***********************************************************
 
-function visibilityChanged(url) {
-  var params = (function makeURL() {
-    var a = document.createElement('a');
-    a.href = url;
+  Code below are for desktop testing!
 
-    var rv = {};
-    var params = a.search.substring(1, a.search.length).split('&');
-    for (var i = 0; i < params.length; i++) {
-      var data = params[i].split('=');
-      rv[data[0]] = data[1];
-    }
-    return rv;
-  })();
-
-  var sender = params['sender'];
-  if (sender) {
-    ConversationListView.openConversationView(sender);
-  }
-}
+*********************************************************** */
 
 if (!navigator.mozSms) {
-  // Until there is a database to store messages on the device, return
-  // a fake list of messages.
+  // We made up a fake database on
   var messagesHack = [];
   (function() {
     var messages = [
@@ -86,12 +74,16 @@ if (!navigator.mozSms) {
         sender: null,
         receiver: '1-977-743-6797',
         body: 'Nothing :)',
-        timestamp: Date.now() - 44000000
+        delivery: 'sent',
+        id: 41,
+        timestamp: new Date(Date.now() - 44000000)
       },
       {
         sender: '1-977-743-6797',
         body: 'Hey! What\s up?',
-        timestamp: Date.now() - 50000000
+        delivery: 'received',
+        id: 40,
+        timestamp: new Date(Date.now() - 50000000)
       }
     ];
 
@@ -99,7 +91,9 @@ if (!navigator.mozSms) {
       messages.push({
         sender: '1-488-678-3487',
         body: 'Hello world!',
-        timestamp: Date.now() - 60000000
+        delivery: 'received',
+        id: 39 - i,
+        timestamp: new Date(Date.now() - 60000000)
       });
     }
 
@@ -137,21 +131,73 @@ if (!navigator.mozSms) {
     var message = {
       sender: null,
       receiver: number,
+      delivery: 'sent',
       body: text,
-      timestamp: Date.now()
+      id: messagesHack.length,
+      timestamp: new Date()
     };
 
-    window.setTimeout(function() {
-      callback(message);
-    }, 0);
-  };
+    var simulateFail = /fail/i.test(text);
 
-  if (!navigator.mozSettings) {
-    window.addEventListener('load', function loadWithoutSettings() {
-      selectedLocale = 'en-US';
-      ConversationView.init();
-      ConversationListView.init();
-    });
-  }
+    window.setTimeout(function sent() {
+      if (simulateFail) {
+        // simulate failure
+        callback(null);
+        return;
+      }
+
+      // simulate success
+      callback(message);
+
+      // the SMS DB is written after the callback
+      window.setTimeout(function writeDB() {
+        messagesHack.unshift(message);
+      }, 90 * Math.random());
+    }, 3000 * Math.random());
+
+    if (simulateFail)
+      return;
+
+    window.setTimeout(function hiBack() {
+      var message = {
+        sender: number,
+        receiver: null,
+        delivery: 'received',
+        body: 'Hi back! ' + text,
+        id: messagesHack.length,
+        timestamp: new Date()
+      };
+
+      var evt = {
+        type: 'received',
+        message: message
+      };
+
+      ConversationView.handleEvent.call(ConversationView, evt);
+      ConversationListView.handleEvent.call(ConversationView, evt);
+
+      // the SMS DB is written after the callback
+      window.setTimeout(function writeDB() {
+        messagesHack.unshift(message);
+      }, 90 * Math.random());
+
+    }, 5000 + 3000 * Math.random());
+  };
 }
 
+function escapeHTML(str, escapeQuotes) {
+  var span = document.createElement('span');
+  span.textContent = str;
+
+  if (escapeQuotes)
+    return span.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  return span.innerHTML;
+}
+
+if (!navigator.mozSettings) {
+  window.addEventListener('load', function loadWithoutSettings() {
+    selectedLocale = 'en-US';
+    ConversationView.init();
+    ConversationListView.init();
+  });
+}

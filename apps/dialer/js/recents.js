@@ -57,7 +57,7 @@ var Recents = {
 
   add: function re_add(recentCall) {
     this.getDatabase((function(database) {
-      var txn = database.transaction(this.STORENAME, IDBTransaction.READ_WRITE);
+      var txn = database.transaction(this.STORENAME, 'readwrite');
       var store = txn.objectStore(this.STORENAME);
 
       var setreq = store.put(recentCall);
@@ -97,7 +97,7 @@ var Recents = {
     if (recent.number) {
       Contacts.findByNumber(recent.number, (function(contact) {
         this.querySelector('.name').textContent = contact.name;
-        this.querySelector('.number').textContent = contact.tel[0];
+        this.querySelector('.number').textContent = contact.tel[0].number;
       }).bind(entry));
     }
 
@@ -119,10 +119,10 @@ var Recents = {
     this.getDatabase((function(database) {
       var recents = [];
 
-      var txn = database.transaction(this.STORENAME, IDBTransaction.READ_ONLY);
+      var txn = database.transaction(this.STORENAME, 'readonly');
       var store = txn.objectStore(this.STORENAME);
 
-      var cursor = store.openCursor(null, IDBCursor.PREV);
+      var cursor = store.openCursor(null, 'prev');
       cursor.onsuccess = function(event) {
         var item = event.target.result;
         if (item) {

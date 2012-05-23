@@ -80,10 +80,10 @@ html * {
 }
 
 #keyboard-label {
-  background: url(images/numpad-icon.png);
+  background: url(images/keypad-icon.png);
 }
 #keyboard-label[data-active] {
-  background:url(images/current-tab.png) center -2px no-repeat, url(images/numpad-icon-active.png) center center no-repeat;
+  background:url(images/current-tab.png) center -2px no-repeat, url(images/keypad-icon-active.png) center center no-repeat;
 }
 #contacts-label {
   background: url(images/contacts-icon.png);
@@ -108,6 +108,7 @@ html * {
   border-radius: 10px 10px 0 0;
 
   background: url(images/keypad-bg.png) center bottom repeat-x #F6F6F6;
+  background-size: 480px 100%;
 }
 
 #views > .view {
@@ -374,6 +375,11 @@ html * {
   height: -moz-calc(100% - 7.5mozmm);
 }
 
+#favorites-container {
+  /* XXX adding 8px to fill the void left by the scrollbar */
+  width: -moz-calc(100% + 8px);
+}
+
 #contacts-container {
   /* XXX adding 8px to fill the void left by the scrollbar */
   width: -moz-calc(100% + 8px);
@@ -529,20 +535,12 @@ html * {
   height: 100%;
   overflow: hidden;
 
-  -moz-transition-property: background-color;
-  -moz-transition-duration: 1s;
-
   background-color: rgba(0, 0, 0, 0.6);
 
   z-index: -1;
 }
 #contacts-overlay.displayed {
-  background-color: rgba(0, 0, 0, 0.6);
   z-index: 20;
-}
-
-#contacts-overlay.hidden {
-  background-color: rgba(0, 0, 0, 0);
 }
 
 #contact-details-container {
@@ -564,14 +562,11 @@ html * {
   -moz-transition-duration: 0.30s;
   -moz-transition-timing-function: linear;
 
-  -moz-transform: scale(0);
+  -moz-transform: translateY(100%);
 }
 
-#contacts-overlay.displayed > #contact-details-container {
-  -moz-transform: scale(1);
-}
-#contacts-overlay.hidden > #contact-details-container {
-  -moz-transform: scale(0);
+#contact-details-container.displayed {
+  -moz-transform: translateY(0);
 }
 
 #contact-details-view {
@@ -642,6 +637,32 @@ html * {
   font-weight: 600;
   line-height: 46px;
   text-align: left;
+}
+
+label.favorite {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  display: block;
+}
+
+label.favorite > input[type=checkbox] {
+  display: none;
+}
+
+label.favorite > input[type=checkbox] + span {
+  display: block;
+  float: right;
+  width: 30px;
+  height: 30px;
+
+  background: url(images/star-off.png);
+}
+
+#contact-details-edit label.favorite > input[type=checkbox]:checked + span {
+  background: url(images/star-on.png);
 }
 
 #contact-photo {
@@ -780,34 +801,6 @@ html * {
   display: block;
 }
 
-/* === Modal transitions === */
-
-#views.modal {
-  position: absolute;
-  top: 0;
-  height: -moz-calc(100% - 290px);
-  opacity: 1;
-
-	background: url(images/app-texture.png) repeat 50% 50%,
-							url(images/dialing-pattern.png) repeat-x 0 0,
-							-moz-linear-gradient(top, hsla(0,0%,0%,.2) 0%, hsla(0,0%,0%,.2) 100%),
-							hsl(212,8%,37%);
-
-  z-index: 10;
-}
-
-#views.modal #phone-number-view-container,
-#views.modal #additionalKeyset {
-  display: none;
-}
-
-#views.modal #keyboard-container {
-  height: 100%;
-}
-#views.modal #mainKeyset {
-  height: -moz-calc(100% - 20px);
-}
-
 /* === Call Screen === */
 
 #call-screen {
@@ -909,7 +902,7 @@ html * {
 #call-actions > div {
   float: left;
   display: block;
-  width: -moz-calc(100% / 2);
+  width: -moz-calc(100% / 3);
   padding: 0;
   margin: 0;
 
@@ -940,6 +933,13 @@ html * {
 }
 #speaker-button.speak {
   background-image: url(images/speaker-icon-active.png);
+}
+
+#keypad-button {
+  background-image: url(images/keypad-icon.png);
+}
+#keypad-button.displayed {
+  background-image: url(images/keypad-icon-active.png);
 }
 
 #mute-button {
@@ -1008,6 +1008,46 @@ html * {
 
 #call-screen.calling #accept-call {
   display: none;
+}
+
+#mainKeyset.overlay {
+  position: absolute;
+  top: 0;
+  height: 72%;
+
+  background: url(images/call-screen-bg.png) center top no-repeat #575B66;
+
+  color: white;
+  z-index: 500;
+}
+
+#mainKeyset.overlay .keyboard-row .keyboard-key {
+  border: 1px solid #bcbcbc;
+}
+
+#mainKeyset.overlay .keyboard-key > span {
+  color: white;
+}
+
+#mainKeyset.overlay .keyboard-key:active {
+  background: rgba(255, 255, 255, .3);
+}
+
+/* == Screen turn off hack == */
+#screen-off {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: black;
+  z-index: 1000;
+
+  display: none;
+}
+#screen-off.displayed {
+  display: block;
 }
 
 /* === Recents === */

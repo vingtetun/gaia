@@ -57,6 +57,20 @@
     </style>
 
     <script>
+      window.addEventListener('load', function onload(e) {
+        if (document.location.protocol === 'file:') {
+          var paths = document.location.pathname.split('/');
+          paths.pop();
+          var src = 'file://' + paths.join('/') + '/apps/system/index.html';
+        } else {
+          var host = document.location.host;
+          var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
+          var src = 'http://system.' + domain;
+        }
+
+        document.getElementById('content').src = src;
+      });
+
       /* Simulate the HOME button */
       window.addEventListener('load', function() {
         var home = document.querySelector('#chrome-home');
@@ -71,7 +85,7 @@
 
   <body>
     <div id="chrome">
-      <iframe id="content" src="http://homescreen.gaiamobile.org/">
+      <iframe id="content">
       </iframe>
       <div id="chrome-controls">
         <center>

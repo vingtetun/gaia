@@ -42,9 +42,46 @@ body.conversation .panel {
   -moz-transform: translateX(-100%);
 }
 
-body.conversation #view,
-body.transition-back #view {
-  left: 100%;
+/* View - Slide Horizontal Transition */
+/* XXX hack: the width is adjusted (0-100%) with a delayed transition in order
+ *           to hide the horizontal scrollbar on the device (at least, when the
+ *           transition is over).
+ * This is just a workaround: the platform bug should be fixed later.  */
+
+#view {
+  -moz-transform: translateX(100%);
+
+  /* XXX hack */
+  overflow: hidden;
+  z-index: 1;
+  width: 0%;
+  -moz-transition: -moz-transform 0.3s ease, width 0s linear 0.5s;
+}
+
+#msg-conversations {
+  -moz-transform: translateX(0);
+
+  /* XXX hack */
+  overflow: hidden;
+  z-index: 10;
+}
+
+body.conversation #view {
+  -moz-transform: translateX(0);
+
+  /* XXX hack */
+  z-index: 10;
+  width: 100%;
+  -moz-transition: -moz-transform 0.3s ease;
+}
+
+body.conversation #msg-conversations {
+  -moz-transform: translateX(-100%);
+
+  /* XXX hack */
+  z-index: 1;
+  width: 0%;
+  -moz-transition: -moz-transform 0.3s ease, width 0s linear 0.5s;
 }
 
 .toolbar {
@@ -73,6 +110,20 @@ body.transition-back #view {
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   border-top: solid 3px #9b9b9b;
+}
+
+.toolbar-panel {
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  width: 100%;
+}
+
+.toolbar-panel-item {
+  -moz-box-flex: 1;
+}
+
+.toolbar-panel-fixed-item {
+  -moz-box-flex: 0;
 }
 
 /* media queries for removing rounded border when keyboard is shown */
@@ -115,6 +166,7 @@ input, textarea {
   color: #fff;
   text-shadow: 0pt -1px 1px rgba(0, 0, 0, 0.5);
   border: none;
+  padding: 0 16px;
   background: -moz-linear-gradient(top, hsl(39,100%,73%) 0, hsla(35,100%,80%,0.2) 2px, hsla(35,100%,50%,.4) 20%,
                 hsl(32,100%,38%) 98%, hsl(32,100%,38%) 99%, hsl(31,100%,50%) 100%),
               -moz-linear-gradient(top, hsl(39,100%,73%) 0, hsla(35,100%,50%,1) 2px, hsl(32,100%,38%) 98%,
@@ -143,8 +195,11 @@ input, textarea {
   background: url("images/app-texture.png") repeat scroll 50% 50%, rgb(243, 243, 243);
 }
 
-#msg-conversations-list > div {
+#msg-conversations-list > a {
   -moz-box-sizing: border-box;
+  display: block;
+  text-decoration: none;
+  outline: none;
   height: 96px;
   position: relative;
   padding: 13px 16px 0 112px;
@@ -152,19 +207,19 @@ input, textarea {
   border-bottom: 1px solid hsla(223,7%,81%,1);
 }
 
-#msg-conversations-list > div:active {
+#msg-conversations-list > a:active {
   background: hsla(35,100%,50%,.2);
 }
 
-#msg-conversations-list > div.hide {
+#msg-conversations-list > a.hide {
   display: none;
 }
 
-#msg-conversations-list > div > * {
+#msg-conversations-list > a > * {
   pointer-events: none;
 }
 
-#msg-conversations-list > div:first-child {
+#msg-conversations-list > a:first-child {
   border-top-color: transparent;
 }
 
@@ -215,6 +270,7 @@ input, textarea {
 }
 
 #msg-new-message {
+  display: block;
   margin-top: 14px;
   margin-left: 32px;
   height: 48px;
@@ -222,6 +278,8 @@ input, textarea {
   font-size: 24px;
   font-weight: bold;
   width: -moz-calc(100% - 32px - 32px);
+  text-decoration: none;
+  outline: none;
 }
 
 #view-back {
@@ -231,6 +289,8 @@ input, textarea {
   font-size: 18px;
   font-weight: 600;
   color: #828282;
+  text-decoration: none;
+  outline: none;
 
   position: absolute;
   top: 3px; left: 0;
@@ -257,10 +317,10 @@ body.conversation-new-msg #view-name {
 
 #view-num {
   display: block;
-  margin: 10px 144px;
+  margin: 10px 152px;
   padding: 0 20px;
   -moz-box-sizing: border-box;
-  width: -moz-calc(100% - 288px);
+  width: -moz-calc(100% - 300px);
 }
 
 body.conversation-new-msg #view-num {
@@ -318,6 +378,20 @@ body.conversation-new-msg #view-num {
 #view-list > div.receiver {
   padding-right: 96px;
   text-align: right;
+}
+
+#view-list > div.pending {
+  -moz-animation: fadeIn 2s ease;
+  opacity: 0.5;
+}
+
+@-moz-keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
 }
 
 #view-list .photo {
@@ -382,11 +456,10 @@ body.conversation-new-msg #view-num {
 #view-bottom-toolbar {
   background: url('images/diagonal-gray-pattern.png'),
   -moz-linear-gradient(center top , rgb(244, 244, 244), rgb(234, 234, 234)) repeat scroll 0% 0% transparent;
+  padding-right: 16px;
 }
 
 #view-msg-text-container {
-  float: left;
-  width: -moz-calc(100% - 128px);
 }
 
 #view-msg-text {
@@ -405,18 +478,16 @@ body.conversation-new-msg #view-num {
 }
 
 #view-msg-send-container {
-  float: left;
-  width: 118px;
 }
 
 #view-msg-send {
-  display: block;
-  width: 96px;
-  height: 48px;
   margin: 14px 0 0 16px;
   font-size: 24px;
   font-weight: bold;
   line-height: 42px;
+  height: 48px;
+  min-width: 96px;
+  -moz-box-sizing: border-box;
 }
 
 /* localization */

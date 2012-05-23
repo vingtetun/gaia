@@ -49,12 +49,6 @@ function visibilityChanged(url, evt) {
       Contacts.load();
       choiceChanged(contacts);
     }
-    var recents = document.getElementById('recents-label');
-    if (choice == 'recents' || recents.hasAttribute('data-active')) {
-      choiceChanged(recents);
-      Recents.showLast();
-    }
-
   } else {
     Recents.stopUpdatingDates();
   }
@@ -221,6 +215,15 @@ var KeyHandler = {
       this.phoneNumber.value += key;
       this.updateFontSize();
       TonePlayer.play(gTonesFrequencies[key]);
+
+      // Sending the DTMF tone
+      var telephony = navigator.mozTelephony;
+      if (telephony) {
+        telephony.startTone(key);
+        window.setTimeout(function ch_stopTone() {
+          telephony.stopTone();
+        }, 100);
+      }
     }
 
     this._timeout = window.setTimeout(callback, 400, this);
@@ -271,8 +274,6 @@ var CallHandler = {
     this.currentCall = call;
 
     this.recentsEntry = {date: Date.now(), type: 'outgoing', number: number};
-
-    var self = this;
 
     this.toggleCallScreen();
   },
@@ -346,8 +347,9 @@ var CallHandler = {
       this.toggleMute();
     if (this.speakerButton.classList.contains('speak'))
       this.toggleSpeaker();
+    if (this.keypadButton.classList.contains('displayed'))
+      this.toggleKeypad();
 
-    this.closeModal();
     clearInterval(this._ticker);
 
     this.toggleCallScreen();
@@ -358,12 +360,27 @@ var CallHandler = {
       if ((this.recentsEntry.type.indexOf('outgoing') == -1) &&
           (this.recentsEntry.type.indexOf('-refused') == -1) &&
           (this.recentsEntry.type.indexOf('-connected') == -1)) {
-        // XXX: This should be replaced by a web notification as
-        // soon as we have them
-        window.parent.postMessage({
-          type: 'missed-call',
-          sender: this.recentsEntry.number
-        }, '*');
+
+        var mozNotif = navigator.mozNotification;
+        if (mozNotif) {
+          var notification = mozNotif.createNotification(
+            'Missed call', 'From ' + this.recentsEntry.number
+          );
+
+          notification.onclick = function ch_notificationClick() {
+            var recents = document.getElementById('recents-label');
+            choiceChanged(recents);
+            Recents.showLast();
+
+            // Asking to launch itself
+            navigator.mozApps.getSelf().onsuccess = function(e) {
+              var app = e.target.result;
+              app.launch();
+            };
+          };
+
+          notification.show();
+        }
       }
       this.recentsEntry = null;
     }
@@ -407,9 +424,13 @@ var CallHandler = {
     delete this.speakerButton;
     return this.speakerButton = document.getElementById('speaker-button');
   },
-  get holdButton() {
-    delete this.holdButton;
-    return this.holdButton = document.getElementById('hold-button');
+  get keypadButton() {
+    delete this.keypadButton;
+    return this.keypadButton = document.getElementById('keypad-button');
+  },
+  get keypadView() {
+    delete this.keypadView;
+    return this.keypadView = document.getElementById('mainKeyset');
   },
 
   execute: function ch_execute(action) {
@@ -442,26 +463,30 @@ var CallHandler = {
 
       finished = true;
 
-      callScreen.classList.add('animate');
-      callScreen.classList.toggle('oncall');
-      callScreen.classList.toggle('prerender');
+      window.setTimeout(function cs_transitionNextLoop() {
+        callScreen.classList.add('animate');
+        callScreen.classList.toggle('oncall');
+        callScreen.classList.toggle('prerender');
+      });
     };
 
     window.addEventListener('MozAfterPaint', function ch_finishAfterPaint() {
       window.removeEventListener('MozAfterPaint', ch_finishAfterPaint);
       finishTransition();
     });
-    var securityTimeout = setTimeout(finishTransition, 100);
+    var securityTimeout = window.setTimeout(finishTransition, 100);
 
     this._onCall = !this._onCall;
 
     // Assume we always either onCall or not, and always onCall before
     // not onCall.
     if (this._onCall) {
-      this._screenLock = navigator.requestWakeLock("screen");
+      this._screenLock = navigator.requestWakeLock('screen');
+      ProximityHandler.enable();
     } else {
       this._screenLock.unlock();
       this._screenLock = null;
+      ProximityHandler.disable();
     }
   },
 
@@ -470,41 +495,15 @@ var CallHandler = {
     navigator.mozTelephony.muted = !navigator.mozTelephony.muted;
   },
 
+  toggleKeypad: function ch_toggleKeypad() {
+    this.keypadButton.classList.toggle('displayed');
+    this.keypadView.classList.toggle('overlay');
+  },
+
   toggleSpeaker: function ch_toggleSpeaker() {
     this.speakerButton.classList.toggle('speak');
     navigator.mozTelephony.speakerEnabled =
       !navigator.mozTelephony.speakerEnabled;
-  },
-
-  toggleHold: function ch_toggleHold() {
-    this.holdButton.classList.toggle('hold');
-    // TODO: make the actual hold call
-  },
-
-  keypad: function ch_keypad() {
-    choiceChanged(document.getElementById('keyboard-label'));
-    this.toggleModal();
-  },
-
-  contacts: function ch_contacts() {
-    choiceChanged(document.getElementById('contacts-label'));
-    this.toggleModal();
-  },
-
-  toggleModal: function ch_toggleModal() {
-    // 2 steps closing to avoid showing the view in its non-modal state
-    // during the transition
-    var views = document.getElementById('views');
-    if (views.classList.contains('modal')) {
-      this.closeModal();
-      return;
-    }
-
-    views.classList.add('modal');
-  },
-  closeModal: function ch_closeModal() {
-    var views = document.getElementById('views');
-    views.classList.remove('modal');
   },
 
   lookupContact: function ch_lookupContact(number) {
@@ -514,19 +513,18 @@ var CallHandler = {
   }
 };
 
-window.addEventListener('localized', function keyboardInit(evt) {
-  window.removeEventListener('load', keyboardInit);
+window.addEventListener('localized', function startup(evt) {
+  window.removeEventListener('localized', startup);
 
   KeyHandler.init();
   CallHandler.setupTelephony();
-});
 
-window.addEventListener('localized', function showBody(evt) {
   // Set the 'lang' and 'dir' attributes to <html> when the page is translated
   var html = document.querySelector('html');
   var lang = document.mozL10n.language;
-  html.setAttribute('lang', lang.code);
-  html.setAttribute('dir', lang.direction);
+  html.lang = lang.code;
+  html.dir = lang.direction;
+
   // <body> children are hidden until the UI is translated
   document.body.classList.remove('hidden');
 });

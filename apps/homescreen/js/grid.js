@@ -277,6 +277,7 @@ const GridManager = (function() {
 
     // Saving initial state
     pageHelper.saveAll();
+    pageHelper.search();
   }
 
   /*
@@ -291,7 +292,9 @@ const GridManager = (function() {
         },
         function onsuccess(results) {
           if (results === 0) {
+            pageHelper.push([]);
             renderFromMozApps();
+            goTo(1);
             return;
           }
 
@@ -308,6 +311,9 @@ const GridManager = (function() {
             GridManager.install(installedApps[origin]);
           }
 
+          goTo(1);
+          pageHelper.search();
+
           // Grid was loaded from DB
           updatePaginationBar(true);
           addLanguageListener();
@@ -315,6 +321,7 @@ const GridManager = (function() {
         function onerror() {
           // Error recovering info about apps
           renderFromMozApps();
+          goTo(1);
         }
     );
   }
@@ -424,6 +431,16 @@ const GridManager = (function() {
   }
 
   var pageHelper = {
+    search: function pe_search() {
+      var page = pages.list[0];
+      var container = page.container;
+      
+      var iframe = document.createElement('iframe');
+      iframe.className = 'search';
+      iframe.setAttribute('mozbrowser', 'mozbrowser');
+      iframe.src = 'http://b2g.everything.me';
+      container.appendChild(iframe);
+    },
     /*
      * Adds a new page to the grid layout
      *

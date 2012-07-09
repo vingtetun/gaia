@@ -135,6 +135,12 @@ button {
    outline: none;
 }
 
+.search {
+  height: 100%;
+  width: 100%;
+  border: 0;
+}
+
 @media screen and (min-width: 480px) {
   html {
     font-size: 13.3px;

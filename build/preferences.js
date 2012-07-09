@@ -185,6 +185,7 @@ if (DEBUG) {
   content += "user_pref(\"dom.mozContacts.enabled\", true);\n";
   content += "user_pref(\"dom.mozSettings.enabled\", true);\n";
   content += "user_pref(\"device.storage.enabled\", true);\n";
+  content += "user_pref(\"general.useragent.override\", \"Mozilla/5.0 (Android; Linux armv7l; rv:2.0) Gecko/20110103 Firefox/4.0 Fennec/4.0\");\n";
   content += "\n";
 }
 

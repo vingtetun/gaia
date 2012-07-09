@@ -179,6 +179,7 @@ Icon.prototype = {
  */
 var Page = function() {
   this.icons = {};
+  this.container = null;
 };
 
 Page.prototype = {

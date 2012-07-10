@@ -890,6 +890,11 @@ const GridManager = (function() {
     /*
      * Exports the dirCtrl utils
      */
-    get dirCtrl() { return dirCtrl; }
+    get dirCtrl() {
+      return dirCtrl;
+    },
+
+    // Go directly to one page
+    goTo: goTo
   };
 })();

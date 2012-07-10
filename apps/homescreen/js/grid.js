@@ -438,7 +438,7 @@ const GridManager = (function() {
       var iframe = document.createElement('iframe');
       iframe.className = 'search';
       iframe.setAttribute('mozbrowser', 'mozbrowser');
-      iframe.src = 'http://b2g.everything.me';
+      iframe.src = 'http://b2g.stg.everything.me';
       container.appendChild(iframe);
     },
     /*

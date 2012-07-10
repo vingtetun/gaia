@@ -24,7 +24,8 @@ const Homescreen = (function() {
   // system application. It should be an activity that will
   // use the system message API.
   window.addEventListener('message', function onMessage(e) {
-    switch (e.data) {
+    var mode = 'type' in e.data ? e.data.type : e.data;
+    switch (mode) {
       case 'home':
         if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
@@ -36,12 +37,14 @@ const Homescreen = (function() {
       case 'open-in-app':
         // Needs to add a frame on the left side
         var url = e.data.url;
+        dump('====================' + url + '\n');
         break;
       case 'add-bookmark':
         // Add a new bookmark to the homescreen
         var title = e.data.title;
         var url = e.data.url;
         var icon = e.data.icon;
+        dump('====================' + title + '\n' + url + '\n' + icon + '\n');
         break;
     }
   });

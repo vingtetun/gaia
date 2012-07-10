@@ -33,6 +33,16 @@ const Homescreen = (function() {
           GridManager.goTo(0);
         }
         break;
+      case 'open-in-app':
+        // Needs to add a frame on the left side
+        var url = e.data.url;
+        break;
+      case 'add-bookmark':
+        // Add a new bookmark to the homescreen
+        var title = e.data.title;
+        var url = e.data.url;
+        var icon = e.data.icon;
+        break;
     }
   });
 

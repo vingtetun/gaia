@@ -23,21 +23,32 @@ const Homescreen = (function() {
   // XXX Currently the home button communicate only with the
   // system application. It should be an activity that will
   // use the system message API.
+
+  var footer = document.getElementById('footer');
+
   window.addEventListener('message', function onMessage(e) {
     var json = JSON.parse(e.data);
     var mode = json.type;
+    var searchContainer = document.getElementById('search');
 
     switch (mode) {
       case 'home':
         if (appFrameIsActive) {
           var frame = document.getElementById('app-frame');
-          document.body.removeChild(frame);
+          searchContainer.classList.remove('result');
+          footer.classList.remove('hidden');
+
+          searchContainer.addEventListener('transitionend', function trWait() {
+            searchContainer.removeEventListener('transitionend', trWait);
+            frame.parentNode.removeChild(frame);
+          });
+
           appFrameIsActive = false;
         } else if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
           Permissions.hide();
         } else {
-          GridManager.goTo(0);
+          GridManager.goTo(1);
         }
         break;
       case 'open-in-app':
@@ -56,13 +67,16 @@ const Homescreen = (function() {
   var appFrameIsActive = false;
 
   function openApp(url) {
+    var searchContainer = document.getElementById('search');
     // This is not really fullscreen, do we expect fullscreen?
     var frame = document.createElement('iframe');
     frame.id = 'app-frame';
     frame.setAttribute('mozbrowser', 'mozbrowser');
     frame.src = url;
-    document.body.appendChild(frame);
+    searchContainer.appendChild(frame);
 
+    searchContainer.classList.add('result');
+    footer.classList.add('hidden');
     appFrameIsActive = true;
   }
 

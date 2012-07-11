@@ -129,6 +129,9 @@ const GridManager = (function() {
       pageHelper.getCurrent().moveToCenter(transEndCallbck);
 
       updatePaginationBar();
+    } else if (currentPage == 1) {
+      // If we're already on the first page, go to search
+      goTo(0);
     } else {
       transEndCallbck();
     }
@@ -434,11 +437,13 @@ const GridManager = (function() {
     search: function pe_search() {
       var page = pages.list[0];
       var container = page.container;
-      
+
+      var searchContainer = document.createElement('div');
+      searchContainer.id = 'search';
       var iframe = document.createElement('iframe');
-      iframe.className = 'search';
       iframe.src = 'http://b2g.everything.me';
-      container.appendChild(iframe);
+      searchContainer.appendChild(iframe);
+      container.appendChild(searchContainer);
     },
     /*
      * Adds a new page to the grid layout

@@ -77,6 +77,12 @@ section,footer,nav,a,img {
   z-index: 10000;
   background-color: rgba(0,0,0, .3);
   box-shadow: inset 0 3px 3px -3px #333;
+
+  -moz-transition: -moz-transform 0.2s linear;
+}
+
+#footer.hidden {
+  -moz-transform: translateY(4rem);
 }
 
 #footer[data-mode = 'edit'] .dock > li {
@@ -135,12 +141,6 @@ button {
    outline: none;
 }
 
-.search {
-  height: 100%;
-  width: 100%;
-  border: 0;
-}
-
 @media screen and (min-width: 480px) {
   html {
     font-size: 13.3px;
@@ -151,12 +151,33 @@ html[dir=rtl] .apps ol > li {
   float: right;
 }
 
-#app-frame {
+#search {
+  position: relative;
+  height: -moz-calc(100% + 4rem);
+  width: 200%;
+
+  margin-top: -1rem;
+  -moz-transform: translateX(-50%);
+  -moz-transition: -moz-transform 0.3s ease-in-out;
+}
+
+#search.result {
+  -moz-transform: translateX(0);
+}
+
+#search > iframe {
   position: absolute;
-  left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10000;
+  left: 50%;
+
+  height: -moz-calc(100% - 4rem);
+  width: 50%;
+
   border: 0;
+}
+
+
+#search > #app-frame {
+  height: 100%;
+  left: 0;
 }

@@ -24,10 +24,16 @@ const Homescreen = (function() {
   // system application. It should be an activity that will
   // use the system message API.
   window.addEventListener('message', function onMessage(e) {
-    var mode = 'type' in e.data ? e.data.type : e.data;
+    var json = JSON.parse(e.data);
+    var mode = json.type;
+
     switch (mode) {
       case 'home':
-        if (GridManager.isEditMode()) {
+        if (appFrameIsActive) {
+          var frame = document.getElementById('app-frame');
+          document.body.removeChild(frame);
+          appFrameIsActive = false;
+        } else if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
           Permissions.hide();
         } else {
@@ -35,19 +41,30 @@ const Homescreen = (function() {
         }
         break;
       case 'open-in-app':
-        // Needs to add a frame on the left side
-        var url = e.data.url;
-        dump('====================' + url + '\n');
+        var url = json.data.url;
+        openApp(url);
         break;
       case 'add-bookmark':
         // Add a new bookmark to the homescreen
-        var title = e.data.title;
-        var url = e.data.url;
-        var icon = e.data.icon;
-        dump('====================' + title + '\n' + url + '\n' + icon + '\n');
+        var title = json.data.title;
+        var url = json.data.url;
+        var icon = json.data.icon;
         break;
     }
   });
+
+  var appFrameIsActive = false;
+
+  function openApp(url) {
+    // This is not really fullscreen, do we expect fullscreen?
+    var frame = document.createElement('iframe');
+    frame.id = 'app-frame';
+    frame.setAttribute('mozbrowser', 'mozbrowser');
+    frame.src = url;
+    document.body.appendChild(frame);
+
+    appFrameIsActive = true;
+  }
 
   // Listening for installed apps
   Applications.addEventListener('install', function oninstall(app) {

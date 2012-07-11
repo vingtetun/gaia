@@ -185,7 +185,6 @@ if (DEBUG) {
   content += "user_pref(\"dom.mozContacts.enabled\", true);\n";
   content += "user_pref(\"dom.mozSettings.enabled\", true);\n";
   content += "user_pref(\"device.storage.enabled\", true);\n";
-  content += "user_pref(\"general.useragent.override\", \"Mozilla/5.0 (Android; Linux armv7l; rv:2.0) Gecko/20110103 Firefox/4.0 Fennec/4.0\");\n";
   content += "\n";
 }
 
@@ -193,6 +192,14 @@ if (DEBUG) {
 // Until this bug is fixed, window.close is allowed for content
 // windows.
 content += "user_pref(\"dom.allow_scripts_to_close_windows\", true);\n";
+
+// Make it compatible with the version of the embedded search
+content += "user_pref(\"general.useragent.override\", \"Mozilla/5.0 (Android; Linux armv7l; rv:2.0) Gecko/20110103 Firefox/4.0 Fennec/4.0\");\n";
+content += "user_pref(\"general.useragent.appName\", \"Mozilla\");\n";
+content += "user_pref(\"general.useragent.vendor\", \"\");\n";
+content += "user_pref(\"general.useragent.vendorSub\", \"\");\n";
+content += "user_pref(\"general.platform.override\", \"Android\");\n";
+content += "user_pref(\"dom.w3c_touch_events.enabled\", false);\n";
 
 writeContent(content);
 dump("\n" + content);

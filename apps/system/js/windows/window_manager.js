@@ -247,7 +247,7 @@ var WindowManager = (function() {
       // send a message to the homescreen so he nows about the
       // home key.
       var home = document.getElementById('homescreen');
-      home.contentWindow.postMessage('home', home.src);
+      home.contentWindow.postMessage('{ "type": "home" }', home.src);
     }
     // Case 5: app-to-app transition
     else {

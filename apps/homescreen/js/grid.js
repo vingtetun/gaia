@@ -942,6 +942,10 @@ const GridManager = (function() {
     },
 
     // Go directly to one page
-    goTo: goTo
+    goTo: goTo,
+
+    getCurrentPage: function gm_getCurrentPage() {
+      return pages.current;
+    }
   };
 })();

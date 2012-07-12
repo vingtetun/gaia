@@ -185,13 +185,14 @@ const Homescreen = (function() {
         } else if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
           Permissions.hide();
-        } else if (ViewController.currentPage !== 1) {
+        } else if (ViewController.currentPage === 1 &&
+                   GridManager.getCurrentPage() === 0) {
           GridManager.goTo(0, function finish() {
-            ViewController.navigate(1, 0.2);
+            ViewController.navigate(0, 0.2);
           });
         } else {
           GridManager.goTo(0, function finish() {
-            ViewController.navigate(0, 0.2);
+            ViewController.navigate(1, 0.2);
           });
         }
         break;

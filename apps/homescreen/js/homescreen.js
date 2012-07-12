@@ -6,6 +6,7 @@ const Homescreen = (function() {
   var threshold = window.innerWidth / 3;
   var windowSize = window.innerWidth;
   var footer = document.getElementById('footer');
+  var searchFrame = document.querySelector('#search > iframe');
 
   /*
    * This component deals with the transitions between landing and grid pages
@@ -43,6 +44,15 @@ const Homescreen = (function() {
         style.MozTransform = 'translateX(' + (n - number) + '00%)';
         style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
       }
+
+      // Temporaty send an event to the embedded search when it is show hidden
+      var details = {
+        type: 'visibilitychange',
+        data: {
+          hidden: number ? false : true
+        }
+      }
+      searchFrame.contentWindow.postMessage(details, '*');
 
       this.currentPage = number;
       PaginationBar.update(number);
@@ -213,6 +223,13 @@ const Homescreen = (function() {
     frame.classList.add('visible');
     if (ViewController.currentPage === 0) {
       search.classList.add('hidden');
+      var details = {
+        type: 'visibilitychange',
+        data: {
+          hidden: true
+        }
+      };
+      searchFrame.contentWindow.postMessage(details, '*');
     }
 
     frame.addEventListener('transitionend', function onStopTransition(e) {
@@ -225,7 +242,16 @@ const Homescreen = (function() {
 
   function closeApp() {
     frame.classList.remove('visible');
-    search.classList.remove('hidden');
+    if (search.classList.contains('hidden')) {
+      var details = {
+        type: 'visibilitychange',
+        data: {
+          hidden: false
+        }
+      };
+      searchFrame.contentWindow.postMessage(details, '*');
+      search.classList.remove('hidden');
+    }
 
     frame.addEventListener('transitionend', function onStopTransition(e) {
       frame.removeEventListener('transitionend', onStopTransition);

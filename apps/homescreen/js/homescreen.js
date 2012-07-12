@@ -4,6 +4,8 @@
 const Homescreen = (function() {
 
   var threshold = window.innerWidth / 3;
+  var windowSize = window.innerWidth;
+  var footer = document.getElementById('footer');
 
   /*
    * This component deals with the transitions between landing and grid pages
@@ -34,9 +36,14 @@ const Homescreen = (function() {
       for (var n = 0; n < total; n++) {
         var page = this.pages[n];
         var style = page.style;
+        if (n === 1) {
+          footer.style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
+          footer.style.MozTransform = 'translateX(' + (n - number) + '00%)';
+        }
         style.MozTransform = 'translateX(' + (n - number) + '00%)';
-        style.MozTransition = duration ? ('all ' + duration + 's ease') : '';
+        style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
       }
+
       this.currentPage = number;
       PaginationBar.update(number);
     },
@@ -53,10 +60,16 @@ const Homescreen = (function() {
       var total = this.total;
       for (var n = 0; n < total; n++) {
         var page = this.pages[n];
-        var calc = (n - currentPage) * 100 + '% + ' + x + 'px';
         var style = page.style;
+        if (n === 1) {
+          var diffX = Math.max(0, Math.min(x, windowSize));
+          footer.style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
+          footer.style.MozTransform = 'translateX(' + diffX + 'px)';
+        } 
+        var calc = (n - currentPage) * 100 + '% + ' + x + 'px';
+
         style.MozTransform = 'translateX(-moz-calc(' + calc + '))';
-        style.MozTransition = duration ? ('all ' + duration + 's ease') : '';
+        style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
       }
     },
 
@@ -198,7 +211,6 @@ const Homescreen = (function() {
     // This is not really fullscreen, do we expect fullscreen?
     frame.classList.add('visible');
     search.classList.add('hidden');
-    footer.classList.add('hidden');
 
     frame.addEventListener('transitionend', function onStopTransition(e) {
       frame.removeEventListener('transitionend', onStopTransition);
@@ -212,7 +224,6 @@ const Homescreen = (function() {
     frame.src = 'about:blank';
     frame.classList.remove('visible');
     search.classList.remove('hidden');
-    footer.classList.remove('hidden');
 
     appFrameIsActive = false;
   }

@@ -865,7 +865,10 @@ const GridManager = (function() {
       var index = checkFirstPageWithGap();
       var origin = Applications.getOrigin(app);
       if (animation) {
-        Applications.getManifest(origin).hidden = true;
+        var manifest = Applications.getManifest(origin);
+        if (manifest) {
+          manifest.hidden = true;
+        }
       }
 
       if (index < pages.total) {
@@ -875,10 +878,9 @@ const GridManager = (function() {
       }
 
       if (animation) {
-        goTo(index, function() {
-          setTimeout(function() {
-            pageHelper.getCurrent().
-                applyInstallingEffect(Applications.getOrigin(app));
+        goTo(index, function goToInstallPage() {
+          setTimeout(function applyInstalledEffect() {
+            pageHelper.getCurrent().applyInstallingEffect(origin);
           }, 200);
         });
       }

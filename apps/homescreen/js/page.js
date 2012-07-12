@@ -8,11 +8,12 @@
  */
 var Icon = function Icon(app) {
   var origin = Applications.getOrigin(app);
+  var manifest = Applications.getManifest(origin);
   this.descriptor = {
     origin: origin,
-    name: Applications.getName(origin),
-    icon: Applications.getIcon(origin),
-    isHidden: Applications.getManifest(origin).hidden
+    name: Applications.getName(origin) || app.name,
+    icon: Applications.getIcon(origin) || app.icon,
+    isHidden: manifest ? manifest.hidden : false
   };
 
   this.type = 'ApplicationIcon';
@@ -359,12 +360,21 @@ Page.prototype = {
    * @param{Object} DOM element
    */
   tap: function pg_tap(elem) {
+    var origin = elem.dataset.origin;
     if (GridManager.isEditMode()) {
       if (elem.className === 'options') {
-        Homescreen.showAppDialog(elem.dataset.origin);
+        Homescreen.showAppDialog(origin);
       }
     } else if (elem.className === 'icon') {
-      Applications.getByOrigin(elem.dataset.origin).launch();
+      var application = Applications.getByOrigin(origin);
+      if (application) {
+        application.launch();
+        return;
+      }
+
+      // This is likely a bookmark. This is not 100% clear what should
+      // be done. So let's.... open the left frame for now.
+      Homescreen.openApp(origin);
     }
   },
 

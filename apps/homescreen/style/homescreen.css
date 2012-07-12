@@ -70,10 +70,6 @@ section,footer,nav,a,img {
   left: 0;
 }
 
-#search {
-  -moz-transform: translateX(-100%);
-}
-
 #icongrid {
   -moz-transform: translateX(0);
 }
@@ -124,13 +120,15 @@ html[dir=rtl] .apps ol > li {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   border: 0;
   -moz-transform: translateX(-100%);
   -moz-transition: -moz-transform 0.2s ease;
+  background-color: rgba(0,0,0,.7);
+  z-index: 10001;
 }
 
 #app-frame.visible {
   -moz-transform: translateX(0);
-  width: 100%;
-  height: 100%;
 }

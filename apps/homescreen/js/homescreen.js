@@ -197,14 +197,10 @@ const Homescreen = (function() {
         }
         break;
       case 'open-in-app':
-        var url = json.data.url;
-        openApp(url);
+        openApp(json.data.url);
         break;
       case 'add-bookmark':
-        // Add a new bookmark to the homescreen
-        var title = json.data.title;
-        var url = json.data.url;
-        var icon = json.data.icon;
+        installApp(json.data.title, json.data.url, json.data.icon);
         break;
     }
   });
@@ -215,7 +211,9 @@ const Homescreen = (function() {
   function openApp(url) {
     // This is not really fullscreen, do we expect fullscreen?
     frame.classList.add('visible');
-    search.classList.add('hidden');
+    if (ViewController.currentPage === 0) {
+      search.classList.add('hidden');
+    }
 
     frame.addEventListener('transitionend', function onStopTransition(e) {
       frame.removeEventListener('transitionend', onStopTransition);
@@ -226,11 +224,27 @@ const Homescreen = (function() {
   }
 
   function closeApp() {
-    frame.src = 'about:blank';
     frame.classList.remove('visible');
     search.classList.remove('hidden');
 
+    frame.addEventListener('transitionend', function onStopTransition(e) {
+      frame.removeEventListener('transitionend', onStopTransition);
+      frame.src = 'about:blank';
+    });
+
+    appFrameIsActive = true;
+
     appFrameIsActive = false;
+  }
+
+  function installApp(title, url, icon) {
+    var app = {
+      name: title,
+      origin: url,
+      icon: icon
+    };
+    ViewController.navigate(1, 0.2);
+    GridManager.install(app, true);
   }
 
   // Listening for installed apps
@@ -257,6 +271,8 @@ const Homescreen = (function() {
       Permissions.show(title, body,
                        function onAccept() { app.uninstall() },
                        function onCancel() {});
-    }
+    },
+
+    openApp: openApp
   };
 })();

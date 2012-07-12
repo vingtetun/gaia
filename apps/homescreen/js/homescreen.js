@@ -2,53 +2,180 @@
 'use strict';
 
 const Homescreen = (function() {
-  PaginationBar.init('.paginationScroller');
-  GridManager.init('.apps');
+
+  var threshold = window.innerWidth / 3;
+
+  /*
+   * This component deals with the transitions between landing and grid pages
+   */
+  var ViewController = {
+
+    /*
+     * Initializes the component
+     *
+     * @param {Object} The homescreen container
+     */
+    init: function vw_init(container) {
+      this.currentPage = 1;
+      this.pages = container.children;
+      this.total = this.pages.length;
+      container.addEventListener('mousedown', this);
+    },
+
+    /*
+     * Navigates to a section given the number
+     *
+     * @param {int} number of the section
+     *
+     * @param {int} duration of the transition
+     */
+    navigate: function vw_navigate(number, duration) {
+      var total = this.total;
+      for (var n = 0; n < total; n++) {
+        var page = this.pages[n];
+        var style = page.style;
+        style.MozTransform = 'translateX(' + (n - number) + '00%)';
+        style.MozTransition = duration ? ('all ' + duration + 's ease') : '';
+      }
+      this.currentPage = number;
+      PaginationBar.update(number);
+    },
+
+    /*
+     * Implements the transition of sections following the finger
+     *
+     * @param {int} x-coordinate
+     *
+     * @param {int} duration of the transition
+     */
+    pan: function vw_pan(x, duration) {
+      var currentPage = this.currentPage;
+      var total = this.total;
+      for (var n = 0; n < total; n++) {
+        var page = this.pages[n];
+        var calc = (n - currentPage) * 100 + '% + ' + x + 'px';
+        var style = page.style;
+        style.MozTransform = 'translateX(-moz-calc(' + calc + '))';
+        style.MozTransition = duration ? ('all ' + duration + 's ease') : '';
+      }
+    },
+
+    /*
+     * Event handling for the homescreen
+     *
+     * @param {Object} The event object from browser
+     */
+    handleEvent: function vw_handleEvent(evt) {
+      switch (evt.type) {
+        case 'mousedown':
+          this.onStart(evt);
+          break;
+        case 'mousemove':
+          this.onMove(evt);
+          break;
+        case 'mouseup':
+          this.onEnd(evt);
+          break;
+      }
+    },
+
+    /*
+     * Listens mousedown events
+     *
+     * @param {Object} the event
+     */
+    onStart: function vw_onStart(evt) {
+      evt.preventDefault();
+      this.startX = evt.pageX;
+      window.addEventListener('mousemove', this);
+      window.addEventListener('mouseup', this);
+    },
+
+    /*
+     * Listens mousemove events
+     *
+     * @param {Object} the event
+     */
+    onMove: function vw_onMove(evt) {
+      this.pan(-(this.startX - evt.pageX), 0);
+    },
+
+    /*
+     * Listens mouseup events
+     *
+     * @param {Object} the event
+     */
+    onEnd: function vw_onEnd(evt) {
+      window.removeEventListener('mousemove', this);
+      window.removeEventListener('mouseup', this);
+      var diffX = evt.pageX - this.startX;
+      var dir = 0; // Keep the position
+      if (diffX > threshold && this.currentPage > 0) {
+        dir = -1; // Previous
+      } else if (diffX < -threshold && this.currentPage < this.total - 1) {
+        dir = 1; // Next
+      }
+      this.navigate(this.currentPage + dir, 0.2);
+    }
+  };
 
   var host = document.location.host;
   var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
 
-  var shortcuts = document.querySelectorAll('#footer li');
-  for (var i = 0; i < shortcuts.length; i++) {
-    var dataset = shortcuts[i].dataset;
-    dataset.origin = dataset.origin.replace('$DOMAIN$', domain);
+  PaginationBar.init('.paginationScroller');
+
+  function initUI() {
+    DockManager.init(document.querySelector('#footer'));
+    GridManager.init('.apps', function gm_init() {
+      PaginationBar.update(1);
+      PaginationBar.show();
+      ViewController.init(document.querySelector('#content'));
+    });
   }
 
-  var mode = 'normal';
-  var footer = document.querySelector('#footer');
-  GridManager.onEditModeChange = function onEditModeChange(value) {
-    footer.dataset.mode = mode = value;
+  function start() {
+    if (Applications.isReady()) {
+      initUI();
+    } else {
+      Applications.addEventListener('ready', initUI);
+    }
   }
+
+  HomeState.init(function success(onUpgradeNeeded) {
+    if (onUpgradeNeeded) {
+      // First time the database is empty -> Dock by default
+      var appsInDockByDef = ['browser', 'dialer', 'music', 'gallery'];
+      appsInDockByDef = appsInDockByDef.map(function mapApp(name) {
+        return 'http://' + name + '.' + domain;
+      });
+      HomeState.saveShortcuts(appsInDockByDef, start, start);
+    } else {
+      start();
+    }
+  }, start);
 
   // XXX Currently the home button communicate only with the
   // system application. It should be an activity that will
   // use the system message API.
 
   var footer = document.getElementById('footer');
+  var search = document.getElementById('search');
 
   window.addEventListener('message', function onMessage(e) {
     var json = JSON.parse(e.data);
     var mode = json.type;
-    var searchContainer = document.getElementById('search');
 
     switch (mode) {
       case 'home':
         if (appFrameIsActive) {
-          var frame = document.getElementById('app-frame');
-          searchContainer.classList.remove('result');
-          footer.classList.remove('hidden');
-
-          searchContainer.addEventListener('transitionend', function trWait() {
-            searchContainer.removeEventListener('transitionend', trWait);
-            frame.parentNode.removeChild(frame);
-          });
-
-          appFrameIsActive = false;
+          closeApp();
         } else if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
           Permissions.hide();
         } else {
-          GridManager.goTo(1);
+          GridManager.goTo(0, function finish() {
+            ViewController.navigate(1, 0.2);
+          });
         }
         break;
       case 'open-in-app':
@@ -66,43 +193,38 @@ const Homescreen = (function() {
 
   var appFrameIsActive = false;
 
+  var frame = document.getElementById('app-frame');
   function openApp(url) {
-    var searchContainer = document.getElementById('search');
     // This is not really fullscreen, do we expect fullscreen?
-    var frame = document.createElement('iframe');
-    frame.id = 'app-frame';
-    frame.setAttribute('mozbrowser', 'mozbrowser');
-    frame.src = url;
-    searchContainer.appendChild(frame);
-
-    searchContainer.classList.add('result');
+    frame.classList.add('visible');
+    search.classList.add('hidden');
     footer.classList.add('hidden');
+
+    frame.addEventListener('transitionend', function onStopTransition(e) {
+      frame.removeEventListener('transitionend', onStopTransition);
+      frame.src = url;
+    });
+
     appFrameIsActive = true;
+  }
+
+  function closeApp() {
+    frame.src = 'about:blank';
+    frame.classList.remove('visible');
+    search.classList.remove('hidden');
+    footer.classList.remove('hidden');
+
+    appFrameIsActive = false;
   }
 
   // Listening for installed apps
   Applications.addEventListener('install', function oninstall(app) {
-    GridManager.install(app);
+    GridManager.install(app, true);
   });
 
   // Listening for uninstalled apps
   Applications.addEventListener('uninstall', function onuninstall(app) {
     GridManager.uninstall(app);
-  });
-
-  // Listening for clicks on the footer
-  footer.addEventListener('click', function footer_onclick(event) {
-    if (mode === 'normal') {
-      var dataset = event.target.dataset;
-      if (dataset && typeof dataset.origin !== 'undefined') {
-        var app = Applications.getByOrigin(dataset.origin);
-        if (dataset.entrypoint) {
-          app.launch('#' + dataset.entrypoint);
-        } else {
-          app.launch();
-        }
-      }
-    }
   });
 
   return {
@@ -122,4 +244,3 @@ const Homescreen = (function() {
     }
   };
 })();
-

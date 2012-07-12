@@ -15,7 +15,6 @@
   src: url('fonts/opensans-bold-webfont.woff');
 }
 
-
 html, body {
   width: 100%;
   height: 100%;
@@ -25,10 +24,6 @@ html, body {
   overflow: hidden;
   font-size: 10px;
   font-family:'Open Sans';
-}
-
-html {
-  font-size: 10px;
 }
 
 * {
@@ -47,7 +42,8 @@ section,footer,nav,a,img {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 3;
+  z-index: 1;
+  pointer-events: none;
 }
 
 #paginationBar > .paginationScroller {
@@ -58,75 +54,38 @@ section,footer,nav,a,img {
   visibility: hidden;
 }
 
-#icongrid {
+#content {
   width: 100%;
-  height: -moz-calc(100% - 4rem);
+  height: 100%;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 2;
 }
 
-/* START footer */
+#content > section {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#search {
+  -moz-transform: translateX(-100%);
+}
+
+#icongrid {
+  -moz-transform: translateX(0);
+  background-color: rgba(0,0,0, .1);
+}
 
 #footer {
-  height: 4rem;
-  width: 100%;
-  position: fixed;
-  bottom: 0;
-  z-index: 10000;
-  background-color: rgba(0,0,0, .3);
-  box-shadow: inset 0 3px 3px -3px #333;
-
   -moz-transition: -moz-transform 0.2s linear;
 }
 
 #footer.hidden {
-  -moz-transform: translateY(4rem);
+  -moz-transform: translateY(100%);
 }
-
-#footer[data-mode = 'edit'] .dock > li {
-  opacity: 0.2;
-}
-
-#footer nav {
-  height: 100%;
-  width: 100%;
-}
-
-#footer .dock {
-  height: 100%;
-  width: 100%;
-  max-width: 32rem;
-  padding: 0;
-  margin: 0 auto;
-  list-style: none;
-}
-
-#footer .dock > li {
-  height: 100%;
-  width: -moz-calc(32rem / 3);
-  float: left;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: auto;
-  font: 0/0 a;
-  opacity: 0.6;
-}
-
-#footer .dock > .logs {
-  background-image: url('../resources/images/footer/1.png');
-}
-
-#footer .dock > .contacts {
-  background-image: url('../resources/images/footer/2.png');
-}
-
-#footer .dock > .phone {
-  background-image: url('../resources/images/footer/4.png');
-}
-
-/* END footer */
 
 button:focus::-moz-focus-inner {
   border-color: transparent !important;
@@ -153,31 +112,34 @@ html[dir=rtl] .apps ol > li {
 
 #search {
   position: relative;
-  height: -moz-calc(100% + 4rem);
-  width: 200%;
-
-  margin-top: -1rem;
-  -moz-transform: translateX(-50%);
-  -moz-transition: -moz-transform 0.3s ease-in-out;
-}
-
-#search.result {
-  -moz-transform: translateX(0);
+  height: -moz-calc(100%);
+  width: -moz-calc(100%);
+  -moz-transform: translateX(-100%);
 }
 
 #search > iframe {
-  position: absolute;
-  top: 0;
-  left: 50%;
-
-  height: -moz-calc(100% - 4rem);
-  width: 50%;
-
+  height: 100%;
+  width: 100%;
   border: 0;
+  -moz-transform: translateX(0);
+  -moz-transition: -moz-transform 0.2s ease;
 }
 
+#search.hidden iframe {
+  -moz-transform: translateX(100%);
+}
 
-#search > #app-frame {
-  height: 100%;
+#app-frame {
+  position: absolute;
+  top: 0;
   left: 0;
+  border: 0;
+  -moz-transform: translateX(-100%);
+  -moz-transition: -moz-transform 0.2s ease;
+}
+
+#app-frame.visible {
+  -moz-transform: translateX(0);
+  width: 100%;
+  height: 100%;
 }

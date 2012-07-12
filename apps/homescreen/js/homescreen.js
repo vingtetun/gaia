@@ -61,7 +61,7 @@ const Homescreen = (function() {
       for (var n = 0; n < total; n++) {
         var page = this.pages[n];
         var style = page.style;
-        if (n === 1) {
+        if (n === 0) {
           var diffX = Math.max(0, Math.min(x, windowSize));
           footer.style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
           footer.style.MozTransform = 'translateX(' + diffX + 'px)';

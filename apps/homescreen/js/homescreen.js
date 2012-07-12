@@ -185,9 +185,13 @@ const Homescreen = (function() {
         } else if (GridManager.isEditMode()) {
           GridManager.setMode('normal');
           Permissions.hide();
-        } else {
+        } else if (ViewController.currentPage !== 1) {
           GridManager.goTo(0, function finish() {
             ViewController.navigate(1, 0.2);
+          });
+        } else {
+          GridManager.goTo(0, function finish() {
+            ViewController.navigate(0, 0.2);
           });
         }
         break;

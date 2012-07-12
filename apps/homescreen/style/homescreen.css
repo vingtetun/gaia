@@ -78,14 +78,6 @@ section,footer,nav,a,img {
   -moz-transform: translateX(0);
 }
 
-#footer {
-  -moz-transition: -moz-transform 0.2s linear;
-}
-
-#footer.hidden {
-  -moz-transform: translateY(100%);
-}
-
 button:focus::-moz-focus-inner {
   border-color: transparent !important;
 }

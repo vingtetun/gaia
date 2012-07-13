@@ -4,8 +4,6 @@
 const Homescreen = (function() {
 
   var threshold = window.innerWidth / 3;
-  var windowSize = window.innerWidth;
-  var footer = document.getElementById('footer');
   var searchFrame = document.querySelector('#search > iframe');
 
   /*
@@ -37,10 +35,6 @@ const Homescreen = (function() {
       for (var n = 0; n < total; n++) {
         var page = this.pages[n];
         var style = page.style;
-        if (n === 1) {
-          footer.style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
-          footer.style.MozTransform = 'translateX(' + (n - number) + '00%)';
-        }
         style.MozTransform = 'translateX(' + (n - number) + '00%)';
         style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
       }
@@ -71,11 +65,6 @@ const Homescreen = (function() {
       for (var n = 0; n < total; n++) {
         var page = this.pages[n];
         var style = page.style;
-        if (n === 0) {
-          var diffX = Math.max(0, Math.min(x, windowSize));
-          footer.style.MozTransition = duration ? ('-moz-transform ' + duration + 's ease') : '';
-          footer.style.MozTransform = 'translateX(' + diffX + 'px)';
-        } 
         var calc = (n - currentPage) * 100 + '% + ' + x + 'px';
 
         style.MozTransform = 'translateX(-moz-calc(' + calc + '))';
@@ -153,6 +142,7 @@ const Homescreen = (function() {
       PaginationBar.update(1);
       PaginationBar.show();
       ViewController.init(document.querySelector('#content'));
+      DragDropManager.init();
     });
   }
 
@@ -192,8 +182,10 @@ const Homescreen = (function() {
       case 'home':
         if (appFrameIsActive) {
           closeApp();
-        } else if (GridManager.isEditMode()) {
-          GridManager.setMode('normal');
+        } else if (document.body.dataset.mode === 'edit') {
+          document.body.dataset.mode = 'normal';
+          GridManager.saveState();
+          DockManager.saveState();
           Permissions.hide();
         } else if (ViewController.currentPage === 1 &&
                    GridManager.getCurrentPage() === 0) {
@@ -223,6 +215,7 @@ const Homescreen = (function() {
     frame.classList.add('visible');
     if (ViewController.currentPage === 0) {
       search.classList.add('hidden');
+      footer.classList.add('hidden');
       var details = {
         type: 'visibilitychange',
         data: {
@@ -251,6 +244,7 @@ const Homescreen = (function() {
       };
       searchFrame.contentWindow.postMessage(details, '*');
       search.classList.remove('hidden');
+      footer.classList.remove('hidden');
     }
 
     frame.addEventListener('transitionend', function onStopTransition(e) {
@@ -280,7 +274,11 @@ const Homescreen = (function() {
 
   // Listening for uninstalled apps
   Applications.addEventListener('uninstall', function onuninstall(app) {
-    GridManager.uninstall(app);
+    if (DockManager.contains(app)) {
+      DockManager.uninstall(app);
+    } else {
+      GridManager.uninstall(app);
+    }
   });
 
   return {
@@ -289,7 +287,7 @@ const Homescreen = (function() {
      *
      * @param {String} the app origin
      */
-    showAppDialog: function showAppDialog(origin) {
+    showAppDialog: function h_showAppDialog(origin) {
       // FIXME: localize this message
       var app = Applications.getByOrigin(origin);
       var title = 'Remove ' + app.manifest.name;
@@ -299,6 +297,10 @@ const Homescreen = (function() {
                        function onCancel() {});
     },
 
-    openApp: openApp
+    openApp: openApp,
+
+    isIcongridInViewport: function h_isIcongridInViewport() {
+      return ViewController.currentPage === 1;
+    }
   };
 })();

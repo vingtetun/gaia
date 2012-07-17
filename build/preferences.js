@@ -131,7 +131,7 @@ appSrcDirs.forEach(function parseDirectory(directoryName) {
     if (!manifest)
       return;
 
-    let rootURL = "http://" + dir + "." + GAIA_DOMAIN + (GAIA_PORT ? GAIA_PORT : '');
+    let rootURL = GAIA_SCHEME + dir + "." + GAIA_DOMAIN + (GAIA_PORT ? GAIA_PORT : '');
     let domain = dir + "." + GAIA_DOMAIN;
     privileges.push(rootURL);
     domains.push(domain);
@@ -179,7 +179,6 @@ if (DEBUG) {
   content += "user_pref(\"javascript.options.strict\", true);\n";
   content += "user_pref(\"dom.report_all_js_exceptions\", true);\n";
   content += "user_pref(\"nglayout.debug.disable_xul_fastload\", true);\n";
-  content += "user_pref(\"browser.cache.offline.enable\", false);\n";
   content += "user_pref(\"extensions.autoDisableScopes\", 0);\n";
   content += "user_pref(\"browser.startup.homepage\", \"" + homescreen + "\");\n";
 

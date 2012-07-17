@@ -12,7 +12,7 @@ const DockManager = (function() {
   function onLongPress(evt) {
     evt.preventDefault();
     evt.stopPropagation();
-    if (Homescreen.isIcongridInViewport()) {
+    if (GridManager.pageHelper.getCurrentPageNumber() >= 1) {
       document.body.dataset.mode = 'edit';
 
       if ('origin' in evt.target.dataset) {
@@ -20,6 +20,15 @@ const DockManager = (function() {
         DragDropManager.start(evt, {x: evt.pageX, y: evt.pageY});
       }
     }
+  }
+
+  /*
+   * UI Localization
+   *
+   * Currently we only translate the app names
+   */
+  function localize() {
+    dock.translate();
   }
 
   function releaseEvents() {
@@ -40,6 +49,7 @@ const DockManager = (function() {
   function render(apps) {
     dock = new Dock();
     dock.render(apps, container);
+    localize();
   }
 
   return {
@@ -102,6 +112,8 @@ const DockManager = (function() {
     isFull: function dm_isFull() {
       return dock.getNumApps() === 4;
     },
+
+    localize: localize,
 
     /*
      * Save current state

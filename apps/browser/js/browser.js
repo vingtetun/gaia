@@ -1,5 +1,7 @@
 'use strict';
 
+var _ = navigator.mozL10n.get;
+
 var Browser = {
 
   currentTab: null,
@@ -145,7 +147,7 @@ var Browser = {
           return;
         }
         tab.loading = true;
-        if (isCurrentTab) {
+        if (isCurrentTab && this.currentScreen === this.PAGE_SCREEN) {
           this.throbber.classList.add('loading');
           this.setUrlButtonMode(this.STOP);
         }
@@ -158,7 +160,7 @@ var Browser = {
           return;
         }
         tab.loading = false;
-        if (isCurrentTab) {
+        if (isCurrentTab && this.currentScreen === this.PAGE_SCREEN) {
           this.throbber.classList.remove('loading');
           this.urlInput.value = tab.title || tab.url;
           this.setUrlButtonMode(this.REFRESH);
@@ -195,7 +197,9 @@ var Browser = {
         tab.url = evt.detail;
         this.updateHistory(evt.detail);
         if (isCurrentTab) {
-          this.urlInput.value = tab.url;
+          if (this.currentScreen === this.PAGE_SCREEN) {
+            this.urlInput.value = tab.url;
+          }
         }
         break;
 
@@ -203,7 +207,8 @@ var Browser = {
         if (evt.detail) {
           tab.title = evt.detail;
           Places.setPageTitle(tab.url, tab.title);
-          if (isCurrentTab && !tab.loading) {
+          if (isCurrentTab && !tab.loading &&
+              this.currentScreen === this.PAGE_SCREEN) {
             this.urlInput.value = tab.title;
           }
           // Refresh the tab screen if we are currently viewing it, for dynamic
@@ -504,13 +509,13 @@ var Browser = {
     timestamp) {
     //TODO: localise
     const LABELS = [
-      'Future',
-      'Today',
-      'Yesterday',
-      'Last 7 Days',
-      'This Month',
-      'Last 6 Months',
-      'Older than 6 Months'
+      'future',
+      'today',
+      'yesterday',
+      'last-7-days',
+      'this-month',
+      'last-6-months',
+      'older-than-6-months'
     ];
 
     var text = '';
@@ -520,11 +525,11 @@ var Browser = {
     if (threshold == 5 && timestamp) {
       var date = new Date(timestamp);
       var now = new Date();
-      text = DateHelper.MONTHS[date.getMonth()];
+      text = _('month-' + date.getMonth());
       if (date.getFullYear() != now.getFullYear())
         text += ' ' + date.getFullYear();
     } else {
-      text = LABELS[threshold];
+      text = _(LABELS[threshold]);
     }
 
     var textNode = document.createTextNode(text);
@@ -564,7 +569,7 @@ var Browser = {
       'A' : {
         'open_in_tab': {
           src: 'default',
-          label: 'Open link in New Tab',
+          label: _('open-in-new-tab'),
           selected: this.openInNewTab.bind(this)
         }
       }
@@ -729,11 +734,6 @@ var Browser = {
     this.urlInput.value = this.currentTab.title;
     this.tabCover.setAttribute('src', this.currentTab.screenshot);
 
-    if (this.currentTab.loading) {
-      this.throbber.classList.add('loading');
-    } else {
-      this.throbber.classList.remove('loading');
-    }
     this.updateSecurityIcon();
     this.refreshButtons();
   },
@@ -775,6 +775,16 @@ var Browser = {
     } else {
       this.setTabVisibility(this.currentTab, true);
     }
+
+    if (this.currentTab.loading) {
+      this.setUrlButtonMode(this.STOP);
+      this.throbber.classList.add('loading');
+    } else {
+      var urlButton = this.currentTab.url ? this.REFRESH : this.GO;
+      this.setUrlButtonMode(urlButton);
+      this.throbber.classList.remove('loading');
+    }
+
     this.switchScreen(this.PAGE_SCREEN);
     this.urlInput.value = this.currentTab.title || this.currentTab.url;
     this.updateTabsCount();
@@ -792,7 +802,7 @@ var Browser = {
     var ul = document.createElement('ul');
 
     for (var tab in this.tabs) {
-      var title = this.tabs[tab].title || this.tabs[tab].url || 'New Tab';
+      var title = this.tabs[tab].title || this.tabs[tab].url || _('new-tab');
       var a = document.createElement('a');
       var li = document.createElement('li');
       var span = document.createElement('span');

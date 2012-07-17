@@ -32,7 +32,12 @@ var Utils = {
 
     return (new Date(time)).toLocaleFormat('%R %p');
   },
-
+  getDayDate: function re_getDayDate(timestamp) {
+    var date = new Date(timestamp);
+    var startDate = new Date(date.getFullYear(),
+                             date.getMonth(), date.getDate());
+    return startDate.getTime();
+  },
   getHeaderDate: function ut_giveHeaderDate(time) {
     switch (time.constructor) {
       case String:
@@ -43,9 +48,9 @@ var Utils = {
         break;
     }
 
-    var today = Math.floor((new Date()).getTime() / 86400000);
-    var otherDay = Math.floor(time / 86400000);
-    var dayDiff = today - otherDay;
+    var today = Utils.getDayDate((new Date()).getTime());
+    var otherDay = Utils.getDayDate(time);
+    var dayDiff = (today - otherDay) / 86400000;
 
     if (isNaN(dayDiff))
       return '(incorrect date)';
@@ -62,21 +67,21 @@ var Utils = {
   }
 };
 
-(function() {
-  var updateHeadersDate = function updateHeadersDate() {
-    var labels = document.querySelectorAll('div.groupHeader');
-    var i = labels.length;
-    while (i--) {
-      labels[i].textContent = giveHeaderDate(labels[i].dataset.time);
-    }
-  };
-  var timer = setInterval(updateHeadersDate, 60 * 1000);
+// (function() {
+//   var updateHeadersDate = function updateHeadersDate() {
+//     var labels = document.querySelectorAll('div.groupHeader');
+//     var i = labels.length;
+//     while (i--) {
+//       labels[i].textContent = giveHeaderDate(labels[i].dataset.time);
+//     }
+//   };
+//   var timer = setInterval(updateHeadersDate, 60 * 1000);
 
-  document.addEventListener('mozvisibilitychange', function visibility(e) {
-    clearTimeout(timer);
-    if (!document.mozHidden) {
-      updateHeadersDate();
-      timer = setInterval(updateHeadersDate, 60 * 1000);
-    }
-  });
-})();
+//   document.addEventListener('mozvisibilitychange', function visibility(e) {
+//     clearTimeout(timer);
+//     if (!document.mozHidden) {
+//       updateHeadersDate();
+//       timer = setInterval(updateHeadersDate, 60 * 1000);
+//     }
+//   });
+// })();

@@ -2,17 +2,6 @@
 'use strict';
 
 const Homescreen = (function() {
-  /*
-  // Temporaty send an event to the embedded search when it is show hidden
-  var details = {
-    type: 'visibilitychange',
-    data: {
-      hidden: number ? false : true
-    }
-  }
-  searchFrame.contentWindow.postMessage(details, '*');
-  */
-
   var host = document.location.host;
   var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
 
@@ -113,7 +102,6 @@ const Homescreen = (function() {
   function closeApp() {
     appFrame.classList.remove('visible');
     if (search.classList.contains('hidden')) {
-      searchFrame.contentWindow.postMessage(details, '*');
       search.classList.remove('hidden');
       footer.classList.remove('hidden');
     }

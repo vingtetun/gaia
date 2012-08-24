@@ -96,6 +96,7 @@
      */
 }
 
+#screen > [data-z-index-level="app"] .navigation-controls,
 #screen > [data-z-index-level="app"] > iframe.appWindow.active {
   z-index: 2;
 }

@@ -337,8 +337,9 @@ var WindowManager = (function() {
     }
   }
 
-  function appendFrame(origin, url, name, manifest, manifestURL, background) {
-    var frame = document.createElement('iframe');
+  function appendFrame(origin, url, name, manifest, manifestURL, background,
+                       frameElement) {
+    var frame = frameElement || document.createElement('iframe');
     frame.id = 'appframe' + nextAppId++;
     frame.className = 'appWindow';
     frame.setAttribute('mozallowfullscreen', 'true');
@@ -353,7 +354,11 @@ var WindowManager = (function() {
     // They also need to be marked as 'mozapp' to be recognized as apps by the
     // platform.
     frame.setAttribute('mozbrowser', 'true');
-    frame.setAttribute('mozapp', manifestURL);
+    if (manifestURL) {
+      frame.setAttribute('mozapp', manifestURL);
+    } else {
+      frame.dataset.bookmark = true;
+    }
 
     // These apps currently have bugs preventing them from being
     // run out of process. All other apps will be run OOP.
@@ -421,7 +426,7 @@ var WindowManager = (function() {
     }
 
     // Add the iframe to the document
-    windows.appendChild(frame);
+    windows.insertBefore(frame, document.getElementById('navigation-controls'));
 
     // And map the app origin to the info we need for the app
     runningApps[origin] = {
@@ -535,8 +540,19 @@ var WindowManager = (function() {
         // as the homescreen.
         if (!homescreen) {
           homescreen = origin;
+
           var frame = runningApps[homescreen].frame;
           frame.dataset.zIndexLevel = 'homescreen';
+          frame.addEventListener('mozbrowseropenwindow', function(evt) {
+            var detail = evt.detail;
+            if (detail.name != 'bookmark')
+              return;
+            evt.stopImmediatePropagation();
+
+            var url = 'http://127.0.0.1/link.html' || detail.url;
+            appendFrame(url, url, url, {}, null, false, detail.frameElement);
+          }, true);
+
           return;
         }
 

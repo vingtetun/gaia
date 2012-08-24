@@ -22,6 +22,7 @@
     <script defer src="js/source_view.js"></script>
     <script defer src="js/storage.js"></script>
     <script defer src="js/hardware_buttons.js"></script>
+    <script defer src="js/navigation_controls.js"></script>
 
     <!-- Grid View -->
     <link rel="stylesheet" type="text/css" href="style/gridview/gridview.css">
@@ -207,6 +208,10 @@
 
       <div id="windows" data-z-index-level="app">
         <!-- application windows are added here -->
+        <div id="navigation-controls">
+          <div id="go-back" class="navigation-controls" onclick="NavigationControls.goBack();">&lt;</div>
+          <div id="go-forward" class="navigation-controls" onclick="NavigationControls.goForward();">&gt;</div>
+        </div>
       </div>
 
       <div id="dialog-overlay" data-z-index-level="dialog-overlay">

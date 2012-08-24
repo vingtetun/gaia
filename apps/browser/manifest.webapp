@@ -65,12 +65,5 @@
   "icons": {
     "120": "/style/icons/Browser.png",
     "60": "/style/icons/60/Browser.png"
-  },
-  "activities": {
-    "view": {
-      "filters": {
-        "type": "url"
-      }
-    }
   }
 }

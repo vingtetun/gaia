@@ -15,13 +15,7 @@ var Bookmark = function Bookmark(params) {
 
 Bookmark.prototype = {
   launch: function bookmark_launch() {
-    new MozActivity({
-      name: 'view',
-      data: {
-        type: 'url',
-        url: this.origin
-      }
-    });
+    window.open(this.origin, 'bookmark');
   },
 
   uninstall: function bookmark_uninstall() {

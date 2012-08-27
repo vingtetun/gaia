@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="pragma" content="no-cache">
+    <link rel="stylesheet" type="text/css" href="style/launcher.css">
+    <script type="text/javascript" defer src="js/launcher.js"></script>
+  </head>
+
+  <body>
+    <iframe id="app" src="about:blank" mozbrowser remote></iframe>
+    <img id="loading" src="style/images/progress.gif"></img>
+
+    <div id="advertisement">
+      <span>Tap to view buttonbar</span>
+      <span>&darr;</span>
+    </div>
+
+    <menu id="toolbar" type="toolbar" class="hidden">
+      <button type="button" value="" id="back-button" alt="Back"
+              title="" data-disabled="disabled"></button>
+      <button type="button" value="" id="forward-button" alt="Forward"
+              title="" data-disabled="disabled"></button>
+      <button type="button" value="" id="full-button" alt="FullScreen"
+              title=""></button>
+      <button type="button" value="" id="reload-button" alt="Reload"
+              title=""></button>
+    </menu>
+  </body>
+</html>

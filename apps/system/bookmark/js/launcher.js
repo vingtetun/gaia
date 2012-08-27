@@ -102,8 +102,6 @@ var Launcher = (function() {
   }
 
   window.addEventListener('message', function onMessage(e) {
-    loading.hidden = false;
-    back.dataset.disabled = true;
     iframe.src = currentURL = e.data;
     iframe.addEventListener('load', function end() {
       iframe.removeEventListener('load', end);

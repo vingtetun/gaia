@@ -167,7 +167,8 @@ var WindowManager = (function() {
       setTimeout(openCallback);
     } else if (classes.contains('faded') && prop === 'opacity') {
 
-      openFrame.setVisible(true);
+      if (openFrame.setVisible)
+        openFrame.setVisible(true);
       openFrame.focus();
 
       // Dispatch a 'appopen' event,
@@ -339,13 +340,13 @@ var WindowManager = (function() {
 
   function appendFrame(origin, url, name, manifest, manifestURL, background,
                        frameElement) {
+    var bookmark = false;
     var frame = frameElement || document.createElement('iframe');
     frame.id = 'appframe' + nextAppId++;
     frame.className = 'appWindow';
     frame.setAttribute('mozallowfullscreen', 'true');
     frame.dataset.frameType = 'window';
     frame.dataset.frameOrigin = origin;
-    frame.src = url;
 
     // Note that we don't set the frame size here.  That will happen
     // when we display the app in setDisplayedApp()
@@ -354,10 +355,21 @@ var WindowManager = (function() {
     // They also need to be marked as 'mozapp' to be recognized as apps by the
     // platform.
     frame.setAttribute('mozbrowser', 'true');
+
     if (manifestURL) {
       frame.setAttribute('mozapp', manifestURL);
     } else {
-      frame.dataset.bookmark = true;
+      frame.dataset.bookmark = bookmark = true;
+    }
+
+    if (!bookmark) {
+      frame.src = url;
+    } else {
+      frame.src = 'bookmark/launcher.html';
+      frame.addEventListener('load', function end() {
+        frame.removeEventListener('load', end);
+        frame.contentWindow.postMessage(url, '*');
+      });
     }
 
     // These apps currently have bugs preventing them from being
@@ -417,7 +429,7 @@ var WindowManager = (function() {
       // list) (bug 782460)
     ];
 
-    if (outOfProcessBlackList.indexOf(name) === -1) {
+    if (!bookmark && outOfProcessBlackList.indexOf(name) === -1) {
       // FIXME: content shouldn't control this directly
       frame.setAttribute('remote', 'true');
       console.info('%%%%% Launching', name, 'as remote (OOP)');
@@ -426,7 +438,7 @@ var WindowManager = (function() {
     }
 
     // Add the iframe to the document
-    windows.insertBefore(frame, document.getElementById('navigation-controls'));
+    windows.appendChild(frame);
 
     // And map the app origin to the info we need for the app
     runningApps[origin] = {
@@ -508,7 +520,6 @@ var WindowManager = (function() {
       // that handles the pending system message.
       // We will launch it in background if it's not handling an activity.
       case 'open-app':
-
         UtilityTray.hide();
 
         if (isRunning(origin)) {
@@ -548,10 +559,16 @@ var WindowManager = (function() {
             if (detail.name != 'bookmark')
               return;
             evt.stopImmediatePropagation();
+            var url = detail.url;
 
-            var url = 'http://127.0.0.1/link.html' || detail.url;
-            appendFrame(url, url, url, {}, null, false, detail.frameElement);
-          }, true);
+            if (isRunning(url)) {
+              if (displayedApp === url)
+                return;
+              setDisplayedApp(url);
+            } else {
+              appendFrame(url, url, url, {}, null, false);
+            }
+          });
 
           return;
         }

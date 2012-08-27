@@ -107,10 +107,6 @@ body {
   visibility: hidden;
 }
 
-#windows > iframe[data-bookmark].active +  #navigation-controls > .navigation-controls {
-  display: block;
-}
-
 #windowSprite {
   position: absolute;
   top: 20px;
@@ -205,27 +201,3 @@ iframe.backgroundWindow {
   visibility: visible;
   pointer-events: auto;
 }
-
-
-/* Navigation Controls */
-.navigation-controls {
-  position: fixed;
-  bottom: 100px;
-  width: 80px;
-  height: 60px;
-  line-height: 60px;
-  background: rgba(0,0,0,0.5);
-  color: white;
-  font-size: 50px;
-  text-align: center;
-  display: none;
-}
-
-#go-back {
-  left: 0;
-}
-
-#go-forward {
-  right: 0;
-}
-

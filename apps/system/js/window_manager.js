@@ -338,9 +338,7 @@ var WindowManager = (function() {
     }
   }
 
-  function appendFrame(origin, url, name, manifest, manifestURL, background,
-                       frameElement) {
-    var bookmark = false;
+  function appendFrame(origin, url, name, manifest, manifestURL, background) {
     var frame = frameElement || document.createElement('iframe');
     frame.id = 'appframe' + nextAppId++;
     frame.className = 'appWindow';
@@ -358,11 +356,6 @@ var WindowManager = (function() {
 
     if (manifestURL) {
       frame.setAttribute('mozapp', manifestURL);
-    } else {
-      frame.dataset.bookmark = bookmark = true;
-    }
-
-    if (!bookmark) {
       frame.src = url;
     } else {
       frame.src = 'bookmark/launcher.html?url=' + url;

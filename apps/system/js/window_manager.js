@@ -365,11 +365,7 @@ var WindowManager = (function() {
     if (!bookmark) {
       frame.src = url;
     } else {
-      frame.src = 'bookmark/launcher.html';
-      frame.addEventListener('load', function end() {
-        frame.removeEventListener('load', end);
-        frame.contentWindow.postMessage(url, '*');
-      });
+      frame.src = 'bookmark/launcher.html?url=' + url;
     }
 
     // These apps currently have bugs preventing them from being
@@ -429,7 +425,7 @@ var WindowManager = (function() {
       // list) (bug 782460)
     ];
 
-    if (!bookmark && outOfProcessBlackList.indexOf(name) === -1) {
+    if (outOfProcessBlackList.indexOf(name) === -1) {
       // FIXME: content shouldn't control this directly
       frame.setAttribute('remote', 'true');
       console.info('%%%%% Launching', name, 'as remote (OOP)');

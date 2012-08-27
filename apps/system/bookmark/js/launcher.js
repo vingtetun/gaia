@@ -109,11 +109,12 @@ var Launcher = (function() {
     loading.hidden = true;
   }
 
-  window.addEventListener('message', function onMessage(e) {
-    iframe.src = e.data;
-    iframe.addEventListener('load', function end() {
-      iframe.removeEventListener('load', end);
-      iframe.addEventListener('mozbrowserlocationchange', locChange);
-    });
-  });
+  function getURL() {
+    var regex = new RegExp("[\\?&]url=([^&#]*)");
+    var results = regex.exec(window.location.href);
+    return decodeURI(results[1]);
+  }
+
+  iframe.src = getURL();
+  iframe.addEventListener('mozbrowserlocationchange', locChange);
 }());

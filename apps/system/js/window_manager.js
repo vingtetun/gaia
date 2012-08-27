@@ -552,18 +552,16 @@ var WindowManager = (function() {
           frame.dataset.zIndexLevel = 'homescreen';
           frame.addEventListener('mozbrowseropenwindow', function(evt) {
             var detail = evt.detail;
-            if (detail.name != 'bookmark')
+            if (!detail.name)
               return;
 
             evt.stopImmediatePropagation();
 
             var url = detail.url, manifest;
-            if (detail.features) {
-              try {
-                manifest = JSON.parse(detail.features);
-              } catch(e) {
-                manifest = {name: url};
-              }
+            try {
+              manifest = JSON.parse(detail.name);
+            } catch(e) {
+              manifest = {name: url};
             }
 
             if (isRunning(url)) {

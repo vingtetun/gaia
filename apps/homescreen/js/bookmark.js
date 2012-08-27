@@ -15,7 +15,7 @@ var Bookmark = function Bookmark(params) {
 
 Bookmark.prototype = {
   launch: function bookmark_launch() {
-    window.open(this.origin, 'bookmark', JSON.stringify(this.manifest));
+    window.open(this.origin, JSON.stringify(this.manifest));
   },
 
   uninstall: function bookmark_uninstall() {

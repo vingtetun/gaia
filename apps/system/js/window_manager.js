@@ -558,15 +558,24 @@ var WindowManager = (function() {
             var detail = evt.detail;
             if (detail.name != 'bookmark')
               return;
+
             evt.stopImmediatePropagation();
-            var url = detail.url;
+
+            var url = detail.url, manifest;
+            if (detail.features) {
+              try {
+                manifest = JSON.parse(detail.features);
+              } catch(e) {
+                manifest = {name: url};
+              }
+            }
 
             if (isRunning(url)) {
               if (displayedApp === url)
                 return;
               setDisplayedApp(url);
             } else {
-              appendFrame(url, url, url, {}, null, false);
+              appendFrame(url, url, manifest.name, manifest, null, false);
             }
           });
 

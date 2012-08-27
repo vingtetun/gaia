@@ -68,7 +68,12 @@ menu button {
   float: left;
 }
 
-#back-button[data-disabled] {
+#forward-button {
+  background-image: url("images/forward.png");
+  float: left;
+}
+
+menu button[data-disabled] {
   opacity: .2;
 }
 

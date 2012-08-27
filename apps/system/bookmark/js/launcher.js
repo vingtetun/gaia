@@ -11,6 +11,8 @@ var Launcher = (function() {
 
   var back = document.getElementById('back-button');
 
+  var forward = document.getElementById('forward-button');
+
   var advertisement = document.getElementById('advertisement');
 
   function removeAdvertisement() {
@@ -59,17 +61,15 @@ var Launcher = (function() {
     iframe.reload(true);
   });
 
-  var locationchange = 0, currentURL;
-
   function locChange(evt) {
-    locationchange++;
-
-    if (locationchange === 0 || evt.detail === currentURL ||
-        evt.detail === currentURL + '/') {
-      locationchange = 0;
-      back.dataset.disabled = true;
-      back.removeEventListener('mousedown', goBack);
-      return;
+    iframe.getCanGoForward().onsuccess = function(e) {
+      if (e.target.result === true) {
+        delete forward.dataset.disabled;
+        forward.addEventListener('mousedown', goForward);
+      } else {
+        forward.dataset.disabled = true;
+        forward.removeEventListener('mousedown', goForward);
+      }
     }
 
     iframe.getCanGoBack().onsuccess = function(e) {
@@ -87,8 +87,16 @@ var Launcher = (function() {
     evt.stopPropagation();
     iframe.getCanGoBack().onsuccess = function(e) {
       if (e.target.result === true) {
-        locationchange -= 2;
         iframe.goBack();
+      }
+    }
+  }
+
+  function goForward(evt) {
+    evt.stopPropagation();
+    iframe.getCanGoForward().onsuccess = function(e) {
+      if (e.target.result === true) {
+        iframe.goForward();
       }
     }
   }
@@ -102,7 +110,7 @@ var Launcher = (function() {
   }
 
   window.addEventListener('message', function onMessage(e) {
-    iframe.src = currentURL = e.data;
+    iframe.src = e.data;
     iframe.addEventListener('load', function end() {
       iframe.removeEventListener('load', end);
       iframe.addEventListener('mozbrowserlocationchange', locChange);

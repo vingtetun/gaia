@@ -358,6 +358,7 @@ var WindowManager = (function() {
       frame.setAttribute('mozapp', manifestURL);
       frame.src = url;
     } else {
+      frame.setAttribute('mozapp', document.location + 'manifest.webapp');
       frame.src = 'bookmark/launcher.html?url=' + url;
     }
 

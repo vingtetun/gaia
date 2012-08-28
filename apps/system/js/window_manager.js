@@ -358,7 +358,7 @@ var WindowManager = (function() {
       frame.setAttribute('mozapp', manifestURL);
       frame.src = url;
     } else {
-      frame.src = 'bookmark/launcher.html?url=' + url;
+      frame.src = 'bookmark/launcher.html?url=' + url + '&name=' + name ;
     }
 
     // These apps currently have bugs preventing them from being

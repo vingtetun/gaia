@@ -3,6 +3,8 @@ html, body {
   height: 100%;
   overflow: hidden;
   font-size: 10px;
+	margin: 0;
+	padding: 0;
 }
 
 iframe {
@@ -11,6 +13,8 @@ iframe {
   left: 0;
   width: 100%;
   height: -moz-calc(100% - 1rem);
+	margin: 0;
+	padding: 0;
 }
 
 #loading {
@@ -19,6 +23,27 @@ iframe {
   left: 0;
   width: 100%;
   z-index: 1000;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+	height: 100%;
+  width: 100%;
+  z-index: 999;
+	background-color: #000;
+	color: grey;
+	font-size: 7rem;
+	font-weight: bold;
+	overflow: hidden;
+  word-wrap: break-word;
+	white-space: pre-wrap;
+	padding: 4rem 0 0 0;
+	text-align: center;
+	opacity: .7;
+	-moz-transition: opacity .5s;
+	pointer-events: none;
 }
 
 menu[type="toolbar"] {
@@ -90,7 +115,6 @@ input::-moz-focus-inner {
 }
 
 #advertisement {
-	color: #000;
 	text-align: center;
 	pointer-events: none;
 	-moz-animation-name: bounce;
@@ -108,8 +132,10 @@ input::-moz-focus-inner {
 }
 
 #advertisement span {
-  font-size: 2.2rem;
+  font-size: 2rem;
+	font-weight: bold;
   display: block;
+	color: #fff;
 }
 
 @-moz-keyframes bounce {

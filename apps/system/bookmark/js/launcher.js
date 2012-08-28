@@ -4,6 +4,8 @@
 var Launcher = (function() {
 
   var loading = document.getElementById('loading');
+  var overlay = document.getElementById('overlay');
+  overlay.textContent = getName();
 
   var iframe = document.getElementById('app');
   iframe.addEventListener('mozbrowserloadstart', mozbrowserloadstart);
@@ -25,7 +27,7 @@ var Launcher = (function() {
   var toolbarTimeout;
 
   var isToolbarDisplayed = false;
-  function toggleToolbar() {
+  function toggleToolbar(evt) {
     clearTimeout(toolbarTimeout);
     toolbar.classList.toggle('hidden');
     isToolbarDisplayed = !isToolbarDisplayed;
@@ -115,6 +117,20 @@ var Launcher = (function() {
     return decodeURI(results[1]);
   }
 
+  function getName() {
+    var regex = new RegExp("[\\?&]name=([^&#]*)");
+    var results = regex.exec(window.location.href);
+    return decodeURI(results[1]);
+  }
+
   iframe.src = getURL();
-  iframe.addEventListener('mozbrowserlocationchange', locChange);
+  iframe.addEventListener('load', function load() {
+    iframe.removeEventListener('load', load);
+    iframe.addEventListener('mozbrowserlocationchange', locChange);
+    overlay.style.opacity = 0;
+    overlay.addEventListener('transitionend', function transitionend() {
+      overlay.removeEventListener('transitionend', transitionend);
+      overlay.parentNode.removeChild(overlay);
+    })
+  });
 }());

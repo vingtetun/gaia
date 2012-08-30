@@ -57,8 +57,7 @@ if (!fb.link) {
                                       contact.name[0].length > 0) {
         // First the name condition is put there
         NAME_COND[2] = contact.name[0].toLowerCase();
-      }
-      else {
+      } else {
          // The condition will be false by definition
         NAME_COND[2] = 'A';
       }
@@ -91,12 +90,11 @@ if (!fb.link) {
       var filter = [];
 
       if (contact.givenName && contact.givenName.length > 0 &&
-                               contact.givenName[0].length > 0) {
+          contact.givenName[0].length > 0) {
         // First the name condition is put there
         FIRST_NAME_COND[2] = contact.givenName[0].toLowerCase();
-      }
-      else {
-         // The condition will be false by definition
+      } else {
+        // The condition will be false by definition
         FIRST_NAME_COND[2] = 'A';
       }
 
@@ -107,8 +105,7 @@ if (!fb.link) {
                                 contact.familyName[0].length > 0) {
         // First the name condition is put there
         LAST_NAME_COND[2] = contact.familyName[0].toLowerCase();
-      }
-      else {
+      } else {
          // The condition will be false by definition
         LAST_NAME_COND[2] = 'A';
       }
@@ -132,15 +129,14 @@ if (!fb.link) {
       var req = fb.utils.getContactData(cid);
 
       req.onsuccess = function() {
-        if (req.result) {
-          cdata = req.result;
-          numQueries = 1;
-          currentRecommendation = null;
-          doGetRemoteProposal(access_token, cdata, buildQuery(cdata));
-        }
-        else {
+        if (!req.result) {
           throw ('FB: Contact to be linked not found' + contactId);
         }
+
+        cdata = req.result;
+        numQueries = 1;
+        currentRecommendation = null;
+        doGetRemoteProposal(access_token, cdata, buildQuery(cdata));
       }
       req.onerror = function() {
         throw ('FB: Error while retrieving contact data');
@@ -203,8 +199,7 @@ if (!fb.link) {
 
       if ((inError || response.data.length === 0) && numQueries <= 1) {
         getRemoteProposalByNames(access_token, cdata);
-      }
-      else {
+      } else {
         var data = response.data;
         currentRecommendation = data;
 
@@ -241,27 +236,26 @@ if (!fb.link) {
 
 
     link.friendsReady = function(response) {
-      if (typeof response.error === 'undefined') {
-        viewButton.textContent = 'View Only Recommended';
-        viewButton.onclick = UI.viewRecommended;
-
-        allFriends = response;
-
-        response.data.forEach(function(item) {
-            if (!item.email) {
-              item.email = '';
-            }
-        });
-
-        clearList();
-
-        utils.templates.append(friendsList, response.data);
-      }
-      else {
+      if (typeof response.error !== 'undefined') {
         window.console.error('FB: Error while retrieving friends',
                               response.error.code, response.error.message);
+
       }
 
+      viewButton.textContent = 'View Only Recommended';
+      viewButton.onclick = UI.viewRecommended;
+
+      allFriends = response;
+
+      response.data.forEach(function(item) {
+        if (!item.email) {
+          item.email = '';
+        }
+      });
+
+      clearList();
+
+      utils.templates.append(friendsList, response.data);
       document.body.dataset.state = 'selection';
     }
 
@@ -275,20 +269,20 @@ if (!fb.link) {
       req.onsuccess = function() {
         if (req.result) {
           notifyParent(friendUid);
+          return;
         }
-        else {
-          var importReq = fb.importer.importFriend(friendUid, access_token);
-          document.body.dataset.state = 'waiting';
 
-          importReq.onsuccess = function() {
-            document.body.dataset.state = 'selection';
-            notifyParent(friendUid);
-          }
+        var importReq = fb.importer.importFriend(friendUid, access_token);
+        document.body.dataset.state = 'waiting';
 
-          importReq.onerror = function() {
-            window.console.error('FB: Error while importing friend data');
-            document.body.dataset.state = 'selection';
-          }
+        importReq.onsuccess = function() {
+          document.body.dataset.state = 'selection';
+          notifyParent(friendUid);
+        }
+
+        importReq.onerror = function() {
+          window.console.error('FB: Error while importing friend data');
+          document.body.dataset.state = 'selection';
         }
       }
       req.onerror = function() {
@@ -317,8 +311,7 @@ if (!fb.link) {
     UI.viewAllFriends = function(event) {
       if (!allFriends) {
         getRemoteAll();
-      }
-      else {
+      } else {
         link.friendsReady(allFriends);
       }
     }

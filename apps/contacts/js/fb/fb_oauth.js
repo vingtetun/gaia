@@ -89,7 +89,7 @@ if (typeof fb.oauth === 'undefined') {
         accessTokenCbData.callback(access_token);
       } else {
         window.console.error('FB: Error in state', parameters.state,
-                                  accessTokenCbData.state);
+                             accessTokenCbData.state);
       }
     }
 

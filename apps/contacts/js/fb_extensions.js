@@ -46,13 +46,12 @@ if (typeof Contacts.extFb === 'undefined') {
         }
 
         req.onerror = function() {
-           window.console.error('FB: Error while linking contacts', req.error);
+          console.error('FB: Error while linking contacts', req.error);
         }
       }
 
       mozContReq.onerror = function() {
-         window.console.error('FB: Error while linking contacts',
-                              mozContReq.error);
+        console.error('FB: Error while linking contacts', mozContReq.error);
       }
     }
 
@@ -68,7 +67,7 @@ if (typeof Contacts.extFb === 'undefined') {
       }
 
       freq.onerror = function() {
-        window.console.error('FB: Error while unlinking', freq.error);
+        console.error('FB: Error while unlinking', freq.error);
       }
     }
 

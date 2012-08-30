@@ -88,9 +88,9 @@ if (!window.fb.contacts) {
 
           req.onsuccess = function(e) {
             var data = e.target.result;
-            var out = {};
+            var ret = {};
             data.forEach(function(contact) {
-              out[contact.uid] = contact;
+              ret[contact.uid] = contact;
             });
             retRequest.done(out);
           };
@@ -138,8 +138,7 @@ if (!window.fb.contacts) {
       };
 
       req.onerror = function(e) {
-        window.console.error('FB: Error while opening the DB: ',
-                                                        e.target.error.name);
+        console.error('FB: Error while opening the DB: ', e.target.error.name);
         if (typeof cb === 'function') {
           cb();
         }

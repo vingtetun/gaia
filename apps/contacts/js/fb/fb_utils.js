@@ -17,8 +17,7 @@ if (!fb.utils) {
     req.onsuccess = function(e) {
       if (e.target.result && e.target.result.length > 0) {
         outReq.done(e.target.result[0]);
-      }
-      else {
+      } else {
         outReq.done(null);
       }
     }
@@ -45,8 +44,7 @@ if (!fb.utils) {
     req.onsuccess = function(e) {
       if (e.target.result && e.target.result.length > 0) {
         outReq.done(e.target.result[0]);
-      }
-      else {
+      } else {
         outReq.done(null);
       }
     }

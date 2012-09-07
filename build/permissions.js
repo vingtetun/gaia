@@ -14,7 +14,8 @@ let permissionList = ["power", "sms", "contacts", "telephony",
                       "pin-app", "wifi-manage", "wifi", "geolocation",
                       "webapps-manage", "desktop-notification",
                       "device-storage", "alarms", "alarm", "attention",
-                      "content-camera", "camera", "tcp-socket", "bluetooth"];
+                      "content-camera", "camera", "tcp-socket", "bluetooth",
+                      "webapps"];
 
 let commonPermissionList = ['offline-app', 'indexedDB-unlimited',
                             'webapps-manage', 'pin-app',
@@ -35,7 +36,8 @@ Gaia.webapps.forEach(function (webapp) {
   let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(rootURL, null, null),
                                                  appId, false);
 
-  let perms = commonPermissionList.concat(manifest.permissions);
+  let perms = manifest.permissions ? commonPermissionList.concat(manifest.permissions)
+                                   : commonPermissionList;
 
   if (perms) {
     for each(let name in perms) {

@@ -39,8 +39,8 @@ var AttentionScreen = {
       document.mozCancelFullScreen();
 
     // Check if the app has the permission to open attention screens
-    var manifestURL = evt.target.getAttribute('mozapp');
-    var app = Applications.getByManifestURL(manifestURL);
+    var origin = evt.target.dataset.frameOrigin;
+    var app = Applications.getByOrigin(origin);
 
     if (!app || !this._hasAttentionPermission(app))
       return;

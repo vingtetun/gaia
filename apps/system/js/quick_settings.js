@@ -141,8 +141,7 @@ var QuickSettings = {
             var host = document.location.host;
             var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
             var protocol = document.location.protocol + '//';
-            Applications.getByManifestURL(protocol + 'settings.' +
-                                          domain + '/manifest.webapp').launch();
+            Applications.getByOrigin(protocol + 'settings.' + domain).launch();
 
             window.addEventListener('appopen', function hideTray(evt) {
               window.removeEventListener('appopen', hideTray);

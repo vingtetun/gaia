@@ -1112,9 +1112,8 @@ var WindowManager = (function() {
     var frame = runningApps[homescreen].frame;
     frame.addEventListener('mozbrowseropenwindow', function handleWrapper(evt) {
       var detail = evt.detail;
-      if (detail.name != '_blank')
+      if (detail.name !== '_blank')
         return;
-
       evt.stopImmediatePropagation();
 
       var url = detail.url;

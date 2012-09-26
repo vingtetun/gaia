@@ -22,7 +22,11 @@ Bookmark.prototype = {
       icon: this.manifest.icons['60']
     }
 
+<<<<<<< HEAD
     return window.open(this.origin, '_blank', JSON.stringify(features));
+=======
+    window.open(this.origin, '_blank', JSON.stringify(features));
+>>>>>>> upstream/master
   },
 
   uninstall: function bookmark_uninstall() {

@@ -14,7 +14,8 @@ var EvmeManager = (function() {
     if (currentWindow) {
       currentWindow.close();
     }
-    currentWindow = evmeApp.launch(true);
+    
+    currentWindow = evmeApp.launch(params.url);
     setVisibilityChange(false);
   }
 
@@ -39,7 +40,7 @@ var EvmeManager = (function() {
   function setVisibilityChange(visible) {
     Evme.visibilityChange(visible);
   }
-  
+
   function openUrl(url) {
     new MozActivity({
       name: 'view',
@@ -73,11 +74,11 @@ var EvmeManager = (function() {
       footerStyle.MozTransform = 'translateY(0)';
       Evme.setOpacityBackground(0);
     },
-    
+
     isAppInstalled: function(url) {
         return Applications.isInstalled(url);
     },
-    
+
     openUrl: openUrl
   };
 
@@ -97,5 +98,5 @@ window.addEventListener("load", function() {
   var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
   Evme.init({
       "gaiaDomain": domain
-  }); 
+  });
 });

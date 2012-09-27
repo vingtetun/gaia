@@ -1116,28 +1116,33 @@ var WindowManager = (function() {
         return;
       evt.stopImmediatePropagation();
 
-      var url = detail.url;
-      if (displayedApp === url) {
-        return;
-      }
+      var origin = detail.url;
 
-      if (isRunning(url)) {
-        setDisplayedApp(url);
-        return;
-      }
-
+      var features = {};
       var frameElement = detail.frameElement;
       try {
-        var features = JSON.parse(detail.features);
-        frameElement.dataset.name = features.name || url;
+        features = JSON.parse(detail.features);
+        frameElement.dataset.name = features.name || origin;
         frameElement.dataset.icon = features.icon || '';
+        frameElement.dataset.bookmark = features.bookmark;
       } catch(ex) { }
 
-      appendFrame(frameElement, url, url, frameElement.dataset.name, {
+      origin = features.origin || origin;
+
+      if (displayedApp === origin) {
+        return;
+      }
+
+      if (isRunning(origin)) {
+        setDisplayedApp(origin);
+        return;
+      }
+
+      appendFrame(frameElement, origin, detail.url, frameElement.dataset.name, {
         'name': frameElement.dataset.name
       }, null);
 
-      setDisplayedApp(url);
+      setDisplayedApp(origin);
     });
   }
 

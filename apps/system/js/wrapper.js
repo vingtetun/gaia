@@ -111,12 +111,11 @@ var Launcher = (function() {
   function onDisplayedApplicationChange() {
     setTimeout(toggleButtonBar, BUTTONBAR_INITIAL_OPEN_TIMEOUT);
 
-    var name = currentAppFrame().dataset.name;
-    if (name) {
-      bookmarkButton.dataset.disabled = true;
+    if (currentAppFrame().dataset.bookmark === 'true') {
+      delete bookmarkButton.dataset.disabled;
       return;
     }
-    delete bookmarkButton.dataset.disabled;
+    bookmarkButton.dataset.disabled = true;
   }
 
   bookmarkButton.addEventListener('click', function doBookmark(evt) {
@@ -130,6 +129,8 @@ var Launcher = (function() {
       if (!value)
         return;
 
+      bookmarkButton.dataset.disabled = true;
+      delete currentAppFrame().dataset.bookmark;
       new MozActivity({
         name: 'save-bookmark',
         data: {

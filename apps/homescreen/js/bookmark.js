@@ -20,7 +20,8 @@ Bookmark.prototype = {
     var features = {
       name: this.manifest.name,
       icon: this.manifest.icons['60'],
-      origin: this.origin
+      origin: this.origin,
+      bookmark: !Applications.isInstalled(this.origin)
     }
 
     return window.open(url || this.origin, '_blank', JSON.stringify(features));

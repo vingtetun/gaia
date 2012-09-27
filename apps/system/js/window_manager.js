@@ -1124,6 +1124,7 @@ var WindowManager = (function() {
         features = JSON.parse(detail.features);
         frameElement.dataset.name = features.name || origin;
         frameElement.dataset.icon = features.icon || '';
+        frameElement.dataset.bookmark = new Boolean(features.bookmark);
       } catch(ex) { }
 
       origin = features.origin || origin;

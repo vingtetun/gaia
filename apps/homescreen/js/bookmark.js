@@ -16,13 +16,14 @@ var Bookmark = function Bookmark(params) {
 };
 
 Bookmark.prototype = {
-  launch: function bookmark_launch() {
+  launch: function bookmark_launch(url) {
     var features = {
       name: this.manifest.name,
-      icon: this.manifest.icons['60']
+      icon: this.manifest.icons['60'],
+      origin: this.origin
     }
 
-    return window.open(this.origin, '_blank', JSON.stringify(features));
+    return window.open(url || this.origin, '_blank', JSON.stringify(features));
   },
 
   uninstall: function bookmark_uninstall() {

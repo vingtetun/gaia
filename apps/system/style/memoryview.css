@@ -1,16 +1,20 @@
 #debug-memory {
   position: absolute;
   top: 0;
-  left: calc(50% - 33px);
+  left: calc(50% - 70px);
   display: block;
   height: 22px;
-  width: 66px;
-  background-color: lightblue;
+  width: 140px;
   pointer-events: none;
   font-size: 20px;
   line-height: 20px;
   text-align: center;
   font-weight: bold;
   overflow: hidden;
+}
+
+#debug-memory span {
+  background-color: lightblue;
   padding: 0 3px;
+  margin: 0 2px;
 }

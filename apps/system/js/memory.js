@@ -64,10 +64,35 @@ var MemoryView = {
 
   toggle: function tv_toggle() {
     this.visible ? this.hide() : this.show();
+  },
+
+  getUsedMemory: function tv_getUsedMemory(pid, callback) {
+    var storage = navigator.getDeviceStorage('apps');
+    var request = storage.get('memory-debug-proc/' + pid + '/smaps');
+    request.onsuccess = function(e) {
+      var file = e.target.result;
+      var reader = new FileReader();
+      reader.readAsText(file);
+      reader.onloadend = function onloadend(value) {
+        var lines = reader.result.split('\n');
+        var totalDirty = 0;
+        for (var i in lines) {
+          var line = lines[i];
+          if (line.indexOf('Private_Dirty') == 0) {
+            totalDirty += parseInt(line.split(/ +/)[1]);
+          }
+        }
+        callback(totalDirty);
+      }
+    }
+
+    request.onerror = function(e) {
+      callback(null);
+      dump('MemoryView: error retrieving /data/memory-debug-proc. Does it exists?\n');
+    }
   }
 };
 
 SettingsListener.observe('debug.memory.enabled', true, function(value) {
   !!value ? MemoryView.show() : MemoryView.hide();
 });
-

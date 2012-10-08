@@ -61,8 +61,14 @@ var MemoryView = (function() {
     }
   }
 
-  function getPIDForName(element, name) {
+
+  function getPIDForName(name, callback) {
     log('looking for ' + name);
+    if (pids[name]) {
+      callback(pids[name]);
+      return;
+    }
+
     var storage = navigator.getDeviceStorage('apps');
 
     var request = storage.get('pids.txt');
@@ -83,10 +89,8 @@ var MemoryView = (function() {
                 if (content.indexOf(name) == -1)
                   return;
 
-                var id = parseInt(content.split(' ')[0]);
-                getUsedMemory(id, function(value) {
-                  element.innerHTML = value;
-                });
+                pids[name] = parseInt(content.split(' ')[0]);
+                callback(pids[name]);
               });
             }
 
@@ -102,6 +106,21 @@ var MemoryView = (function() {
     request.onerror = function onerror() {
       log('Error retrieving /data/proc. Does it exists?');
     }
+  }
+
+  var pids = {};
+  var currentName = 'Homescreen';
+
+  function getUSS(element) {
+    for (var p in pids) {
+      log(p + ': ' + pids[p] + '\n');
+    }
+
+    getPIDForName(currentName, function onPID(pid) {
+      getUsedMemory(pid, function(value) {
+        element.innerHTML = value;
+      });
+    });
   }
 
 
@@ -137,12 +156,23 @@ var MemoryView = (function() {
 
         document.getElementById('screen').appendChild(element);
 
-        window.clearInterval(this._interval);
-        this._interval = window.setInterval(function updateMemory() {
-          getFreeMemory(free);
+        window.addEventListener('appwillclose', function willclose(e) {
+          currentName = 'Homescreen';
+        });
 
-          // XXX retrieve the current displayed application name
-          getPIDForName(used, 'Homescreen');
+        window.addEventListener('appwillopen', function willopen(e) {
+          currentName = e.target.dataset.name;
+          used.innerHTML = '00000';
+        });
+
+        window.addEventListener('appterminated', function terminated(e) {
+          delete pids[e.detail.name];
+        });
+
+        window.clearInterval(interval);
+        interval = window.setInterval(function updateMemory() {
+          getFreeMemory(free);
+          getUSS(used);
         }, 1000);
       }
 

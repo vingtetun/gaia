@@ -767,6 +767,7 @@ var WindowManager = (function() {
     frame.setAttribute('mozallowfullscreen', 'true');
     frame.className = 'appWindow';
     frame.dataset.frameOrigin = origin;
+    frame.dataset.name = name;
 
     // Note that we don't set the frame size here.  That will happen
     // when we display the app in setDisplayedApp()
@@ -1230,6 +1231,8 @@ var WindowManager = (function() {
     if (!isRunning(origin))
       return;
 
+    var name = runningApps[origin].frame.dataset.name;
+
     // If the app is the currently displayed app, switch to the homescreen
     if (origin === displayedApp) {
       setDisplayedApp(homescreen, function() {
@@ -1245,7 +1248,10 @@ var WindowManager = (function() {
     // Let other system app module know an app is
     // being killed, removed or crashed.
     var evt = document.createEvent('CustomEvent');
-    evt.initCustomEvent('appterminated', true, false, { origin: origin });
+    evt.initCustomEvent('appterminated', true, false, {
+      name: name,
+      origin: origin
+    });
     window.dispatchEvent(evt);
   }
 

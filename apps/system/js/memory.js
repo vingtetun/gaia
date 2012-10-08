@@ -24,8 +24,10 @@ var MemoryView = {
       var request = storage.get('meminfo');
       request.onsuccess = function(e) {
         var file = e.target.result;
+
         var reader = new FileReader();
         reader.readAsText(file);
+
         reader.onloadend = function onloadend(value) {
           var lines = reader.result.split('\n');
           for (var i in lines) {
@@ -54,7 +56,7 @@ var MemoryView = {
       document.getElementById('screen').appendChild(element);
 
       window.clearInterval(this._interval);
-      window.setInterval(function updateMemory() {
+      this._interval = window.setInterval(function updateMemory() {
         getFreeMemory(element);
       }, 1000);
     }

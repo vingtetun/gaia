@@ -16,6 +16,7 @@
     "telephony",
     "voicemail",
     "device-storage:pictures",
+    "device-storage:apps",
     "settings",
     "storage",
     "content-camera",

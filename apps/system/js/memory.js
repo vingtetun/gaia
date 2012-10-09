@@ -5,7 +5,7 @@
 
 var MemoryView = (function() {
   function log(str) {
-    dump(' +-+ MemoryView: ' + str + '\n');
+    //dump(' +-+ MemoryView: ' + str + '\n');
   }
 
   function getFileContent(file, callback) {
@@ -42,7 +42,7 @@ var MemoryView = (function() {
 
   function getFreeMemory(element) {
     var storage = navigator.getDeviceStorage('apps');
-    var request = storage.get('meminfo');
+    var request = storage.get('proc/meminfo');
     request.onsuccess = function onsuccess(e) {
       getFileContent(e.target.result, function onGetContent(content) {
         var lines = content.split('\n');
@@ -69,38 +69,35 @@ var MemoryView = (function() {
       return;
     }
 
+    // Bug XXXXXX - Infinite loop when reading /proc with the device storage API
     var storage = navigator.getDeviceStorage('apps');
-
-    var request = storage.get('pids.txt');
+    var request = storage.enumerate('proc');
     request.onsuccess = function onsuccess(e) {
-      getFileContent(e.target.result, function onGetContent(content) {
-        var lines = content.split('\n');
-        for (var i in lines) {
-          var line = lines[i];
-          if (parseInt(line)) {
-            var pid = parseInt(line);
+      var pid = parseInt(e.target.result.name.split('/')[0]);
+      if (!pid) {
+        e.target.continue();
+        return;
+      }
 
-            var storage2 = navigator.getDeviceStorage('apps');
-            var stat = storage2.get('proc/' + pid + '/stat');
+      var storage2 = navigator.getDeviceStorage('apps');
+      var stat = storage2.get('proc/' + pid + '/stat');
 
-            stat.onsuccess = function onStatSuccess(e) {
-              var file = e.target.result;
-              getFileContent(file, function onStatContent(content) {
-                if (content.indexOf(name) == -1)
-                  return;
-
-                pids[name] = parseInt(content.split(' ')[0]);
-                callback(pids[name]);
-              });
-            }
-
-            stat.onerror = function onStatError() {
-              log('Error retrieving /proc/' + pid +
-                  '/stat. Does it exists?');
-            }
+      stat.onsuccess = function onStatSuccess(evt) {
+        var file = evt.target.result;
+        getFileContent(file, function onStatContent(content) {
+          if (content.indexOf(name) == -1) {
+            e.target.continue();
+            return;
           }
-        }
-      });
+
+          pids[name] = parseInt(content.split(' ')[0]);
+          callback(pids[name]);
+        });
+      }
+
+      stat.onerror = function onStatError() {
+        log('Error retrieving /proc/' + pid + '/stat. Does it exists?');
+      }
     }
 
     request.onerror = function onerror() {
@@ -122,7 +119,6 @@ var MemoryView = (function() {
       });
     });
   }
-
 
   var element = null;
   var interval = 0;

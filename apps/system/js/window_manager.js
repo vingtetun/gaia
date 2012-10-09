@@ -767,7 +767,7 @@ var WindowManager = (function() {
     frame.setAttribute('mozallowfullscreen', 'true');
     frame.className = 'appWindow';
     frame.dataset.frameOrigin = origin;
-    frame.dataset.name = name;
+    frame.dataset.name = manifest.name;
 
     // Note that we don't set the frame size here.  That will happen
     // when we display the app in setDisplayedApp()

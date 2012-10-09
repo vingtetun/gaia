@@ -49,7 +49,7 @@ var MemoryView = (function() {
         for (var i in lines) {
           var line = lines[i];
           if (line.indexOf('MemFree') == 0) {
-            element.innerHTML = line.split(/ +/)[1];
+            element.innerHTML = 'f ' + line.split(/ +/)[1];
             return;
           }
         }
@@ -115,7 +115,7 @@ var MemoryView = (function() {
 
     getPIDForName(currentName, function onPID(pid) {
       getUsedMemory(pid, function(value) {
-        element.innerHTML = value;
+        element.innerHTML = 'u ' + value;
       });
     });
   }

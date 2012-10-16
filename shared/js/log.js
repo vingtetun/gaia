@@ -2,23 +2,25 @@
 'use strict';
 
 (function logjs() {
-  // The following variables can be defined directly in the src attribute of
-  // the script tag used to load log.js.
-  //
-  // <script src="shared/js/log.js?name=FOO"> will add a FOO in every output
-  // strings.
-  //
-  // <script src="shared/js/log.js?silent=1"> will disable all outputs. It make
-  // it easy to keep some debugging code in production and to enable it back by
-  // just switching '1' to '0'.
-  //
-  // It can be defined multiple variables by using the standard syntax:
-  // <script src="shared/js/log.js?name=FOO&silent=1">
-  //
+  /**
+   * The following variables can be defined directly in the src attribute of
+   * the script tag used to load log.js.
+   *
+   * <script src="shared/js/log.js?name=FOO"> will add a FOO in every output
+   * strings.
+   *
+   * <script src="shared/js/log.js?silent=1"> will disable all outputs. It make
+   * it easy to keep some debugging code in production and to enable it back by
+   * just switching '1' to '0'.
+   *
+   * It can be defined multiple variables by using the standard syntax:
+   * <script src="shared/js/log.js?name=FOO&silent=1">
+   *
+   */
   var name = '';
   var silent = 0;
 
-  // Parse the url set vi <script src=""> and set variables accordingly.
+  // Parse the url set via <script src=""> and set variables accordingly.
   var scripts = document.getElementsByTagName('script');
   for (var i = 0; i < scripts.length; i++) {
     var url = scripts[i].src;

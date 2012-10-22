@@ -10,7 +10,7 @@ var KeyboardManager = (function() {
     return protocol + '//keyboard.' + domain + '/index.html';;
   }
 
-  function generateKeyboard(contaimer, keyboardURL, manifestURL) {
+  function generateKeyboard(container, keyboardURL, manifestURL) {
     var keyboard = document.createElement('iframe');
     keyboard.src = keyboardURL;
     keyboard.setAttribute('mozbrowser', 'true');

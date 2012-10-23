@@ -5,13 +5,15 @@
 
 window.addEventListener('load', function startup() {
   function launchHomescreen() {
-    var activity = new MozActivity({
-      name: 'view',
-      data: { type: 'application/x-application-list' }
-    });
-    activity.onerror = function homescreenLaunchError() {
-      console.error('Failed to launch home screen with activity.');
-    };
+    var lock = navigator.mozSettings.createLock();
+    var setting = lock.get('homescreen.manifestURL');
+    setting.onsuccess = function() {
+      var app =
+        Applications.getByManifestURL(this.result['homescreen.manifestURL']);
+      if (app) {
+        WindowManager.ensureHomescreen(app);
+      }
+    }
   }
 
   if (Applications.ready) {

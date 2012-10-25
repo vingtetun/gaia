@@ -159,14 +159,12 @@
                 <h2>#type#</h2>
                 <div class="item">
                   <div class="item-media pull-right">
-                    <button id="send-sms-button-#i#" class="activity send-sms icon icon-message"></button>
+                    <button id="send-sms-button-#i#" class="activity"><span role="button" class="icon-message">Message</span></button>
                   </div>
                   <div class="item-body-exp">
-                    <button class="activity icon icon-call" id="call-or-pick-#i#">
-                      <b>
-                        #value#
-                        <em>#carrier#</em>
-                      </b>
+                    <button class="activity" id="call-or-pick-#i#"><span role="button" class="icon-call" data-l10n-id="call">Call</span>
+                      <b>#value#</b>
+                      <em>#carrier#</em>
                     </button>
                   </div>
                 </div>
@@ -182,7 +180,7 @@
                 <h2>#type#</h2>
                 <div class="item">
                   <div class="item-body-exp">
-                    <button id="email-or-pick-#i#" class="activity icon icon-email">
+                    <button id="email-or-pick-#i#" class="activity"><span role="button" class="icon-email">E-mail</span>
                       <b>#value#</b>
                     </button>
                   </div>
@@ -193,19 +191,23 @@
               <li class="social-actions" id="social-template-#i#" data-template>
                 <h2 data-l10n-id="social-network" id="social-label">Social Network</h2>
                   <div class="fillflow-twocols">
-                    <button id="msg_button" data-l10n-id="msg-send" class="activity icon icon-message">
-                      Message
+                    <button id="msg_button" class="activity">
+                      <span role="button" class="icon-message"></span>
+                      <b data-l10n-id="msg-send">Message</b>
                     </button>
-                    <button id="wall_button" data-l10n-id="wall-post" class="activity icon icon-email">
-                      Wall Post
+                    <button id="wall_button" class="activity">
+                      <span role="button" class="icon-email"></span>
+                      <b data-l10n-id="wall-post">Wall Post</b>
                     </button>
                   </div>
 
-                  <button id="profile_button" data-l10n-id="show-profile" class="fillflow-row activity icon icon-fb-profile">
-                    Show Profile
+                  <button id="profile_button" class="fillflow-row activity">
+                    <span role="button" class="icon-fb-profile"></span>
+                    <b data-l10n-id="show-profile">Show Profile</b>
                   </button>
 
-                  <button id="link_button" class="activity icon icon-link">
+                  <button id="link_button" class="activity">
+                    <span role="button" class="icon-link"></span>
                     #action#
                   </button>
               </li>
@@ -237,7 +239,8 @@
                 </ul>
                 <ul>
                   <li>
-                    <button id='toggle-favorite' class="fillflow-row icon icon-fav">
+                    <button id='toggle-favorite' class="fillflow-row">
+                      <span class="icon-fav"></span>
                       Add as favorite
                     </button>
                   </li>
@@ -368,8 +371,9 @@
                       <!-- Iterating over phone template here -->
                     </div>
                   </section>
-                  <button data-field-type="tel" id='add-new-phone' data-l10n-id="addPhone" class="fillflow-row action action-add icon icon-add">
-                    Add phone number
+                  <button data-field-type="tel" id='add-new-phone' class="fillflow-row action action-add">
+                    <span role="button" class="icon-add"></span>
+                    <b data-l10n-id="addPhone">Add phone number</b>
                   </button>
                 </li>
 
@@ -380,8 +384,9 @@
                     </div>
                   </section>
 
-                  <button data-field-type="email" id='add-new-email' data-l10n-id="addEmail" class="fillflow-row action action-add icon icon-add">
-                    Add email address
+                  <button data-field-type="email" id='add-new-email' class="fillflow-row action action-add">
+                    <span role="button" class="icon-add"></span>
+                    <b data-l10n-id="addEmail">Add email address</b>
                   </button>
                 </li>
 
@@ -392,8 +397,9 @@
                     </div>
                   </section>
 
-                  <button data-field-type="adr" id='add-new-address' data-l10n-id="addAddress" class="fillflow-row action action-add icon icon-add">
-                    Add new address
+                  <button data-field-type="adr" id='add-new-address' class="fillflow-row action action-add">
+                    <span role="button" class="icon-add"></span>
+                    <b data-l10n-id="addAddress">Add new address</b>
                   </button>
                 </li>
 
@@ -404,8 +410,9 @@
                     </div>
                   </section>
 
-                  <button data-field-type="note" id='add-new-note' data-l10n-id="addComment" class="fillflow-row action action-add icon icon-add">
-                    Add comment
+                  <button data-field-type="note" id='add-new-note' class="fillflow-row action action-add">
+                    <span role="button" class="icon-add"></span>
+                    <b data-l10n-id="addComment">Add comment</b>
                   </button>
                 </li>
               </ul>

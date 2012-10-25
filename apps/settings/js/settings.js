@@ -22,7 +22,14 @@ var Settings = {
     // register web activity handler
     navigator.mozSetMessageHandler('activity', this.webActivityHandler);
 
-    this.loadGaiaCommit();
+    // Load the gaia commit when the corresponding pane is shown.
+    window.addEventListener('hashchange', function onHashChange(evt) {
+      if (!evt.newURL.endsWith('#more-info'))
+        return;
+
+      window.removeEventListener('hashchange', onHashChange);
+      Settings.loadGaiaCommit();
+    });
 
     var settings = this.mozSettings;
     if (!settings)
@@ -385,6 +392,9 @@ window.addEventListener('localized', function showBody() {
   // <body> children are hidden until the UI is translated
   if (document.body.classList.contains('hidden')) {
     // first run: show main page
+    if (!document.location.hash) {
+      document.location.hash = 'root';
+    }
     document.body.classList.remove('hidden');
   } else {
     // we were in #languages and selected another locale:

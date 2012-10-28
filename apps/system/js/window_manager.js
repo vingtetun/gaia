@@ -673,12 +673,6 @@ var WindowManager = (function() {
   // Ensure the homescreen is loaded and return its frame.  Restarts
   // the homescreen app if it was killed in the background.
   function ensureHomescreen(app, reset) {
-    if (app) {
-      homescreenManifestURL = app.manifestURL;
-      homescreen = app.origin;
-      homescreenURL = app.origin + '/index.html#root';
-    }
-
     // If the url of the homescreen is not known at this point do nothing.
     if (!homescreen || !homescreenManifestURL) {
       return null;
@@ -702,6 +696,22 @@ var WindowManager = (function() {
       displayedApp = homescreen;
     }
     return runningApps[homescreen].frame;
+  }
+
+  function launchHomescreen() {
+    var lock = navigator.mozSettings.createLock();
+    var setting = lock.get('homescreen.manifestURL');
+    setting.onsuccess = function() {
+      var app =
+        Applications.getByManifestURL(this.result['homescreen.manifestURL']);
+      if (app) {
+        homescreenManifestURL = app.manifestURL;
+        homescreen = app.origin;
+        homescreenURL = app.origin + '/index.html#root';
+
+        ensureHomescreen(app);
+      }
+    }
   }
 
   // Hide current app
@@ -1413,6 +1423,6 @@ var WindowManager = (function() {
     },
     hideCurrentApp: hideCurrentApp,
     restoreCurrentApp: restoreCurrentApp,
-    ensureHomescreen: ensureHomescreen
+    launchHomescreen: launchHomescreen
   };
 }());

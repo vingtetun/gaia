@@ -4,24 +4,12 @@
 'use strict';
 
 window.addEventListener('load', function startup() {
-  function launchHomescreen() {
-    var lock = navigator.mozSettings.createLock();
-    var setting = lock.get('homescreen.manifestURL');
-    setting.onsuccess = function() {
-      var app =
-        Applications.getByManifestURL(this.result['homescreen.manifestURL']);
-      if (app) {
-        WindowManager.ensureHomescreen(app);
-      }
-    }
-  }
-
   if (Applications.ready) {
-    launchHomescreen();
+    WindowManager.launchHomescreen();
   } else {
     window.addEventListener('applicationready', function appListReady(event) {
       window.removeEventListener('applicationready', appListReady);
-      launchHomescreen();
+      WindowManager.launchHomescreen();
     });
   }
 

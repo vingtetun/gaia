@@ -810,6 +810,10 @@ Evme.Brain = new function() {
                 Evme.EventHandler.trigger("Core", "returnedFromApp");
             }
         }
+
+        this.cancel = function() {
+          returnFromOutside();
+        }
     };
 
     // modules/BackgroundImage/

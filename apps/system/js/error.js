@@ -27,7 +27,7 @@ window.addEventListener('localized', function onload(e) {
 
   var params = extractParams(document.location.search.slice(1));
   var type = params['type'];
-  var name = params['name'];
+  var name = decodeURIComponent(params['name']);
   switch (type) {
     case 'airplane':
       title.textContent = _('airplane-is-on');

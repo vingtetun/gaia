@@ -228,14 +228,19 @@ var ModalDialog = {
       type = 'offline';
     }
 
+    var name = encodeURIComponent(WindowManager.getCurrentDisplayedApp().name);
+
     var host = document.location.host;
     var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
     var protocol = document.location.protocol + '//';
     var origin = protocol + 'system.' + domain;
-    target.src = origin + '/error.html?' +
-                 'origin=' + this.currentOrigin + '&' +
-                 'name=' + WindowManager.getCurrentDisplayedApp().name + '&' +
-                 'type=' + type;
+    var errorURL = origin + '/error.html?' +
+                   'origin=' + this.currentOrigin + '&' +
+                   'name=' + name + '&' +
+                   'type=' + type;
+    if (errorURL != target.src || type != 'other') {
+      target.src = errorURL;
+    }
   },
 
   hide: function md_hide() {

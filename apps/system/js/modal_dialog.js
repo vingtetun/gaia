@@ -20,9 +20,8 @@ var ModalDialog = {
     var elementsID = ['alert', 'alert-ok', 'alert-message',
       'prompt', 'prompt-ok', 'prompt-cancel', 'prompt-input', 'prompt-message',
       'confirm', 'confirm-ok', 'confirm-cancel', 'confirm-message',
-      'error', 'error-back', 'error-reload', 'select-one', 'select-one-cancel',
-      'select-one-menu', 'select-one-title', 'alert-title', 'confirm-title',
-      'prompt-title', 'error-title', 'error-message'];
+      'select-one', 'select-one-cancel', 'select-one-menu', 'select-one-title',
+      'alert-title', 'confirm-title', 'prompt-title'];
 
     var toCamelCase = function toCamelCase(str) {
       return str.replace(/\-(.)/g, function replacer(str, p1) {
@@ -92,17 +91,11 @@ var ModalDialog = {
         // the frame is currently displayed.
         if (origin == WindowManager.getDisplayedApp() ||
             frameType == 'inline-activity')
-          this.show(origin);
+          this.show(evt.target, origin);
         break;
 
       case 'click':
-        if (evt.currentTarget === elements.errorBack) {
-          this.cancelHandler();
-          WindowManager.kill(this.currentOrigin);
-        } else if (evt.currentTarget === elements.errorReload) {
-          this.cancelHandler();
-          WindowManager.reload(this.currentOrigin);
-        } else if (evt.currentTarget === elements.confirmCancel ||
+        if (evt.currentTarget === elements.confirmCancel ||
           evt.currentTarget === elements.promptCancel ||
           evt.currentTarget === elements.selectOneCancel) {
           this.cancelHandler();
@@ -114,7 +107,7 @@ var ModalDialog = {
         break;
 
       case 'appopen':
-        this.show(evt.detail.origin);
+        this.show(evt.target, evt.detail.origin);
         break;
 
       case 'home':
@@ -161,7 +154,7 @@ var ModalDialog = {
   },
 
   // Show relative dialog and set message/input value well
-  show: function md_show(origin) {
+  show: function md_show(target, origin) {
     if (!(origin in this.currentEvents))
       return;
 
@@ -220,29 +213,29 @@ var ModalDialog = {
 
       // Error
       case 'other':
-        this.showErrorDialog();
+        this.showErrorDialog(target);
         break;
     }
 
     this.setHeight(window.innerHeight - StatusBar.height);
   },
 
-  showErrorDialog: function md_showErrorDialog() {
-    var _ = navigator.mozL10n.get;
-    var elements = this.elements;
-    var appName = WindowManager.getCurrentDisplayedApp().name;
+  showErrorDialog: function md_showErrorDialog(target) {
+    var type = 'other';
     if (AirplaneMode.enabled) {
-      elements.errorTitle.textContent = _('airplane-is-on');
-      elements.errorMessage.textContent = _('airplane-is-turned-on',
-          {name: appName});
+      type = 'airplane';
     } else if (!navigator.onLine) {
-      elements.errorTitle.textContent = _('network-connection-unavailable');
-      elements.errorMessage.textContent = _('network-error', {name: appName});
-    } else {
-      elements.errorTitle.textContent = _('error-title', {name: appName});
-      elements.errorMessage.textContent = _('error-message', {name: appName});
+      type = 'offline';
     }
-    this.elements.error.classList.add('visible');
+
+    var host = document.location.host;
+    var domain = host.replace(/(^[\w\d]+\.)?([\w\d]+\.[a-z]+)/, '$2');
+    var protocol = document.location.protocol + '//';
+    var origin = protocol + 'system.' + domain;
+    target.src = origin + '/error.html?' +
+                 'origin=' + this.currentOrigin + '&' +
+                 'name=' + WindowManager.getCurrentDisplayedApp().name + '&' +
+                 'type=' + type;
   },
 
   hide: function md_hide() {
@@ -473,7 +466,7 @@ var ModalDialog = {
     // Create a virtual mapping in this.currentEvents,
     // since system-app uses the different way to call ModalDialog.
     this.currentEvents['system'] = pseudoEvt;
-    this.show('system');
+    this.show(null, 'system');
     if (config.title)
       this.setTitle(config.type, config.title);
   },

@@ -203,7 +203,6 @@ var OnCallHandler = (function onCallHandler() {
     // Animating the screen in the viewport.
     toggleScreen();
 
-    ProximityHandler.enable();
     cpuLock = navigator.requestWakeLock('cpu');
 
     if (telephony) {
@@ -406,7 +405,6 @@ var OnCallHandler = (function onCallHandler() {
     if (closing)
       return;
 
-    ProximityHandler.disable();
     if (cpuLock) {
       cpuLock.unlock();
       cpuLock = null;
@@ -428,9 +426,28 @@ var OnCallHandler = (function onCallHandler() {
     window.close();
   }
 
-  /* === Bluetooth Headset support ===*/
-  function handleBTCommand(evt) {
+  /* Handle commands send to the callscreen via postmessage */
+  function handleCommand(evt) {
     var message = evt.data;
+    if (!message) {
+      return;
+    }
+
+    // Currently managing to kind of commands:
+    // BT: bluetooth
+    // HS: headset
+    switch (message.type) {
+      case 'BT':
+        handleBTCommand(message.command);
+        break;
+      case 'HS':
+        handleHSCommand(message.command);
+        break;
+    }
+  }
+
+  /* === Bluetooth Headset support ===*/
+  function handleBTCommand(message) {
     switch (message) {
       case 'CHUP':
         end();
@@ -446,7 +463,24 @@ var OnCallHandler = (function onCallHandler() {
         break;
     }
   }
-  window.addEventListener('message', handleBTCommand);
+
+  function handleHSCommand(message) {
+    // We will receive the message for button released,
+    // we will ignore it
+    if (message == 'headset-button-release') {
+      return;
+    }
+
+    if (telephony.active) {
+      end();
+    } else if (handledCalls.length > 1) {
+      holdAndAnswer();
+    } else {
+      answer();
+    }
+  }
+
+  window.addEventListener('message', handleCommand);
 
   /* === User Actions === */
   function answer() {

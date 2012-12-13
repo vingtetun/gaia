@@ -39,7 +39,14 @@ function compile(file) {
 }
 
 var dispatchEvent = function() {
-  debug(document.body.innerHTML);
+  let file = new FileUtils.File('/tmp/result.html');
+  let doctype = document.doctype;
+  if (doctype.name == 'html') {
+    doctype = "<!DOCTYPE html>";
+  }
+
+  // outerHTML breaks the formating so let use innerHTML and wrap that ourself
+  writeContent(file, doctype + "\n<html>\n  " + document.documentElement.innerHTML + "\n</html>");
 }
 
 var XMLHttpRequest = function() {
@@ -58,6 +65,7 @@ var XMLHttpRequest = function() {
     var firstDir = paths.shift();
     if (firstDir != "shared") {
       file.append('apps');
+      // XXX hack need the real app name
       file.append('settings');
       file.append(firstDir);
     } else {
@@ -74,8 +82,6 @@ var XMLHttpRequest = function() {
         }
       }
     });
-    debug(file.path);
-
     this.responseText = getFileContent(file);
   }
 

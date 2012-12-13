@@ -189,5 +189,6 @@ this.addEventListener = function(type, callback) {
 }
 
 var navigator = {};
-navigator.language = 'fr';
+// This needs to be filled with the value of the current locale
+navigator.language = 'en-US';
 

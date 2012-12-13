@@ -236,6 +236,11 @@ ifneq ($(DEBUG),1)
 	@$(call run-js-command, webapp-zip)
 endif
 
+# Precompile l10n
+webapp-l10n: install-xulrunner-sdk
+	@$(call run-js-command, webapp-l10n)
+
+
 offline-cache: webapp-manifests install-xulrunner-sdk
 	@echo "Populate external apps appcache"
 	@$(call run-js-command, offline-cache)

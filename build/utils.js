@@ -180,3 +180,14 @@ function gaiaOriginURL(name) {
 function gaiaManifestURL(name) {
   return gaiaOriginURL(name) + "/manifest.webapp";
 }
+
+
+//XXX
+var l10nCallback = null;
+this.addEventListener = function(type, callback) {
+  l10nCallback = callback;
+}
+
+var navigator = {};
+navigator.language = 'fr';
+

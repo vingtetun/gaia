@@ -317,7 +317,7 @@ define run-js-command
 	const OFFICIAL = "$(MOZILLA_OFFICIAL)";                                     \
 	const GAIA_ENGINE = "xpcshell";                                             \
 	';                                                                          \
-	$(XULRUNNERSDK) $(XPCSHELLSDK) -e "$$JS_CONSTS" -f build/utils.js "build/$(strip $1).js"
+	$(XULRUNNERSDK) $(XPCSHELLSDK) -e "$$JS_CONSTS" -f build/utils.js -f shared/js/l10n.js "build/$(strip $1).js"
 endef
 
 # Optional files that may be provided to extend the set of default

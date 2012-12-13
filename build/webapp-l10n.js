@@ -31,11 +31,65 @@ Gaia.webapps.forEach(function(webapp) {
 
 function compile(file) {
   if (file.leafName === "index.html") {
-    let document = (new DOMParser()).parseFromString(getFileContent(file),
+    document = (new DOMParser()).parseFromString(getFileContent(file),
                                                      "text/html");
 
-    debug(document.body.innerHTML);
+    navigator.mozL10n.translate(document.documentElement);
   }
 }
+
+var dispatchEvent = function() {
+  debug(document.body.innerHTML);
+}
+
+var XMLHttpRequest = function() {
+  var path = '';
+  var propertiesCallback = null;
+
+  function open(type, url, async) {
+    path = url;
+    this.readyState = 4;
+    this.status = 0;
+
+    debug(path);
+    let file = new FileUtils.File(GAIA_DIR);
+
+    var paths = path.split('/');
+    var firstDir = paths.shift();
+    if (firstDir != "shared") {
+      file.append('apps');
+      file.append('settings');
+      file.append(firstDir);
+    } else {
+      file.append(firstDir);
+    }
+
+    paths.forEach(function appendPath(name) {
+      file.append(name);
+      if (name == "branding") {
+        if (OFFICIAL) {
+          file.append("official");
+        } else {
+          file.append("unofficial");
+        }
+      }
+    });
+    debug(file.path);
+
+    this.responseText = getFileContent(file);
+  }
+
+  function send() {
+    this.onreadystatechange();
+  }
+
+  return {
+    open: open,
+    send: send,
+    onreadystatechange: null
+  }
+}
+
+l10nCallback();
 
 debug("webapp-l10n.js: End");

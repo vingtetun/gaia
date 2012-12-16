@@ -519,11 +519,13 @@ var OnCallHandler = (function onCallHandler() {
 
   function endAndAnswer() {
     var callToEnd = telephony.active;
-    holdAndAnswer();
+    var callToAnswer = handledCalls[handledCalls.length - 1].call;
 
-    callToEnd.onheld = function hangUpAfterHold() {
-      callToEnd.hangUp();
-    };
+    callToEnd.addEventListener('disconnected', function disconnected() {
+      callToEnd.removeEventListener('disconnected', disconnected);
+      callToAnswer.answer();
+    });
+    callToEnd.hangUp();
 
     CallScreen.hideIncoming();
   }
@@ -551,7 +553,7 @@ var OnCallHandler = (function onCallHandler() {
 
     // If not we're rejecting the last incoming call
     if (!handledCalls.length) {
-      toggleScreen();
+      exitCallScreen(true);
       return;
     }
 

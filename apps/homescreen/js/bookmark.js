@@ -57,6 +57,13 @@ var BookmarkEditor = {
   },
 
   save: function bookmarkEditor_save() {
+    var a = document.createElement('a');
+    a.href = this.bookmarkUrl.value;
+    // Do not allow the user to save javascript: uri.
+    if (a.protocol = 'javascript:') {
+      return;
+    }
+
     this.data.name = this.bookmarkTitle.value;
     this.data.bookmarkURL = this.bookmarkUrl.value;
     var app = new Bookmark(this.data);

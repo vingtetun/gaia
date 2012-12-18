@@ -4,6 +4,12 @@ function closeWindow() {
 }
 
 function reloadWindow(url) {
+  var a = document.createElement('a');
+  a.href = url;
+  // This can be a malicious script. See bug 822232.
+  if (a.protocol == 'javascript:') {
+    return;
+  }
   document.location.replace(url);
 }
 

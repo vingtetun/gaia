@@ -118,21 +118,14 @@ var PhoneLock = {
     this.hideErrorMessage();
     this.MODE = mode;
     this.passcodePanel.dataset.mode = mode;
-    if (document.location.hash != 'phoneLock-passcode') {
-      var self = this;
-      document.location.hash = 'phoneLock-passcode'; // show dialog box
-      this.passcodePanel.addEventListener('transitionend', function ontransitionend() {
-        self.passcodePanel.removeEventListener('transitionend', ontransitionend);
-        self.passcodeInput.focus();
-      });
-    }
+    document.location.hash = 'phoneLock-passcode'; // show dialog box
+    this.passcodeInput.focus();
     this.updatePassCodeUI();
   },
 
   handleEvent: function pl_handleEvent(evt) {
     // Prevent mousedown event to avoid the keypad losing focus.
     if (evt.type == 'mousedown') {
-      this.passcodeInput.focus();
       evt.preventDefault();
       return;
     }
@@ -140,7 +133,6 @@ var PhoneLock = {
     switch (evt.target) {
       case this.passcodeEnable:
         evt.preventDefault();
-        this._passcodeBuffer = '';
         if (this.settings.passcodeEnable) {
           this.changeMode('confirm');
         } else {

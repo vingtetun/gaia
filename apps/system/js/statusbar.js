@@ -133,16 +133,6 @@ var StatusBar = {
         this.update.label.call(this);
         break;
 
-      case 'cardstatechange':
-        this.update.signal.call(this);
-        this.update.label.call(this);
-        this.update.data.call(this);
-        break;
-
-      case 'callschanged':
-        this.update.signal.call(this);
-        break;
-
       case 'iccinfochange':
         this.update.label.call(this);
         break;
@@ -153,7 +143,6 @@ var StatusBar = {
 
       case 'bluetoothconnectionchange':
         this.update.bluetooth.call(this);
-        break;
 
       case 'moztimechange':
         this.update.time.call(this);
@@ -261,11 +250,27 @@ var StatusBar = {
         return;
       }
 
-      var operatorInfos = MobileOperator.userFacingInfo(conn);
-      l10nArgs.operator = operatorInfos.operator;
+      var voice = conn.voice;
+      var iccInfo = conn.iccInfo;
+      var network = voice.network;
+      l10nArgs.operator = network.shortName || network.longName;
 
-      if (operatorInfos.region) {
-        l10nArgs.operator += ' ' + operatorInfos.region;
+      if (iccInfo.isDisplaySpnRequired && iccInfo.spn) {
+        if (iccInfo.isDisplayNetworkNameRequired) {
+          l10nArgs.operator = l10nArgs.operator + ' ' + iccInfo.spn;
+        } else {
+          l10nArgs.operator = iccInfo.spn;
+        }
+      }
+
+      if (network.mcc == 724 &&
+        voice.cell && voice.cell.gsmLocationAreaCode) {
+        // We are in Brazil, It is legally required to show local region name
+
+        var lac = voice.cell.gsmLocationAreaCode % 100;
+        var region = MobileInfo.brazil.regions[lac];
+        if (region)
+          l10nArgs.operator += ' ' + region;
       }
 
       label.dataset.l10nArgs = JSON.stringify(l10nArgs);
@@ -340,36 +345,22 @@ var StatusBar = {
       flightModeIcon.hidden = true;
       icon.hidden = false;
 
-      if (conn.cardState === 'absent') {
-        // no SIM
-        delete icon.dataset.level;
-        delete icon.dataset.emergency;
-        delete icon.dataset.searching;
-        delete icon.dataset.roaming;
-      } else if (voice.connected || this.hasActiveCall()) {
-        // "Carrier" / "Carrier (Roaming)"
-        icon.dataset.level = Math.ceil(voice.relSignalStrength / 20); // 0-5
-        icon.dataset.roaming = voice.roaming;
-
-        delete icon.dataset.emergency;
-        delete icon.dataset.searching;
-      } else {
-        // "No Network" / "Emergency Calls Only (REASON)" / trying to connect
+      icon.dataset.roaming = voice.roaming;
+      if (!voice.connected && !voice.emergencyCallsOnly) {
+        // "No Network" / "Searching"
         icon.dataset.level = -1;
-        // logically, we should have "&& !voice.connected" as well but we
-        // already know this.
-        icon.dataset.searching = (!voice.emergencyCallsOnly &&
-                                  voice.state !== 'notSearching');
-        icon.dataset.emergency = (voice.emergencyCallsOnly);
-        delete icon.dataset.roaming;
-      }
 
-      if (voice.emergencyCallsOnly) {
-        this.addCallListener();
+        // Possible value of voice.state are
+        // 'notSearching', 'searching', 'denied', 'registered',
+        // where the later three means the phone is trying to grabbing
+        // the network. See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=777057
+        icon.dataset.searching = (voice.state !== 'notSearching');
+
       } else {
-        this.removeCallListener();
+        // "Emergency Calls Only (REASON)" / "Carrier" / "Carrier (Roaming)"
+        icon.dataset.level = Math.ceil(voice.relSignalStrength / 20); // 0-5
       }
-
     },
 
     data: function sb_updateSignal() {
@@ -536,27 +527,6 @@ var StatusBar = {
     callForwarding: function sb_updateCallForwarding() {
       var icon = this.icons.callForwarding;
       icon.hidden = !this.settingValues['ril.cf.unconditional.enabled'];
-    }
-  },
-
-  hasActiveCall: function sb_hasActiveCall() {
-    var telephony = navigator.mozTelephony;
-
-    // will return true as soon as we begin dialing
-    return !!(telephony && telephony.active);
-  },
-
-  addCallListener: function sb_addCallListener() {
-    var telephony = navigator.mozTelephony;
-    if (telephony) {
-      telephony.addEventListener('callschanged', this);
-    }
-  },
-
-  removeCallListener: function sb_addCallListener() {
-    var telephony = navigator.mozTelephony;
-    if (telephony) {
-      telephony.removeEventListener('callschanged', this);
     }
   },
 

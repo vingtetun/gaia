@@ -14,10 +14,6 @@ html * {
   overflow: hidden;
 }
 
-button::-moz-focus-inner {
-  border: 0;
-}
-
 .font-regular {
   font-family: 'MozTT';
   font-weight: 400;
@@ -94,24 +90,9 @@ button::-moz-focus-inner {
   z-index: -1;
 }
 
-body.showKeypad #views {
-  transition: top 0.3s ease;
+#views.show {
   top: 0;
   z-index: 500;
-}
-
-body.showKeypad #keyboard-container {
-  height: 35rem;
-}
-
-body.showKeypad .duration {
-  transition: visibility 0.3s ease;
-  visibility: hidden;
-}
-
-body.showKeypad #call-options {
-  transition: transform 0.3s ease;
-  transform: translateY(16rem);
 }
 
 #views > .view {
@@ -177,26 +158,22 @@ body.hidden *[data-l10n-id] {
 }
 
 #call-options {
-  height: 9.5rem;
+  height:9.5rem;
 }
 
 #co-advanced {
+  opacity: 1.0;
   height: 9.5rem;
 }
 
 .co-advanced-option {
+  background: rgba(0,0,0,.45);
   height: 9.5rem;
   width: 100%;
-  background: rgba(0,0,0,.92);
   border: 0;
   border-top: 1px solid #3A3A3A;
   border-bottom: 1px solid #3A3A3A;
   border-right: 1px solid #3A3A3A;
-  border-radius: 0;
-}
-
-.co-advanced-option:not([disabled]):active {
-  background: #00aacc;
 }
 
 #co-advanced span.grid-cell:last-child .co-advanced-option {
@@ -204,14 +181,17 @@ body.hidden *[data-l10n-id] {
 }
 
 #mute > span {
-  display: inline-block;
-  background: url('images/ActionIcon_40x40_mute.png');
-  width: 4rem;
-  height: 4rem;
+  display:inline-block;
+  background-color: #DDD;
+  background:url('images/ActionIcon_40x40_mute.png');
+  background-size: 4rem 4rem;
+  width:4rem;
+  height:4rem;
+  opacity: 1.0;
 }
 
 #mute.mute > span {
-  background-position: 0 -4rem;
+  background:url('images/ActionIcon_40x40_mute_active.png');
 }
 
 button[disabled] .icon-keypad-visibility {
@@ -220,26 +200,31 @@ button[disabled] .icon-keypad-visibility {
 
 .icon-keypad-visibility {
   display:inline-block;
+  background-color: #DDD;
   background:url('images/ActionIcon_40x40_dialpad.png') ;
   background-size: 4rem 4rem;
   width:4rem;
   height:4rem;
+  opacity: 1.0;
 }
 
 #speaker span {
   display:inline-block;
-  background:url('images/ActionIcon_40x40_speaker.png') ;
+  background-color: #DDD;
+  background:url('images/ActionIcon_40x40_bluetooth.png') ;
+  background-size: 4rem 4rem;
   width:4rem;
   height:4rem;
   opacity: 1.0;
 }
 
 #speaker.speak  > span {
-  background-position: 0 -4rem;
+  background:url('images/ActionIcon_40x40_bluetooth_active.png');
 }
 
 #callbar {
-  background: rgba(0,0,0,.92);
+  background:rgba(0,0,0,.8);
+  opacity: 1.0;
 }
 
 #callbar-hang-up {
@@ -267,6 +252,7 @@ button[disabled] .icon-keypad-visibility {
 #callbar-hang-up-action {
   background: url("images/btn_hang_up.png") repeat-x;
   background-size: auto 100%;
+  opacity: 1.0;
   margin: 1rem .5rem 1.5rem 1.5rem;
 }
 
@@ -291,6 +277,7 @@ button[disabled] .icon-keypad-visibility {
 #callbar-start-call-action {
   background: url("images/btn_pick_up.png") repeat-x;
   background-size: auto 100%;
+  opacity: 1.0;
   margin: 1rem 1.5rem 1.5rem .5rem;
 }
 

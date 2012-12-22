@@ -103,10 +103,6 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
                 "iconsFormat": iconsFormat,
                 "elList": elApps,
                 "onDone": function onAppsPrintComplete(group, appsList) {
-                    if (apps && apps.length) {
-                        self.addInstalledSeparator();
-                    }
-                    
                     scroll.refresh();
                     
                     SCROLL_TO_BOTTOM = elAppsContainer.offsetHeight - elApps.offsetHeight;
@@ -119,8 +115,6 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
             });
         
         Evme.EventHandler.trigger(NAME, "load");
-        
-        return iconsResult;
     };
     
     this.appendTo = function appendTo(elParent) {
@@ -223,15 +217,11 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
         return isTrue;
     };
     
-    this.addInstalledSeparator = function() {
-        elApps.appendChild(Evme.$create('li', {'class': "installed-separator"}));
-    };
-    
     this.MoreIndicator = new function MoreIndicator() {
         var self = this,
             el = null, elParent = null,
             text = '';
-        
+            
         this.init = function init(options) {
             elParent = options.elParent;
             text = options.text;

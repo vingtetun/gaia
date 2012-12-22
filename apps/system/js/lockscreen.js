@@ -769,15 +769,33 @@ var LockScreen = {
 
       return;
     }
-    var operatorInfos = MobileOperator.userFacingInfo(conn);
-    if (operatorInfos.carrier) {
-      connstateLine2.textContent = operatorInfos.carrier + ' ' + operatorInfos.region;
+
+    if (voice.network.mcc == 724 &&
+        voice.cell && voice.cell.gsmLocationAreaCode) {
+      // We are in Brazil, It is legally required to show local info
+      // about current registered GSM network in a legally specified way.
+      var lac = voice.cell.gsmLocationAreaCode % 100;
+      var carriers = MobileInfo.brazil.carriers;
+      var regions = MobileInfo.brazil.regions;
+
+      connstateLine2.textContent =
+        (carriers[voice.network.mnc] || ('724' + voice.network.mnc)) +
+        ' ' +
+        (regions[lac] ? regions[lac] + ' ' + lac : '');
     }
 
-    var operator = operatorInfos.operator
+    var carrierName = voice.network.shortName || voice.network.longName;
+
+    if (iccInfo.isDisplaySpnRequired && iccInfo.spn) {
+      if (iccInfo.isDisplayNetworkNameRequired) {
+        carrierName = carrierName + ' ' + iccInfo.spn;
+      } else {
+        carrierName = iccInfo.spn;
+      }
+    }
 
     if (voice.roaming) {
-      var l10nArgs = { operator: operator };
+      var l10nArgs = { operator: carrierName };
       connstateLine1.dataset.l10nId = 'roaming';
       connstateLine1.dataset.l10nArgs = JSON.stringify(l10nArgs);
       connstateLine1.textContent = _('roaming', l10nArgs);
@@ -786,7 +804,7 @@ var LockScreen = {
     }
 
     delete connstateLine1.dataset.l10nId;
-    connstateLine1.textContent = operator;
+    connstateLine1.textContent = carrierName;
   },
 
   updatePassCodeUI: function lockscreen_updatePassCodeUI() {

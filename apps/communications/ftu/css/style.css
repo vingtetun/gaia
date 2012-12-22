@@ -95,7 +95,7 @@ html, body {
   background: url(images/next.png) no-repeat center center;
 }
 
-[role=navigation] #wifi-join-button {
+[role=navigation] #join {
   display:none;
 }
 
@@ -111,7 +111,7 @@ html, body {
   display: none;
 }
 
-[role=navigation].secondary-menu #wifi-join-button {
+[role=navigation].secondary-menu #join {
   display: block;
 }
 
@@ -186,7 +186,7 @@ html, body {
   Splash screen
 */
 
-#splash-screen {
+#splash {
   opacity: 0;
   z-index: 3000;
   transition: all 1s ease;
@@ -194,51 +194,51 @@ html, body {
   background-size: 100% auto;
 }
 
-#splash-screen.show {
+#splash.show {
   opacity: 1;
 }
 /*
   Pin code screen
 */
 
-#pincode-screen .pin_container {
+#pincode .pin_container {
   height: calc(100% - 10rem);
 }
 
-#pincode-screen section header {
+#pincode section header {
   padding: 1.5rem 3rem 0.5rem 3rem;
   color: black;
   font-size: 1.5rem;
 }
 
-#pincode-screen .input-wrapper {
+#pincode .input-wrapper {
   padding: 0 1.5rem;
   position: relative;
 }
 
-#pincode-screen #pin-error {
+#pincode #pin_error {
   padding: 1rem 2rem;
   font-size: 1.5rem;
   color: red;
 }
 
-#pincode-screen #pin-input.onerror {
+#pincode #sim-pin.onerror {
   border-color: red;
 }
 
-#pincode-screen .input-wrapper input {
+#pincode .input-wrapper input {
   font-size: 2rem;
   padding-left: 1.5rem;
   pointer-events: none;
 }
 
-#pincode-screen #fake-sim-pin {
+#pincode #fake-sim-pin {
   margin-top: -4rem;
   opacity: 0;
   pointer-events: auto;
 }
 
-#pincode-screen input[type="number"] {
+#pincode input[type="number"] {
     -moz-box-sizing: border-box;
     display: block;
     overflow: hidden;
@@ -293,18 +293,18 @@ html, body {
   Finish process
 */
 
-#finish-screen, #tutorialFinish {
+#finish, #tutorialFinish {
   opacity: 0;
   z-index: 3010;
   transition: all 1s ease;
   background: #3b4547;
 }
 
-#finish-screen.show, #tutorialFinish.show {
+#finish.show, #tutorialFinish.show {
   opacity: 1;
 }
 
-#finish-screen h1, #tutorialFinish h1 {
+#finish h1, #tutorialFinish h1 {
   margin: 0;
   color: white;
   font-size: 4.1rem;
@@ -313,7 +313,7 @@ html, body {
   line-height: 4rem;
 }
 
-#finish-screen h2, #tutorialFinish h2 {
+#finish h2, #tutorialFinish h2 {
   margin: 0;
   color: white;
   font-size: 1.8rem;
@@ -322,14 +322,14 @@ html, body {
   line-height: 2rem;
 }
 
-#finish-screen p, #tutorialFinish p {
+#finish p, #tutorialFinish p {
   margin: 0;
   color: white;
   font-size: 1.4rem;
   font-weight: normal;
 }
 
-#finish-screen .content {
+#finish .content {
   background: url(images/icon_tour.png) no-repeat center 95%;
 }
 
@@ -337,17 +337,17 @@ html, body {
   background: url(images/thumb-up.png) no-repeat center 70%;
 }
 
-#finish-screen .content, #tutorialFinish .content {
+#finish .content, #tutorialFinish .content {
   height: calc(100% - 6rem);
   padding: 0 3rem;
   width: calc(100% - 6rem);
 }
 
-#finish-screen [role=navigation],#tutorialFinish [role=navigation] {
+#finish [role=navigation],#tutorialFinish [role=navigation] {
   border-top: .1rem solid #697476;
 }
 
-#finish-screen [role=navigation] button,#tutorialFinish [role=navigation] button {
+#finish [role=navigation] button,#tutorialFinish [role=navigation] button {
   text-align: center;
 }
 
@@ -522,7 +522,7 @@ html, body {
   margin-bottom: 0;
 }
 
-#sim-import-button {
+#sim_import {
   background: url('images/import_sim.png') center left no-repeat;
 }
 
@@ -888,34 +888,34 @@ i.hack-first-child {
   Tutorial
 */
 
-#tutorial-screen [role=main] > [role=region] {
+#tutorial [role=main] > [role=region] {
   background-color: #474747;
   color: white;
 }
 
-#tutorial-screen [role=main] {
+#tutorial [role=main] {
   top: 0;
   bottom: 0;
 }
 
-#tutorial-screen header {
+#tutorial header {
   height: 5rem;
   font-size: 1.4rem;
   padding: 3rem 1.5rem 1rem 1.5rem;
   text-align: left;
 }
 
-#tutorial-screen section {
+#tutorial section {
   text-align: center;
 }
 
 /* Tutorial Steps state */
-#tutorial-screen .step-state {
+#tutorial .step-state {
   border-bottom: none;
   top: 1.5rem;
 }
 
-#tutorial-screen .step-state:before {
+#tutorial .step-state:before {
   width: calc(100% / 5);
   height: 0.3rem;
   margin-top: -0.2rem;

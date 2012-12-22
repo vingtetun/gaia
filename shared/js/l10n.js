@@ -42,7 +42,7 @@
   var gDEBUG = 1;
 
   function consoleLog(message) {
-    if (gDEBUG >= 2) {
+    if (gDEBUG == 2) {
       console.log('[l10n] ' + message);
     }
   };
@@ -227,7 +227,7 @@
       // URL will raise an exception here -- hence this ugly try...catch.
       try {
         xhr.send(null);
-      } catch (e) {
+      } catch(e) {
         onFailure();
       }
     }
@@ -775,7 +775,7 @@
   function getL10nData(key, args) {
     var data = gL10nData[key];
     if (!data) {
-      consoleWarn('#' + key + ' is undefined.');
+      consoleWarn('[l10n] #' + key + ' is undefined.');
     }
 
     /** This is where l10n expressions should be processed.
@@ -787,7 +787,7 @@
     for (var prop in data) {
       var str = data[prop];
       str = substIndexes(str, args, key, prop);
-      str = substArguments(str, args, key);
+      str = substArguments(str, args);
       rv[prop] = str;
     }
     return rv;
@@ -820,7 +820,7 @@
   }
 
   // replace {{arguments}} with their values
-  function substArguments(str, args, key) {
+  function substArguments(str, args) {
     var reArgs = /\{\{\s*([a-zA-Z\.:-]+)\s*\}\}/;
     var match = reArgs.exec(str);
     while (match) {
@@ -834,7 +834,7 @@
       } else if (arg in gL10nData) {
         sub = gL10nData[arg][gTextProp];
       } else {
-        consoleWarn('argument {{' + arg + '}} for #' + key + ' is undefined.');
+        consoleWarn('could not find argument {{' + arg + '}}');
         return str;
       }
 
@@ -917,23 +917,13 @@
     gReadyState = 'interactive';
     consoleLog('loading [' + navigator.language + '] resources, ' +
         (gAsyncResourceLoading ? 'asynchronously.' : 'synchronously.'));
-
-    // load the default locale and translate the document if required
-    if (document.documentElement.lang === navigator.language) {
-      loadLocale(navigator.language, fireL10nReadyEvent);
-    } else {
-      loadLocale(navigator.language, translateFragment);
-    }
+    loadLocale(navigator.language, translateFragment);
   }
 
-  // the B2G build system doesn't expose any `document'...
-  if (typeof(document) !== 'undefined') {
-    if (document.readyState === 'interactive' ||
-        document.readyState === 'complete') {
-      l10nStartup();
-    } else {
-      document.addEventListener('DOMContentLoaded', l10nStartup);
-    }
+  if (document.readyState == 'interactive' || document.readyState == 'complete') {
+    l10nStartup();
+  } else {
+    window.addEventListener('DOMContentLoaded', l10nStartup);
   }
 
   // load the appropriate locale if the language setting has changed

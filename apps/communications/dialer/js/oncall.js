@@ -4,7 +4,6 @@ var CallScreen = {
   _ticker: null,
   _screenLock: null,
 
-  body: document.body,
   screen: document.getElementById('call-screen'),
   views: document.getElementById('views'),
 
@@ -52,6 +51,7 @@ var CallScreen = {
 
     this.calls.addEventListener('click',
                                 OnCallHandler.toggleCalls);
+
   },
 
   setCallerContactImage: function cs_setCallerContactImage(image_url, force) {
@@ -85,14 +85,14 @@ var CallScreen = {
 
   showKeypad: function cs_showKeypad() {
     KeypadManager.render('oncall');
-    this.body.classList.add('showKeypad');
+    this.views.classList.add('show');
   },
 
   hideKeypad: function cs_hideKeypad() {
     KeypadManager.restorePhoneNumber();
     KeypadManager.restoreAdditionalContactInfo();
     KeypadManager.formatPhoneNumber();
-    this.body.classList.remove('showKeypad');
+    this.views.classList.remove('show');
   },
 
   render: function cs_render(layout_type) {
@@ -131,7 +131,7 @@ var CallScreen = {
 
   showIncoming: function cs_showIncoming() {
     // Hiding the keypad
-    this.body.classList.remove('showKeypad');
+    this.views.classList.remove('show');
 
     this.callToolbar.classList.add('transparent');
     this.incomingContainer.classList.add('displayed');
@@ -391,20 +391,19 @@ var OnCallHandler = (function onCallHandler() {
     displayed = !displayed;
     animating = true;
 
-    var callScreen = CallScreen.screen;
-    callScreen.classList.remove('animate');
-    callScreen.classList.toggle('prerender');
+    CallScreen.screen.classList.remove('animate');
+    CallScreen.screen.classList.toggle('prerender');
 
     window.addEventListener('MozAfterPaint', function ch_finishAfterPaint() {
       window.removeEventListener('MozAfterPaint', ch_finishAfterPaint);
 
       window.setTimeout(function cs_transitionNextLoop() {
-        callScreen.classList.add('animate');
-        callScreen.classList.toggle('displayed');
-        callScreen.classList.toggle('prerender');
+        CallScreen.screen.classList.add('animate');
+        CallScreen.screen.classList.toggle('displayed');
+        CallScreen.screen.classList.toggle('prerender');
 
-        callScreen.addEventListener('transitionend', function trWait() {
-          callScreen.removeEventListener('transitionend', trWait);
+        CallScreen.screen.addEventListener('transitionend', function trWait() {
+          CallScreen.screen.removeEventListener('transitionend', trWait);
 
           animating = false;
 

@@ -38,10 +38,7 @@
     "save-bookmark": {
       "filters": {
         "type": "url"
-      },
-      "disposition": "inline",
-      "href": "/save-bookmark.html",
-      "returnValue": true
+      }
     }
   }
 }

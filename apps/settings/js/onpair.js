@@ -128,11 +128,9 @@ var PairView = {
  */
 
 function onLocalized(callback) {
-  if (navigator.mozL10n.readyState == 'complete' ||
-      navigator.mozL10n.readyState == 'interactive') {
+  if (navigator.mozL10n.readyState == 'complete') {
     callback();
   } else {
     window.addEventListener('localized', callback);
   }
 }
-

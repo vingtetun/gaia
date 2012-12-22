@@ -27,7 +27,6 @@ var EverythingME = {
       });
 
       EverythingME.load(function success() {
-        EvmeFacade.onShow();
         var loadingOverlay = document.querySelector('#loading-overlay');
         loadingOverlay.style.opacity = 0;
         setTimeout(function starting() {

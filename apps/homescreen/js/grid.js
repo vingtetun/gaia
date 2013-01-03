@@ -144,6 +144,7 @@ const GridManager = (function() {
 
         var container = pages[index].container;
         container.setCapture(true);
+        MouseEventShim.setCapture(container);
         container.addEventListener('mousemove', pan, true);
 
         window.addEventListener('mouseup', function removePanHandler(e) {

@@ -90,8 +90,10 @@
       return;
 
     // End a MouseEventShim.setCapture() call
-    if (MouseEventShim.capturing)
+    if (MouseEventShim.capturing) {
       MouseEventShim.capturing = false;
+      MouseEventShim.captureTarget = null;
+    }
 
     for(var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
@@ -152,6 +154,9 @@
           leave(oldtarget, newtarget, touch);
           target = newtarget;
         }
+      }
+      else if (MouseEventShim.captureTarget) {
+        target = MouseEventShim.captureTarget;
       }
 
       emitEvent('mousemove', target, touch);
@@ -227,8 +232,10 @@ var MouseEventShim = {
   // as the mousedown even if they leave the bounds of the element. This is
   // like setting trackMouseMoves to false for just one drag. It is a
   // substitute for event.target.setCapture(true)
-  setCapture: function() {
+  setCapture: function(target) {
     this.capturing = true;  // Will be set back to false on mouseup
+    if (target) 
+      this.captureTarget = target;
   },
 
   capturing: false

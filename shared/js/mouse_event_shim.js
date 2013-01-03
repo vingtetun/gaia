@@ -66,7 +66,7 @@
     if (e.defaultPrevented)
       return;
 
-    // If there is more than one similtaneous touch, ignore all but the first
+    // If there is more than one simultaneous touch, ignore all but the first
     starttouch = e.changedTouches[0];
     target = starttouch.target;
     wantsclick = true;
@@ -88,6 +88,10 @@
   function handleTouchEnd(e) {
     if (!starttouch)
       return;
+
+    // End a MouseEventShim.setCapture() call
+    if (MouseEventShim.capturing)
+      MouseEventShim.capturing = false;
 
     for(var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
@@ -121,7 +125,8 @@
       if (e.defaultPrevented)
         return;
 
-      var tracking = MouseEventShim.trackMouseMoves;
+      var tracking = MouseEventShim.trackMouseMoves &&
+        !MouseEventShim.capturing;
 
       if (tracking) {
         // If the touch point moves, then the element it is over
@@ -216,4 +221,15 @@ var MouseEventShim = {
   // Set this to false if you don't care about mouseover/out events
   // and don't want the target of mousemove events to follow the touch
   trackMouseMoves: true,
+
+  // Call this function from a mousedown event handler if you want to guarantee
+  // that the mousemove and mouseup events will go to the same element
+  // as the mousedown even if they leave the bounds of the element. This is
+  // like setting trackMouseMoves to false for just one drag. It is a
+  // substitute for event.target.setCapture(true)
+  setCapture: function() {
+    this.capturing = true;  // Will be set back to false on mouseup
+  },
+
+  capturing: false
 };

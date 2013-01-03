@@ -288,7 +288,6 @@ var ValuePicker = (function() {
 
   function vp_mousemove(event) {
     event.stopPropagation();
-    event.target.setCapture(true);
     currentEvent = cloneEvent(event);
 
     calcSpeed();
@@ -325,6 +324,8 @@ var ValuePicker = (function() {
 
   function vp_mousedown(event) {
     event.stopPropagation();
+    event.target.setCapture(true);
+    MouseEventShim.setCapture();
 
     // Stop animation
     this.element.classList.remove('animation-on');

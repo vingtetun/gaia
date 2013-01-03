@@ -269,10 +269,6 @@ var ValuePicker = (function() {
   function calcSpeed() {
     var movingSpace = startEvent.y - currentEvent.y;
     var deltaTime = currentEvent.timestamp - startEvent.timestamp;
-    // Synthetic mouse events have timestamps in microseconds 
-    // instead of milliseconds.
-    if (currentEvent.timestamp > 2 * Date.now())
-      deltaTime = deltaTime / 1000;
     var speed = movingSpace / deltaTime;
     currentSpeed = parseFloat(speed.toFixed(2));
   }

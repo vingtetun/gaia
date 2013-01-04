@@ -1,21 +1,22 @@
 /**
  * mouse_event_shim.js: generate mouse events from touch events.
- *   Capture and discard any mouse events that gecko sends so we
- *   don't get duplicates.
  * 
+ *   This library listens for touch events and generates mousedown, mousemove
+ *   mouseup, and click events to match them. It captures and dicards any 
+ *   real mouse events (non-synthetic events with isTrusted true) that are 
+ *   send by gecko so that there are not duplicates.
+ * 
+ *   This library does emit mouseover/mouseout and mouseenter/mouseleave 
+ *   events. You can turn them off by setting MouseEventShim.trackMouseMoves to
+ *   false. This means that mousemove events will always have the same target
+ *   as the mousedown even that began the series. You can also call
+ *   MouseEventShim.setCapture() from a mousedown event handler to prevent
+ *   mouse tracking until the next mouseup event.
+ *
  *   This library does not support multi-touch but should be sufficient
  *   to do drags based on mousedown/mousemove/mouseup events.
  * 
- * XXX
- *  we do not currently emit mouseenter/mouseleave
- *  events. Maybe these should be optional, and users of this library
- *  can enable them if they are needed.
- *
- * XXX
- *  do I need to deal with dblclick events?
- *  
- * XXX
- * How does this code interact with the contextmenu event?
+ *   This library does not emit dblclick events or contextmenu events
  */
 
 'use strict';
@@ -139,19 +140,11 @@
         var oldtarget = target;
         var newtarget = document.elementFromPoint(touch.clientX, touch.clientY);
         if (newtarget === null) {
-          console.warn('document.elementFromPoint returned null');
+          // this can happen as the touch is moving off of the screen, e.g.
           newtarget = oldtarget;
         }
-        if (newtarget != oldtarget) {
-          // XXX: emit events here (mouseleave? mouseout?)
-          // mouseout is easy: just emit it and let it bubble
-          // mouseleave is harder because we may have left multiple
-          // elements in the containment hieararchy, so we have to 
-          // traverse up the parentNode chain and fire a mouseleave on
-          // every container element that has been left.
-          // See: http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#events-mouseevent-event-order
-          // to get the event order right for these
-          leave(oldtarget, newtarget, touch);
+        if (newtarget !== oldtarget) {
+          leave(oldtarget, newtarget, touch); // mouseout, mouseleave
           target = newtarget;
         }
       }
@@ -161,8 +154,8 @@
 
       emitEvent('mousemove', target, touch);
 
-      if (tracking && newtarget != oldtarget) {
-        enter(newtarget, oldtarget, touch);
+      if (tracking && newtarget !== oldtarget) {
+        enter(newtarget, oldtarget, touch);  // mouseover, mouseenter
       }
     }
   }
@@ -176,12 +169,25 @@
   // Send out all the events that are required
   function leave(oldtarget, newtarget, touch) {
     emitEvent('mouseout', oldtarget, touch, newtarget);
+
+    // If the touch has actually left oldtarget (and has not just moved
+    // into a child of oldtarget) send a mouseleave event. mouseleave
+    // events don't bubble, so we have to repeat this up the hierarchy.
+    for(var e = oldtarget; !contains(e, newtarget); e = e.parentNode) {
+      emitEvent('mouseleave', e, touch, newtarget);
+    }
   }
 
   // A touch has entered newtarget from oldtarget
-  // Send out all the events that are required
+  // Send out all the events that are required.
   function enter(newtarget, oldtarget, touch) {
     emitEvent('mouseover', newtarget, touch, oldtarget);
+
+    // Emit non-bubbling mouseenter events if the touch actually entered
+    // newtarget and wasn't already in some child of it
+    for(var e = newtarget; !contains(e, oldtarget); e = e.parentNode) {
+      emitEvent('mouseenter', e, touch, oldtarget);
+    }
   }
 
   function emitEvent(type, target, touch, relatedTarget) {
@@ -216,8 +222,7 @@ var MouseEventShim = {
   // milliseconds. This utility function returns a the timestamp converted
   // to milliseconds, if necessary.
   getEventTimestamp: function(e) {
-    // XXX: Are real events always trusted?
-    if (e.isTrusted)
+    if (e.isTrusted)             // XXX: Are real events always trusted?
       return e.timeStamp;
     else
       return e.timeStamp/1000;

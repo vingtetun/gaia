@@ -36,7 +36,7 @@
 
   var starttouch;  // The Touch object that we started with
   var target;      // The element the touch is currently over
-  var wantsclick;  // Will we be sending a click event after mouseup?
+  var emitclick;   // Will we be sending a click event after mouseup?
 
   // Use capturing listeners to discard all mouse events from gecko
   window.addEventListener('mousedown', discardEvent, true);
@@ -70,7 +70,7 @@
     // If there is more than one simultaneous touch, ignore all but the first
     starttouch = e.changedTouches[0];
     target = starttouch.target;
-    wantsclick = true;
+    emitclick = true;
 
     // Move to the position of the touch
     emitEvent('mousemove', target, starttouch);
@@ -82,7 +82,7 @@
     // And remember not to send a click event
     if (!result) {
       e.preventDefault();
-      wantsclick = false;
+      emitclick = false;
     }
   }
 
@@ -104,9 +104,10 @@
 
       emitEvent('mouseup', target, touch);
 
-      // If target is still the same element we started on send a click, too
-      // Unless the user prevented the click on mousedown
-      if (target === starttouch.target && wantsclick)
+      // If target is still the same element we started and the touch did not
+      // move more than the threshold and if the user did not prevent
+      // the mousedown, then send a click event, too.
+      if (target === starttouch.target && emitclick)
         emitEvent('click', target, touch);
 
       starttouch = null;
@@ -127,6 +128,14 @@
       // Don't send a mousemove if the touchmove was prevented
       if (e.defaultPrevented)
         return;
+
+      // See if we've moved too much to emit a click event
+      var dx = Math.abs(touch.screenX - starttouch.screenX);
+      var dy = Math.abs(touch.screenY - starttouch.screenY);
+      if (dx > MouseEventShim.dragThresholdX ||
+          dy > MouseEventShim.dragThresholdY){
+        emitclick = false;
+      }
 
       var tracking = MouseEventShim.trackMouseMoves &&
         !MouseEventShim.capturing;
@@ -243,5 +252,11 @@ var MouseEventShim = {
       this.captureTarget = target;
   },
 
-  capturing: false
+  capturing: false,
+
+  // Keep these in sync with ui.dragThresholdX and ui.dragThresholdY prefs.
+  // If a touch ever moves more than this many pixels from its starting point
+  // then we will not synthesize a click event when the touch ends.
+  dragThresholdX: 25,
+  dragThresholdY: 25,
 };

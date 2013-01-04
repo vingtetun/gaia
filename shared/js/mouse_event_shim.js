@@ -70,6 +70,17 @@
     if (e.defaultPrevented)
       return;
 
+    // Sometimes an unknown gecko bug causes us to get a touchstart event
+    // for an iframe target that we can't use because it is cross origin.
+    // Don't start handling a touch in that case
+    try {
+      e.changedTouches[0].target.ownerDocument;
+    }
+    catch (e) {
+      // Ignore the event if we can't see the properties of the target
+      return;
+    }
+
     // If there is more than one simultaneous touch, ignore all but the first
     starttouch = e.changedTouches[0];
     target = starttouch.target;
@@ -224,7 +235,13 @@
                              0,           // we're simulating the left button
                              relatedTarget || null);
 
-    return target.dispatchEvent(synthetic);
+    try {
+      return target.dispatchEvent(synthetic);
+    }
+    catch (e) {
+      console.warn('Exception calling dispatchEvent', type, e);
+      return true;
+    }
   }
 }());
 

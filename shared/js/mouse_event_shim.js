@@ -1,12 +1,12 @@
 /**
  * mouse_event_shim.js: generate mouse events from touch events.
- * 
+ *
  *   This library listens for touch events and generates mousedown, mousemove
- *   mouseup, and click events to match them. It captures and dicards any 
- *   real mouse events (non-synthetic events with isTrusted true) that are 
+ *   mouseup, and click events to match them. It captures and dicards any
+ *   real mouse events (non-synthetic events with isTrusted true) that are
  *   send by gecko so that there are not duplicates.
- * 
- *   This library does emit mouseover/mouseout and mouseenter/mouseleave 
+ *
+ *   This library does emit mouseover/mouseout and mouseenter/mouseleave
  *   events. You can turn them off by setting MouseEventShim.trackMouseMoves to
  *   false. This means that mousemove events will always have the same target
  *   as the mousedown even that began the series. You can also call
@@ -15,7 +15,7 @@
  *
  *   This library does not support multi-touch but should be sufficient
  *   to do drags based on mousedown/mousemove/mouseup events.
- * 
+ *
  *   This library does not emit dblclick events or contextmenu events
  */
 
@@ -30,7 +30,7 @@
   // events.  We don't need the shim code for mouse events.
   try {
     document.createEvent('TouchEvent');
-  } catch(e) {
+  } catch (e) {
     return;
   }
 
@@ -45,7 +45,7 @@
   window.addEventListener('click', discardEvent, true);
 
   function discardEvent(e) {
-    if (e.isTrusted) 
+    if (e.isTrusted)
       e.stopImmediatePropagation();
   }
 
@@ -60,7 +60,7 @@
 
   function handleTouchStart(e) {
     // If we're already handling a touch, ignore this one
-    if (starttouch) 
+    if (starttouch)
       return;
 
     // Ignore any event that has already been prevented
@@ -96,7 +96,7 @@
       MouseEventShim.captureTarget = null;
     }
 
-    for(var i = 0; i < e.changedTouches.length; i++) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
       // If the ended touch does not have the same id, skip it
       if (touch.identifier !== starttouch.identifier)
@@ -119,7 +119,7 @@
     if (!starttouch)
       return;
 
-    for(var i = 0; i < e.changedTouches.length; i++) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
       // If the ended touch does not have the same id, skip it
       if (touch.identifier !== starttouch.identifier)
@@ -133,7 +133,7 @@
       var dx = Math.abs(touch.screenX - starttouch.screenX);
       var dy = Math.abs(touch.screenY - starttouch.screenY);
       if (dx > MouseEventShim.dragThresholdX ||
-          dy > MouseEventShim.dragThresholdY){
+          dy > MouseEventShim.dragThresholdY) {
         emitclick = false;
       }
 
@@ -182,7 +182,7 @@
     // If the touch has actually left oldtarget (and has not just moved
     // into a child of oldtarget) send a mouseleave event. mouseleave
     // events don't bubble, so we have to repeat this up the hierarchy.
-    for(var e = oldtarget; !contains(e, newtarget); e = e.parentNode) {
+    for (var e = oldtarget; !contains(e, newtarget); e = e.parentNode) {
       emitEvent('mouseleave', e, touch, newtarget);
     }
   }
@@ -194,7 +194,7 @@
 
     // Emit non-bubbling mouseenter events if the touch actually entered
     // newtarget and wasn't already in some child of it
-    for(var e = newtarget; !contains(e, oldtarget); e = e.parentNode) {
+    for (var e = newtarget; !contains(e, oldtarget); e = e.parentNode) {
       emitEvent('mouseenter', e, touch, oldtarget);
     }
   }
@@ -205,10 +205,10 @@
     var count =
       (type === 'mousedown' || type === 'mouseup' || type === 'click') ? 1 : 0;
 
-    synthetic.initMouseEvent(type, 
+    synthetic.initMouseEvent(type,
                              bubbles,     // canBubble
                              true,        // cancelable
-                             window, 
+                             window,
                              count,       // detail: click count
                              touch.screenX,
                              touch.screenY,
@@ -234,7 +234,7 @@ var MouseEventShim = {
     if (e.isTrusted)             // XXX: Are real events always trusted?
       return e.timeStamp;
     else
-      return e.timeStamp/1000;
+      return e.timeStamp / 1000;
   },
 
   // Set this to false if you don't care about mouseover/out events
@@ -248,7 +248,7 @@ var MouseEventShim = {
   // substitute for event.target.setCapture(true)
   setCapture: function(target) {
     this.capturing = true;  // Will be set back to false on mouseup
-    if (target) 
+    if (target)
       this.captureTarget = target;
   },
 
@@ -258,5 +258,5 @@ var MouseEventShim = {
   // If a touch ever moves more than this many pixels from its starting point
   // then we will not synthesize a click event when the touch ends.
   dragThresholdX: 25,
-  dragThresholdY: 25,
+  dragThresholdY: 25
 };

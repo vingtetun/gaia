@@ -45,8 +45,11 @@
   window.addEventListener('click', discardEvent, true);
 
   function discardEvent(e) {
-    if (e.isTrusted)
-      e.stopImmediatePropagation();
+    if (e.isTrusted) {
+      e.stopImmediatePropagation(); // so it goes no further
+      if (e.type === 'click')
+        e.preventDefault();         // so it doesn't trigger a change event
+    }
   }
 
   // Listen for touch events that bubble up to the window.

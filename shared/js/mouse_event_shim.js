@@ -121,8 +121,8 @@
       // If target is still the same element we started and the touch did not
       // move more than the threshold and if the user did not prevent
       // the mousedown, then send a click event, too.
-      if (target === starttouch.target && emitclick)
-        emitEvent('click', target, touch);
+      if (emitclick)
+        emitEvent('click', starttouch.target, touch);
 
       starttouch = null;
       return;

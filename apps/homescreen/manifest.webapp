@@ -45,5 +45,8 @@
       "href": "/save-bookmark.html",
       "returnValue": true
     }
+  },
+  "icons": {
+    "60": "/style/icons/Homescreen.png"
   }
 }

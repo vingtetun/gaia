@@ -11,7 +11,6 @@ var CostControlApp = (function() {
 
   'use strict';
 
-
   var costcontrol, initialized = false;
   window.addEventListener('DOMContentLoaded', function _onDOMReady() {
     var mobileConnection = window.navigator.mozMobileConnection;
@@ -29,14 +28,15 @@ var CostControlApp = (function() {
   });
 
   function _startApp() {
-    checkSIMChange();
-    CostControl.getInstance(function _onCostControlReady(instance) {
-      if (ConfigManager.option('fte')) {
-        window.location = '/fte.html';
-        return;
-      }
-      costcontrol = instance;
-      setupApp();
+    checkSIMChange(function _onSIMChecked() {
+      CostControl.getInstance(function _onCostControlReady(instance) {
+        if (ConfigManager.option('fte')) {
+          window.location = '/fte.html';
+          return;
+        }
+        costcontrol = instance;
+        setupApp();
+      });
     });
   }
 
@@ -102,7 +102,6 @@ var CostControlApp = (function() {
 
     initialized = true;
   }
-
 
   var currentMode;
   function updateUI() {

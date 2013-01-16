@@ -2,7 +2,7 @@
 'use strict';
 
 // Checks for a SIM change
-function checkSIMChange() {
+function checkSIMChange(callback) {
   asyncStorage.getItem('lastSIM', function _compareWithCurrent(lastSIM) {
     var currentSIM = window.navigator.mozMobileConnection.iccInfo.iccid;
     if (lastSIM !== currentSIM) {
@@ -10,8 +10,14 @@ function checkSIMChange() {
       MindGap.updateTagList(currentSIM);
     }
     ConfigManager.requestSettings(function _onSettings(settings) {
-      if (settings.nextReset)
-        setNextReset(settings.nextReset);
+      if (settings.nextReset) {
+        setNextReset(settings.nextReset, callback);
+        return;
+      }
+
+      if (callback) {
+        callback();
+      }
     });
   });
 }
@@ -21,16 +27,16 @@ function addAlarmTimeout(type, delay) {
   return proxy.addAlarmTimeout(type, delay);
 }
 
-function setNextReset(when) {
+function setNextReset(when, callback) {
   var proxy = document.getElementById('message-handler');
-  return proxy ? proxy.contentWindow.setNextReset(when) : setNextReset(when);
+  return proxy ? proxy.contentWindow.setNextReset(when, callback) :
+                 setNextReset(when, callback);
 }
 
 // Next automatic reset date based on user preferences
-function updateNextReset(trackingPeriod, value) {
+function updateNextReset(trackingPeriod, value, callback) {
   if (trackingPeriod === 'never') {
-    setNextReset(null); // remove oldAlarm
-    debug('Automatic reset disabled');
+    setNextReset(null, callback); // remove any alarm
     return;
   }
 
@@ -58,10 +64,11 @@ function updateNextReset(trackingPeriod, value) {
       daysToTarget = 7 + daysToTarget;
     nextReset = new Date();
     nextReset.setTime(nextReset.getTime() + oneDay * daysToTarget);
+    toMidnight(nextReset);
   }
 
   // remove oldAlarm and set the new one
-  setNextReset(nextReset);
+  setNextReset(nextReset, callback);
 }
 
 function resetData() {

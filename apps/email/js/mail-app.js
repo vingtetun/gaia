@@ -240,9 +240,10 @@ if ('mozSetMessageHandler' in window.navigator) {
     else if (activityName === 'new' ||
              activityName === 'view') {
       // new uses URI, view uses url
-      var [to, subject, body, cc, bcc] = queryURI(
-        activity.source.data.url ||
-        activity.source.data.URI);
+      var data = queryURI(activity.source.data.url ||
+                          activity.source.data.URI);
+      var to = data[0], subject = data[1], body = data[2],
+          cc = data[3], bcc = data[4];
     }
     var sendMail = function actHandleMail() {
       var folderToUse;

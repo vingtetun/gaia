@@ -20,9 +20,9 @@ var emptyFn = function() {}, CRLF = '\r\n',
     reDateTime = /^(\d{2})-(.{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-]\d{4})$/,
     HOUR_MILLIS = 60 * 60 * 1000, MINUTE_MILLIS = 60 * 1000;
 
-const CHARCODE_RBRACE = ('}').charCodeAt(0),
-      CHARCODE_ASTERISK = ('*').charCodeAt(0),
-      CHARCODE_RPAREN = (')').charCodeAt(0);
+var CHARCODE_RBRACE = ('}').charCodeAt(0),
+    CHARCODE_ASTERISK = ('*').charCodeAt(0),
+    CHARCODE_RPAREN = (')').charCodeAt(0);
 
 var setTimeoutFunc = window.setTimeout.bind(window),
     clearTimeoutFunc = window.clearTimeout.bind(window);
@@ -59,8 +59,8 @@ function parseImapDate(dstr) {
 /**
  * Modified utf-7 detecting regexp for use by `decodeModifiedUtf7`.
  */
-const RE_MUTF7 = /&([^-]*)-/g,
-      RE_COMMA = /,/g;
+var RE_MUTF7 = /&([^-]*)-/g,
+    RE_COMMA = /,/g;
 /**
  * Decode the modified utf-7 representation used to encode mailbox names to
  * lovely unicode.
@@ -1967,7 +1967,7 @@ function isNotEmpty(str) {
   return str.trim().length > 0;
 }
 
-const RE_RECENT = /^\\Recent$/i;
+var RE_RECENT = /^\\Recent$/i;
 function isNotEmptyOrRecent(str) {
   var s = str.trim();
   return s.length > 0 && !RE_RECENT.test(s);

@@ -33,9 +33,9 @@ define('mailapi/accountcommon',
     $module,
     exports
   ) {
-const allbackMaker = $allback.allbackMaker;
+var allbackMaker = $allback.allbackMaker;
 
-const PIECE_ACCOUNT_TYPE_TO_CLASS = {
+var PIECE_ACCOUNT_TYPE_TO_CLASS = {
   'imap': $imapacct.ImapAccount,
   'smtp': $smtpacct.SmtpAccount,
   //'gmail-imap': GmailAccount,
@@ -46,7 +46,7 @@ const PIECE_ACCOUNT_TYPE_TO_CLASS = {
 // complete during the autoconfiguration process. This value is intentionally
 // fairly large so that we don't abort an XHR just because the network is
 // spotty.
-const AUTOCONFIG_TIMEOUT_MS = 30 * 1000;
+var AUTOCONFIG_TIMEOUT_MS = 30 * 1000;
 
 /**
  * Composite account type to expose account piece types with individual
@@ -229,7 +229,7 @@ CompositeAccount.prototype = {
   getFirstFolderWithType: $acctmixins.getFirstFolderWithType,
 };
 
-const COMPOSITE_ACCOUNT_TYPE_TO_CLASS = {
+var COMPOSITE_ACCOUNT_TYPE_TO_CLASS = {
   'imap+smtp': CompositeAccount,
   'fake': $fakeacct.FakeAccount,
   'activesync': $asacct.ActiveSyncAccount,
@@ -310,8 +310,8 @@ var autoconfigByDomain = exports._autoconfigByDomain = {
  * @return the new identities
  */
 function recreateIdentities(universe, accountId, oldIdentities) {
-  let identities = [];
-  for (let [,oldIdentity] in Iterator(oldIdentities)) {
+  var identities = [];
+  for (var oldIdentity in Iterator(oldIdentities)[1]) {
     identities.push({
       id: accountId + '/' + $a64.encodeInt(universe.config.nextIdentityNum++),
       name: oldIdentity.name,
@@ -803,7 +803,7 @@ Autoconfigurator.prototype = {
    *        info, formatted as JSON
    */
   _getXmlConfig: function getXmlConfig(url, callback) {
-    let xhr = new XMLHttpRequest({mozSystem: true});
+    var xhr = new XMLHttpRequest({mozSystem: true});
     xhr.open('GET', url, true);
     xhr.timeout = this.timeout;
 
@@ -818,22 +818,22 @@ Autoconfigurator.prototype = {
       // issue), trying to use responseXML results in a SecurityError when
       // running XPath queries. So let's just do an end-run around the
       // "security".
-      let doc = new DOMParser().parseFromString(xhr.responseText, 'text/xml');
+      var doc = new DOMParser().parseFromString(xhr.responseText, 'text/xml');
       function getNode(xpath, rel) {
         return doc.evaluate(xpath, rel || doc, null,
                             XPathResult.FIRST_ORDERED_NODE_TYPE, null)
                   .singleNodeValue;
       }
 
-      let provider = getNode('/clientConfig/emailProvider');
+      var provider = getNode('/clientConfig/emailProvider');
       // Get the first incomingServer we can use (we assume first == best).
-      let incoming = getNode('incomingServer[@type="imap"] | ' +
+      var incoming = getNode('incomingServer[@type="imap"] | ' +
                              'incomingServer[@type="activesync"]', provider);
-      let outgoing = getNode('outgoingServer[@type="smtp"]', provider);
+      var outgoing = getNode('outgoingServer[@type="smtp"]', provider);
 
       if (incoming) {
-        let config = { type: null, incoming: {}, outgoing: {} };
-        for (let [,child] in Iterator(incoming.children))
+        var config = { type: null, incoming: {}, outgoing: {} };
+        for (var child in Iterator(incoming.children)[1])
           config.incoming[child.tagName] = child.textContent;
 
         if (incoming.getAttribute('type') === 'activesync') {
@@ -841,7 +841,7 @@ Autoconfigurator.prototype = {
         }
         else if (outgoing) {
           config.type = 'imap+smtp';
-          for (let [,child] in Iterator(outgoing.children))
+          for (var child in Iterator(outgoing.children)[1])
             config.outgoing[child.tagName] = child.textContent;
 
           // We do not support unencrypted connections outside of unit tests.
@@ -923,7 +923,7 @@ Autoconfigurator.prototype = {
         return;
       }
 
-      let autoconfig = {
+      var autoconfig = {
         type: 'activesync',
         displayName: config.user.name,
         incoming: {
@@ -947,10 +947,10 @@ Autoconfigurator.prototype = {
    */
   _getConfigFromDomain: function getConfigFromDomain(userDetails, domain,
                                                      callback) {
-    let suffix = '/mail/config-v1.1.xml?emailaddress=' +
+    var suffix = '/mail/config-v1.1.xml?emailaddress=' +
                  encodeURIComponent(userDetails.emailAddress);
-    let url = 'http://autoconfig.' + domain + suffix;
-    let self = this;
+    var url = 'http://autoconfig.' + domain + suffix;
+    var self = this;
 
     this._getXmlConfig(url, function(error, config, errorDetails) {
       if (self._isSuccessOrFatal(error)) {
@@ -959,7 +959,7 @@ Autoconfigurator.prototype = {
       }
 
       // See <http://tools.ietf.org/html/draft-nottingham-site-meta-04>.
-      let url = 'http://' + domain + '/.well-known/autoconfig' + suffix;
+      var url = 'http://' + domain + '/.well-known/autoconfig' + suffix;
       self._getXmlConfig(url, function(error, config, errorDetails) {
         if (self._isSuccessOrFatal(error)) {
           callback(error, config, errorDetails);
@@ -993,7 +993,7 @@ Autoconfigurator.prototype = {
    *        domain
    */
   _getMX: function getMX(domain, callback) {
-    let xhr = new XMLHttpRequest({mozSystem: true});
+    var xhr = new XMLHttpRequest({mozSystem: true});
     xhr.open('GET', 'https://live.mozillamessaging.com/dns/mx/' +
              encodeURIComponent(domain), true);
     xhr.timeout = this.timeout;
@@ -1024,7 +1024,7 @@ Autoconfigurator.prototype = {
    *        info, formatted as JSON
    */
   _getConfigFromMX: function getConfigFromMX(domain, callback) {
-    let self = this;
+    var self = this;
     this._getMX(domain, function(error, mxDomain, errorDetails) {
       if (error)
         return callback(error, null, errorDetails);
@@ -1066,11 +1066,12 @@ Autoconfigurator.prototype = {
    *        info, formatted as JSON
    */
   getConfig: function getConfig(userDetails, callback) {
-    let [emailLocalPart, emailDomainPart] = userDetails.emailAddress.split('@');
-    let domain = emailDomainPart.toLowerCase();
+    var details = userDetails.emailAddress.split('@');
+    var emailLocalPart = details[0], emailDomainPart = details[1];
+    var domain = emailDomainPart.toLowerCase();
     console.log('Attempting to get autoconfiguration for', domain);
 
-    const placeholderFields = {
+    var placeholderFields = {
       incoming: ['username', 'hostname', 'server'],
       outgoing: ['username', 'hostname'],
     };
@@ -1087,12 +1088,13 @@ Autoconfigurator.prototype = {
 
       // Fill any placeholder strings in the configuration object we retrieved.
       if (config) {
-        for (let [serverType, fields] in Iterator(placeholderFields)) {
+        for (var iter in Iterator(placeholderFields)) {
+          var serverType = iter[0], fields = iter[1];
           if (!config.hasOwnProperty(serverType))
             continue;
 
-          let server = config[serverType];
-          for (let [,field] in Iterator(fields)) {
+          var server = config[serverType];
+          for (var field in Iterator(fields)[1]) {
             if (server.hasOwnProperty(field))
               server[field] = fillPlaceholder(server[field]);
           }
@@ -1108,7 +1110,7 @@ Autoconfigurator.prototype = {
       return;
     }
 
-    let self = this;
+    var self = this;
     console.log('  Looking in local file store');
     this._getConfigFromLocalFile(domain, function(error, config, errorDetails) {
       if (self._isSuccessOrFatal(error)) {
@@ -1150,7 +1152,7 @@ Autoconfigurator.prototype = {
    *        info, formatted as JSON
    */
   tryToCreateAccount: function(universe, userDetails, callback) {
-    let self = this;
+    var self = this;
     this.getConfig(userDetails, function(error, config, errorDetails) {
       if (error)
         return callback(error, null, errorDetails);

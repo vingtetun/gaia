@@ -21,10 +21,15 @@
  **/
 define('net',['require','exports','module','util','events'],function(require, exports, module) {
 
+function debug(str) {
+  dump("NetSocket (" + Date.now() + ") :" + str + "\n");
+}
+
 var util = require('util'),
     EventEmitter = require('events').EventEmitter;
 
 function NetSocket(port, host, crypto) {
+  debug("Created");
   this._host = host;
   this._port = port;
   this._actualSock = navigator.mozTCPSocket.open(
@@ -40,35 +45,45 @@ function NetSocket(port, host, crypto) {
 }
 exports.NetSocket = NetSocket;
 util.inherits(NetSocket, EventEmitter);
+
 NetSocket.prototype.setTimeout = function() {
+  debug("setTimeout");
 };
 NetSocket.prototype.setKeepAlive = function(shouldKeepAlive) {
+  debug("setKeepAlive");
 };
 NetSocket.prototype.write = function(buffer) {
+  debug("Write");
   this._actualSock.send(buffer);
 };
 NetSocket.prototype.end = function() {
+  debug("End");
   this._actualSock.close();
   this.destroyed = true;
 };
 
 NetSocket.prototype._onconnect = function(event) {
+  debug("OnConnect");
   this.emit('connect', event.data);
 };
 NetSocket.prototype._onerror = function(event) {
+  debug("OnError");
   this.emit('error', event.data);
 };
 NetSocket.prototype._ondata = function(event) {
+  debug("OnData");
   var buffer = Buffer(event.data);
   this.emit('data', buffer);
 };
 NetSocket.prototype._onclose = function(event) {
+  debug("OnClose");
   this.emit('close', event.data);
   this.emit('end', event.data);
 };
 
 
 exports.connect = function(port, host) {
+  debug("Connect");
   return new NetSocket(port, host, false);
 };
 

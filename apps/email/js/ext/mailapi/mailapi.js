@@ -1,17 +1,5 @@
 /**
  *
- **/
-
-define('mailapi/mailapi',
-  [
-    'exports'
-  ],
-  function(
-    exports
-  ) {
-
-/**
- *
  */
 function MailAccount(api, wireRep) {
   this._api = api;
@@ -1178,7 +1166,7 @@ var MailUtils = {
 /**
  * The public API exposed to the client via the MailAPI global.
  */
-function MailAPI() {
+function MailAPIBase() {
   this._nextHandle = 1;
 
   this._slices = {};
@@ -1215,8 +1203,7 @@ function MailAPI() {
    */
   this.onbadlogin = null;
 }
-exports.MailAPI = MailAPI;
-MailAPI.prototype = {
+MailAPIBase.prototype = {
   toString: function() {
     return '[MailAPI]';
   },
@@ -2198,5 +2185,3 @@ MailAPI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
 };
 
-
-}); // end define

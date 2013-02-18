@@ -334,7 +334,10 @@ function MailUniverse(callAfterBigBang, testOptions) {
 
   this._LOG = null;
   this._db = new $maildb.MailDB(testOptions);
-  this._cronSyncer = new $cronsync.CronSyncer(this);
+
+  // XXX need to make sure the mozAlarms apis works...
+  //this._cronSyncer = new $cronsync.CronSyncer(this);
+
   var self = this;
   this._db.getConfig(function(configObj, accountInfos, lazyCarryover) {
     function setupLogging(config) {
@@ -484,8 +487,10 @@ MailUniverse.prototype = {
    * Perform initial initialization based on our configuration.
    */
   _initFromConfig: function() {
+/*
     this._cronSyncer.setSyncIntervalMS(
       $syncbase.CHECK_INTERVALS_ENUMS_TO_MS[this.config.syncCheckIntervalEnum]);
+*/
   },
 
   /**
@@ -506,8 +511,10 @@ MailUniverse.prototype = {
         case 'syncCheckIntervalEnum':
           if (!$syncbase.CHECK_INTERVALS_ENUMS_TO_MS.hasOwnProperty(val))
             continue;
+/*
           this._cronSyncer.setSyncIntervalMS(
             $syncbase.CHECK_INTERVALS_ENUMS_TO_MS[val]);
+*/
           break;
         case 'debugLogging':
           break;
@@ -884,7 +891,7 @@ MailUniverse.prototype = {
 
     window.removeEventListener('online', this._bound_onConnectionChange);
     window.removeEventListener('offline', this._bound_onConnectionChange);
-    this._cronSyncer.shutdown();
+    //this._cronSyncer.shutdown();
     this._db.close();
     this._LOG.__die();
   },

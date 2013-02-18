@@ -63,7 +63,7 @@ MailDB.prototype = {
   },
 
   getConfig: function(callback, trans) {
-    // XXX anything to do with trans
+    // XXX vn Does trans deserve any purpose?
     if (!this._ready) {
       this._callbacksQueue.push(this.getConfig.bind(this, callback));
       return;
@@ -93,7 +93,7 @@ MailDB.prototype = {
     var args = [ accountId, folderInfo, perFolderStuff, deletedFolderIds ];
     sendMessage('saveAccountFolderStates', args, callback);
 
-    // XXX I'm not convinced this is used...
+    // XXX vn Does this deserve any purpose?
     return null;
   },
 

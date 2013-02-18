@@ -5,10 +5,6 @@ function debug(str) {
   dump('MailWorker (remote): ' + str + '\n');
 }
 
-self.onmessage = function(event) {
-  debug(event.data);
-}
-self.postMessage("hello");
 
 var window = self;
 
@@ -53,11 +49,6 @@ var console = {
     debug('console.error: ' + str);
   }
 }
-
-
-// XXX Let's remote navigator online/offline
-addEventListener('message', function(evt) {
-});
 
 var scripts = [
   'ext/almond.js',

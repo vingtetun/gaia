@@ -62,7 +62,32 @@ function onUniverse() {
   console.log("Mail universe/bridge created and notified!");
 }
 
-var universe = new $mailuniverse.MailUniverse(onUniverse);
+var universe = null;
+self.addEventListener('message', function(evt) {
+  var data = evt.data;
+  debug("same-frame-setup.js: " + JSON.stringify(data));
+
+  switch (data.type) {
+    case 'hello': {
+      navigator.onLine = data.online;
+
+      universe = new $mailuniverse.MailUniverse(onUniverse);
+      break;
+    }
+
+    case 'online': {
+      navigator.onLine = true;
+      break;
+    }
+
+    case 'offline': {
+      navigator.onLine = false;
+      break;
+    }
+    break;
+  }
+});
+self.postMessage({ type: "hello" });
 
 /**
  * Debugging: enable spawning a loggest log browser using our log contents;

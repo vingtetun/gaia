@@ -1070,7 +1070,7 @@ FolderStorage.prototype = {
         // Although everything should be async, avoid stack explosions by
         // deferring the execution to a future turn of the event loop.
         if (self._mutexQueue.length)
-          window.setZeroTimeout(self._invokeNextMutexedCall.bind(self));
+          window.setTimeout(self._invokeNextMutexedCall.bind(self));
         else if (self._slices.length === 0)
           self.folderSyncer.allConsumersDead();
       });

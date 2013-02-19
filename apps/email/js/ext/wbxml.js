@@ -138,8 +138,8 @@
         continue;
 
       if (page.Tags) {
-        var v = Iterator(page.Tags).next()[1];
-        codepages.__nsnames__[v >> 8] = name;
+        var v = Iterator(page.Tags).next();
+        codepages.__nsnames__[v[1] >> 8] = name;
 
         for (var iter2 in Iterator(page.Tags)) {
           var tag = iter2[0], value = iter2[1];
@@ -242,7 +242,8 @@
       var strValue = '';
       var array = [];
 
-      for (var hunk in Iterator(pieces)[1]) {
+      for (var iter in Iterator(pieces)) {
+        var hunk = iter[1];
         if (hunk instanceof Extension) {
           if (strValue) {
             array.push(strValue);
@@ -704,7 +705,8 @@
       var bytes = strings.map(function(s) { return encoder.encode(s); });
       var len = bytes.reduce(function(x, y) { return x + y.length + 1; }, 0);
       this._write_mb_uint32(len);
-      for (var b in Iterator(bytes)[1]) {
+      for (var iter in Iterator(bytes)) {
+        var b = iter[1];
         this._write_bytes(b);
         this._write(0x00);
       }
@@ -831,8 +833,10 @@
       }
 
       if (attrs.length) {
-        for (var attr in Iterator(attrs)[1])
+        for (var iter in Iterator(attrs)) {
+          var attr = iter[1];
           this._writeAttr(attr);
+        }
         this._write(Tokens.END);
       }
     },
@@ -856,8 +860,10 @@
 
     _writeText: function(value, inAttr) {
       if (Array.isArray(value)) {
-        for (var piece in Iterator(value)[1])
+        for (var iter in Iterator(value)) {
+          var piece = iter[1];
           this._writeText(piece, inAttr);
+        }
       }
       else if (value instanceof Writer.StringTableRef) {
         this._write(Tokens.STR_T);
@@ -990,7 +996,8 @@
       for (var node in reader.document) {
         if (node.type === 'TAG') {
           fullPath.push(node.tag);
-          for (var listener in Iterator(this.listeners)[1]) {
+          for (var iter in Iterator(this.listeners)) {
+            var listener = iter[1];
             if (this._pathMatches(fullPath, listener.path)) {
               node.children = [];
               try {
@@ -1008,14 +1015,16 @@
         else if (node.type === 'STAG') {
           fullPath.push(node.tag);
 
-          for (var listener in Iterator(this.listeners)[1]) {
+          for (var iter in Iterator(this.listeners)) {
+            var listener = iter[1];
             if (this._pathMatches(fullPath, listener.path)) {
               recording++;
             }
           }
         }
         else if (node.type === 'ETAG') {
-          for (var listener in Iterator(this.listeners)[1]) {
+          for (var iter in Iterator(this.listeners)) {
+            var listener = iter[1];
             if (this._pathMatches(fullPath, listener.path)) {
               recording--;
               try {

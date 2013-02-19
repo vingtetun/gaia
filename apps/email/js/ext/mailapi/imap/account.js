@@ -452,7 +452,7 @@ ImapAccount.prototype = {
     // If we are offline, invoke the deathback soon and don't bother trying to
     // get a connection.
     if (dieOnConnectFailure && !this.universe.online) {
-      window.setZeroTimeout(deathback);
+      window.setTimeout(deathback);
       return;
     }
 

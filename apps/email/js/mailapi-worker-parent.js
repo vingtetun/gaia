@@ -74,10 +74,176 @@ worker.oncronsyncer = function(msg) {
   CronSync.process(msg.uid, msg.cmd, msg.args);
 }
 
+worker.ondomparser = function(msg) {
+  dump("ACCOUNT: asked for: " + msg.cmd + "\n");
+  if (msg.cmd == 'parseconfig') { // accountcommon
+    var doc = new DOMParser().parseFromString(msg.text, 'text/xml');
+    var getNode = function(xpath, rel) {
+      return doc.evaluate(xpath, rel || doc, null,
+                          XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+                            .singleNodeValue;
+    }
+
+    var provider = getNode('/clientConfig/emailProvider');
+    // Get the first incomingServer we can use (we assume first == best).
+    var incoming = getNode('incomingServer[@type="imap"] | ' +
+                           'incomingServer[@type="activesync"]', provider);
+    var outgoing = getNode('outgoingServer[@type="smtp"]', provider);
+
+    var config = null;
+    var status = null;
+    if (incoming) {
+      config = { type: null, incoming: {}, outgoing: {} };
+      for (var iter in Iterator(incoming.children)) {
+        var child = iter[1];
+        dump("ACCOUNT: " + child.tagName + ":" + child.textContent +"\n");
+        config.incoming[child.tagName] = child.textContent;
+      }
+
+      if (incoming.getAttribute('type') === 'activesync') {
+        config.type = 'activesync';
+      } else if (outgoing) {
+        config.type = 'imap+smtp';
+        for (var iter in Iterator(outgoing.children)) {
+          var child = iter[1];
+          dump("ACCOUNT: " + child.tagName + ":" + child.textContent +"\n");
+          config.outgoing[child.tagName] = child.textContent;
+        }
+
+        // We do not support unencrypted connections outside of unit tests.
+        dump("ACCOUNT: " + config.incoming.socketType + " : " + config.outgoing.socketType + "\n");
+        if (config.incoming.socketType !== 'SSL' ||
+            config.outgoing.socketType !== 'SSL') {
+          config = null;
+          status = 'unsafe';
+        }
+      } else {
+        config = null;
+        status = 'no-outgoing';
+      }
+    } else {
+      status = 'no-incoming';
+    }
+
+    worker.postMessage({
+      type: 'parseconfig',
+      data: {
+        config: config,
+        status: status
+      }
+    });
+  } else if (msg.cmd == 'parseactivesync') { 
+dump("ACCOUNT: " + msg.text + "\n");
+    var doc = new DOMParser().parseFromString(msg.text, 'text/xml');
+
+    var getNode = function(xpath, rel) {
+      return doc.evaluate(xpath, rel, nsResolver,
+                          XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+                  .singleNodeValue;
+    }
+    var getNodes = function(xpath, rel) {
+      return doc.evaluate(xpath, rel, nsResolver,
+                          XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+    }
+    var getString = function(xpath, rel) {
+      return doc.evaluate(xpath, rel, nsResolver, XPathResult.STRING_TYPE,
+                          null).stringValue;
+    }
+
+    var postResponse = function(error, config) {
+      worker.postMessage({
+        type: 'parseactivesync',
+        data: {
+          error: error || null,
+          config: config || null,
+        }
+      });
+    }
+
+    var postAutodiscover = function(data) {
+      worker.postMessage({
+        type: 'parseactivesync',
+        data: data
+      });
+    }
+ 
+    var error = null;
+    if (doc.documentElement.tagName === 'parsererror') {
+      error = 'Error parsing autodiscover response';
+      return postResponse(error);
+    }
+
+    var responseNode = getNode('/ad:Autodiscover/ms:Response', doc);
+    if (!responseNode) {
+      error = 'Missing Autodiscover Response node';
+      return postResponse(error);
+    }
+
+    var error = getNode('ms:Error', responseNode) ||
+                getNode('ms:Action/ms:Error', responseNode);
+    if (error) {
+      error = getString('ms:Message/text()', error);
+      return postResponse(error);
+    }
+
+    var redirect = getNode('ms:Action/ms:Redirect', responseNode);
+    if (redirect) {
+      if (aNoRedirect) {
+        error = 'Multiple redirects occurred during autodiscovery';
+        return postResponse(error);
+      }
+
+      var redirectedEmail = getString('text()', redirect);
+      return postResponse({
+        redirectedEmail: redirectedEmail
+      });
+    }
+
+    var user = getNode('ms:User', responseNode);
+    var config = {
+      culture: getString('ms:Culture/text()', responseNode),
+      user: {
+        name:  getString('ms:DisplayName/text()',  user),
+        email: getString('ms:EMailAddress/text()', user),
+      },
+      servers: [],
+    };
+
+    var servers = getNodes('ms:Action/ms:Settings/ms:Server', responseNode);
+    var server;
+    while ((server = servers.iterateNext())) {
+      config.servers.push({
+        type:       getString('ms:Type/text()',       server),
+        url:        getString('ms:Url/text()',        server),
+        name:       getString('ms:Name/text()',       server),
+        serverData: getString('ms:ServerData/text()', server),
+      });
+    }
+
+    // Try to find a MobileSync server from Autodiscovery.
+    for (var iter in Iterator(config.servers)) {
+      var server = iter[1];
+      if (server.type === 'MobileSync') {
+        config.mobileSyncServer = server;
+        break;
+      }
+    }
+
+    if (!config.mobileSyncServer) {
+      error = 'No MobileSync server found';
+      return postResponse(error, config);
+    }
+
+    postResponse(null, config);
+
+  }
+}
+
 worker.onmessage = function(event) {
   debug(JSON.stringify(event.data) + "\n");
   this['on' + event.data.type](event.data);
 }
+
 
 /* Cron Sync */
 var CronSync = (function() {

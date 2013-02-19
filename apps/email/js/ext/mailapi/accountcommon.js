@@ -311,7 +311,8 @@ var autoconfigByDomain = exports._autoconfigByDomain = {
  */
 function recreateIdentities(universe, accountId, oldIdentities) {
   var identities = [];
-  for (var oldIdentity in Iterator(oldIdentities)[1]) {
+  for (var iter in Iterator(oldIdentities)) {
+    var oldIdentity = iter[1];
     identities.push({
       id: accountId + '/' + $a64.encodeInt(universe.config.nextIdentityNum++),
       name: oldIdentity.name,
@@ -818,49 +819,26 @@ Autoconfigurator.prototype = {
       // issue), trying to use responseXML results in a SecurityError when
       // running XPath queries. So let's just do an end-run around the
       // "security".
-      var doc = new DOMParser().parseFromString(xhr.responseText, 'text/xml');
-      function getNode(xpath, rel) {
-        return doc.evaluate(xpath, rel || doc, null,
-                            XPathResult.FIRST_ORDERED_NODE_TYPE, null)
-                  .singleNodeValue;
-      }
+      self.postMessage({
+        type: 'domparser',
+        cmd: 'parseconfig',
+        text: xhr.responseText
+      });
 
-      var provider = getNode('/clientConfig/emailProvider');
-      // Get the first incomingServer we can use (we assume first == best).
-      var incoming = getNode('incomingServer[@type="imap"] | ' +
-                             'incomingServer[@type="activesync"]', provider);
-      var outgoing = getNode('outgoingServer[@type="smtp"]', provider);
-
-      if (incoming) {
-        var config = { type: null, incoming: {}, outgoing: {} };
-        for (var child in Iterator(incoming.children)[1])
-          config.incoming[child.tagName] = child.textContent;
-
-        if (incoming.getAttribute('type') === 'activesync') {
-          config.type = 'activesync';
-        }
-        else if (outgoing) {
-          config.type = 'imap+smtp';
-          for (var child in Iterator(outgoing.children)[1])
-            config.outgoing[child.tagName] = child.textContent;
-
-          // We do not support unencrypted connections outside of unit tests.
-          if (config.incoming.socketType !== 'SSL' ||
-              config.outgoing.socketType !== 'SSL') {
-            callback('no-config-info', null, { status: 'unsafe' });
-            return;
-          }
-        }
-        else {
-          callback('no-config-info', null, { status: 'no-outgoing' });
+      // XXX urgh!
+        dump("ACCOUNT: waiting for a domparser message..\n");
+      self.addEventListener('message', function onworkerresponse(evt) {
+        if (evt.data.type != 'parseconfig') {
           return;
         }
+        self.removeEventListener(evt.type, onworkerresponse);
 
-        callback(null, config, null);
-      }
-      else {
-        callback('no-config-info', null, { status: 'no-incoming' });
-      }
+        dump("ACCOUNT: receive a domparser message..\n");
+        var data = evt.data.data; 
+        callback(data.config ? null : 'no-config-info',
+                 data.config,
+                  { status: data.status });
+      });
     };
 
     xhr.ontimeout = xhr.onerror = function() {
@@ -1094,7 +1072,8 @@ Autoconfigurator.prototype = {
             continue;
 
           var server = config[serverType];
-          for (var field in Iterator(fields)[1]) {
+          for (var iter in Iterator(fields)) {
+            var field = iter[1];
             if (server.hasOwnProperty(field))
               server[field] = fillPlaceholder(server[field]);
           }

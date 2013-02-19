@@ -754,7 +754,7 @@ FakeAccount.prototype = {
   runOp: function(op, mode, callback) {
     // Just pretend we performed the op so no errors trigger.
     if (callback)
-      setZeroTimeout(callback);
+      setTimeout(callback);
   },
 };
 

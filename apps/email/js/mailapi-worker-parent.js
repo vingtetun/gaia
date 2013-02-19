@@ -1,6 +1,7 @@
 
 'use strict';
 
+setTimeout(function() {
 (function() {
 
 function debug(str) {
@@ -23,7 +24,7 @@ worker.onhello = function() {
     worker.postMessage({ type: 'online' });
   });
 
-  // XXX Ensure that it works
+  // XXX Ensure that it works ???
   navigator.mozSetMessageHandler('alarm', function(msg) {
     worker.postMessage({ type: 'alarm', args: msg });
   });
@@ -90,12 +91,29 @@ var CronSync = (function() {
     };
   }
 
+  function addAlarm(time) {
+    var req = navigator.mozAlarms.add(time, 'ignoreTimezone', {});
+
+    req.onsuccess = function() {
+      console.log('addAlarm: scheduled!');
+    };
+
+    req.onerror = function(event) {
+      console.warn('addAlarm: scheduling problem!');
+      var target = event.target;
+      console.warn(' err:', target && target.error && target.error.name);
+    };
+  }
+
   function process(uid, cmd, args) {
     dump("CronSync: " + cmd + "\n");
 
     switch (cmd) {
       case 'clearAlarms':
         clearAlarms();
+        break;
+      case 'addAlarm':
+        addAlarm.apply(this, args);
         break;
     }
   }
@@ -636,3 +654,6 @@ MailDB.prototype = {
 };
 
 })();
+
+// XXX Let's start the network a bit later.
+});

@@ -238,7 +238,6 @@ function CronSyncer(universe, _logParent) {
   this._outstandingNotesPerAccount = {};
 
   this._initialized = false;
-  this._hackTimeout = null;
 
   this._activeSlices = [];
 }
@@ -248,12 +247,6 @@ CronSyncer.prototype = {
    * Remove any/all scheduled alarms.
    */
   _clearAlarms: function() {
-    // mozalarms doesn't work on desktop; comment out and use setTimeout.
-    if (this._hackTimeout !== null) {
-      window.clearTimeout(this._hackTimeout);
-      this._hackTimeout = null;
-    }
-
     sendMessage('clearAlarms');
   },
 
@@ -262,29 +255,8 @@ CronSyncer.prototype = {
       return;
     console.log("scheduling sync for " + (this._syncIntervalMS / 1000) +
                 " seconds in the future.");
-    this._hackTimeout = window.setTimeout(this.onAlarm.bind(this),
-                                          this._syncIntervalMS);
 
-    // XXX
-    try {
-      console.log('mozAlarms', navigator.mozAlarms);
-      var req = navigator.mozAlarms.add(
-        new Date(Date.now() + this._syncIntervalMS),
-        'ignoreTimezone', {});
-      console.log('req:', req);
-      req.onsuccess = function() {
-        console.log('scheduled!');
-      };
-      req.onerror = function(event) {
-        console.warn('alarm scheduling problem!');
-        console.warn(' err:',
-                     event.target && event.target.error &&
-                     event.target.error.name);
-      };
-    }
-    catch (ex) {
-      console.error('problem initiating request:', ex);
-    }
+    sendMessage('addAlarm', [new Date(Date.now() + this._syncIntervalMS)]);
   },
 
   setSyncIntervalMS: function(syncIntervalMS) {
@@ -292,9 +264,10 @@ CronSyncer.prototype = {
     var pendingAlarm = false;
     if (!this._initialized) {
       this._initialized = true;
-      // mozAlarms doesn't work on b2g-desktop
 
       pendingAlarm = navigator.hasPendingAlarm;
+
+      // XXX does this fire the first time or is there a race?
       window.addEventListener('message', (function(evt) {
         switch(evt.data.type) {
           case 'alarm':

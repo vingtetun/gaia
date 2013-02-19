@@ -12,7 +12,8 @@ var worker = new Worker("js/mailapi-worker.js");
 worker.onhello = function() {
   worker.postMessage({
     type: 'hello',
-    online: navigator.onLine
+    online: navigator.onLine,
+    hasPendingAlarm: navigator.mozHasPendingMessage('alarm')
   }); 
 
   window.addEventListener('online', function() {
@@ -20,6 +21,11 @@ worker.onhello = function() {
   });
   window.addEventListener('offline', function() {
     worker.postMessage({ type: 'online' });
+  });
+
+  // XXX Ensure that it works
+  navigator.mozSetMessageHandler('alarm', function(msg) {
+    worker.postMessage({ type: 'alarm', args: msg });
   });
 }
 
@@ -63,10 +69,41 @@ worker.ontcpsocket = function(msg) {
   TCPSocket.process(msg.cmd, msg.args);
 }
 
+worker.oncronsyncer = function(msg) {
+  CronSync.process(msg.uid, msg.cmd, msg.args);
+}
+
 worker.onmessage = function(event) {
   debug(JSON.stringify(event.data) + "\n");
   this['on' + event.data.type](event.data);
 }
+
+/* Cron Sync */
+var CronSync = (function() {
+  function clearAlarms() {
+    var req = navigator.mozAlarms.getAll();
+    req.onsuccess = function(event) {
+      var alarms = event.target.result;
+      for (var i = 0; i < alarms.length; i++) {
+        navigator.mozAlarms.remove(alarms[i].id);
+      }
+    };
+  }
+
+  function process(uid, cmd, args) {
+    dump("CronSync: " + cmd + "\n");
+
+    switch (cmd) {
+      case 'clearAlarms':
+        clearAlarms();
+        break;
+    }
+  }
+
+  return {
+    process: process
+  }
+})();
 
 /* TCP Socket */
 

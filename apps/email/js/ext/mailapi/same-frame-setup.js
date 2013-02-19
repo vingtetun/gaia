@@ -70,6 +70,7 @@ self.addEventListener('message', function(evt) {
   switch (data.type) {
     case 'hello': {
       navigator.onLine = data.online;
+      navigator.hasPendingAlarm = data.hasPendingAlarm;
 
       universe = new $mailuniverse.MailUniverse(onUniverse);
       break;
@@ -84,6 +85,7 @@ self.addEventListener('message', function(evt) {
       navigator.onLine = false;
       break;
     }
+
     break;
   }
 });

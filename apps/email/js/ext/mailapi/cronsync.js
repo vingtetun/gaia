@@ -183,6 +183,36 @@ function displayHeaderInFrontend(header) {
   gApp.launch();
 }
 
+var uid = 0;
+var callbacks = {};
+function sendMessage(cmd, args, callback) {
+  if (callback) {
+    callbacks[uid] = callback;
+  }
+
+  if (!Array.isArray(args)) {
+    args = args ? [args] : [];
+  }
+
+  self.postMessage({ uid: uid++, type: 'cronsyncer', cmd: cmd, args: args });
+}
+
+function receiveMessage(evt) {
+  var data = evt.data;
+  if (data.type != 'maildb')
+    return;
+
+  dump("MailWorker (cronsyncer): receiveMessage " + data.op + "\n");
+
+  var callback = callbacks[data.uid];
+  if (!callback)
+    return;
+  delete callbacks[data.uid];
+
+  dump("MailWorker (cronsyncer): receiveMessage fire callback\n");
+  callback.apply(callback, data.args);
+}
+
 /**
  * Creates the synchronizer.  It is does not do anything until the first call
  * to setSyncInterval.
@@ -223,15 +253,8 @@ CronSyncer.prototype = {
       window.clearTimeout(this._hackTimeout);
       this._hackTimeout = null;
     }
-/*
-    var req = navigator.mozAlarms.getAll();
-    req.onsuccess = function(event) {
-      var alarms = event.target.result;
-      for (var i = 0; i < alarms.length; i++) {
-        navigator.mozAlarms.remove(alarms[i].id);
-      }
-    }.bind(this);
-*/
+
+    sendMessage('clearAlarms');
   },
 
   _scheduleNextSync: function() {
@@ -241,9 +264,10 @@ CronSyncer.prototype = {
                 " seconds in the future.");
     this._hackTimeout = window.setTimeout(this.onAlarm.bind(this),
                                           this._syncIntervalMS);
-/*
+
+    // XXX
     try {
-      console.log('mpozAlarms', navigator.mozAlarms);
+      console.log('mozAlarms', navigator.mozAlarms);
       var req = navigator.mozAlarms.add(
         new Date(Date.now() + this._syncIntervalMS),
         'ignoreTimezone', {});
@@ -261,7 +285,6 @@ CronSyncer.prototype = {
     catch (ex) {
       console.error('problem initiating request:', ex);
     }
-*/
   },
 
   setSyncIntervalMS: function(syncIntervalMS) {
@@ -270,10 +293,15 @@ CronSyncer.prototype = {
     if (!this._initialized) {
       this._initialized = true;
       // mozAlarms doesn't work on b2g-desktop
-      /*
-      pendingAlarm = navigator.mozHasPendingMessage('alarm');
-      navigator.mozSetMessageHandler('alarm', this.onAlarm.bind(this));
-     */
+
+      pendingAlarm = navigator.hasPendingAlarm;
+      window.addEventListener('message', (function(evt) {
+        switch(evt.data.type) {
+          case 'alarm':
+            this.onAlarm(evt.data.args);
+            break;
+        }
+      }).bind(this));
     }
 
     // leave zero intact, otherwise round up to the minimum.

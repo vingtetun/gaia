@@ -424,7 +424,7 @@ ImapConnection.prototype.connect = function(loginCb) {
     data = customBufferSplitCRLF(data);
     // Defer any extra server responses found in the incoming data
     for (var i=1,len=data.length; i<len; ++i) {
-      process.nextTick(processData.bind(null, data[i]));
+      setTimeout(processData.bind(null, data[i]));
     }
 
     data = data[0].toString('ascii');
@@ -633,7 +633,7 @@ ImapConnection.prototype.connect = function(loginCb) {
 
       if (data[0] === '+' && self._state.ext.idle.state === IDLE_WAIT) {
         self._state.ext.idle.state = IDLE_READY;
-        return process.nextTick(function() { self._send(); });
+        return setTimeout(function() { self._send(); });
       }
 
       var sendBox = false;
@@ -728,12 +728,12 @@ ImapConnection.prototype.connect = function(loginCb) {
           }
         }, self._state.tmoKeepalive);
       } else
-        process.nextTick(function() { self._send(); });
+        setTimeout(function() { self._send(); });
 
       self._state.isIdle = true;
     } else if (data[0] === 'IDLE') {
       if (self._state.requests.length)
-        process.nextTick(function() { self._send(); });
+        setTimeout(function() { self._send(); });
       self._state.isIdle = false;
       self._state.ext.idle.state = IDLE_NONE;
       self._state.ext.idle.timeWaited = 0;

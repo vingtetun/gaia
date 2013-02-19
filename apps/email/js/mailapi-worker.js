@@ -5,7 +5,6 @@ function debug(str) {
   dump('MailWorker (remote): ' + str + '\n');
 }
 
-
 var window = self;
 
 // XXX Move it to the other side
@@ -18,23 +17,6 @@ navigator.mozApps = {
   }
 }
 
-var TextEncoder = function() {
-  return {
-    decode: function(str) {
-      return str;
-    },
-
-    encode: function(str) {
-      return str;
-    }
-  }
-}
-TextEncoder.encode = function(str) {
-  return str;
-}
-TextEncoder.decode = function(str) {
-  return str;
-}
 
 var console = {
   log: function (str) {

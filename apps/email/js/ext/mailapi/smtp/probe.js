@@ -93,6 +93,7 @@ SmtpProber.prototype = {
 
     clearTimeoutFunc(this.timeoutId);
 
+    dump("tryToCreateAccount: smtpprobe: " + this.error + "\n");
     this.onresult(this.error, this.errorDetails);
     this.onresult = null;
 

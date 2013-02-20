@@ -156,9 +156,11 @@ MailBridge.prototype = {
   },
 
   _cmd_tryToCreateAccount: function mb__cmd_tryToCreateAccount(msg) {
+    dump("tryToCreateAccount: mailbridge\n");
     var self = this;
     this.universe.tryToCreateAccount(msg.details, msg.domainInfo,
                                      function(error, account, errorDetails) {
+        dump("tryToCreateAccountResults: mailbridge\n");
         self.__sendMessage({
             type: 'tryToCreateAccountResults',
             handle: msg.handle,

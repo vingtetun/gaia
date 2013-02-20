@@ -379,6 +379,7 @@ Configurators['imap+smtp'] = {
 
     var smtpProber = new $smtpprobe.SmtpProber(credentials, smtpConnInfo,
                                                _LOG);
+
     smtpProber.onresult = callbacks.smtp;
   },
 

@@ -28,29 +28,37 @@ function debug(str) {
 var util = require('util'),
     EventEmitter = require('events').EventEmitter;
 
-function sendMessage(cmd, args, callback) {
+function sendMessage(cmd, uid, args, callback) {
   if (!Array.isArray(args)) {
     args = args ? [args] : [];
   }
 
-  self.postMessage({ type: 'tcpsocket', cmd: cmd, args: args });
+  self.postMessage({ type: 'tcpsocket', uid: uid, cmd: cmd, args: args });
 }
 
+var socketId = 0;
+
 function NetSocket(port, host, crypto) {
+  var uid = this.uid = socketId++;
+
   var args = [host, port, { useSSL: crypto, binaryType: 'arraybuffer' }];
-  sendMessage('open', args);
+  sendMessage('open', uid, args);
 
   self.addEventListener('message', function(evt) {
     var data = evt.data;
     if (data.type != 'tcpsocket')
       return;
+
+    if (data.uid != uid)
+      return;
+
     dump("MailWorker (tcpsocket): receiveMessage " + data.cmd + "\n");
 
     var callback = callbacks[data.cmd];
     if (!callback)
       return;
 
-    dump("MailWorker (tcpsocket): receiveMessage fire callback\n");
+    dump("MailWorker (tcpsocket): receiveMessage fire callback for " + data.cmd + "\n");
     callback.call(callback, { data: data.args });
   });
 
@@ -73,10 +81,10 @@ NetSocket.prototype.setTimeout = function() {
 NetSocket.prototype.setKeepAlive = function(shouldKeepAlive) {
 };
 NetSocket.prototype.write = function(buffer) {
-  sendMessage('write', [buffer]);
+  sendMessage('write', this.uid, [buffer]);
 };
 NetSocket.prototype.end = function() {
-  sendMessage('end');
+  sendMessage('end', this.uid);
   this.destroyed = true;
 };
 
@@ -94,7 +102,6 @@ NetSocket.prototype._onclose = function(event) {
   this.emit('close', event.data);
   this.emit('end', event.data);
 };
-
 
 exports.connect = function(port, host) {
   return new NetSocket(port, host, false);

@@ -654,6 +654,7 @@ MailUniverse.prototype = {
 
   tryToCreateAccount: function mu_tryToCreateAccount(userDetails, domainInfo,
                                                      callback) {
+    dump("tryToCreateAccount: mailuniverse\n");
     if (!this.online) {
       callback('offline');
       return;

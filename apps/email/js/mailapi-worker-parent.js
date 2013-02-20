@@ -67,7 +67,7 @@ worker.onmaildb = function(msg) {
 }
 
 worker.ontcpsocket = function(msg) {
-  TCPSocket.process(msg.cmd, msg.args);
+  TCPSocket.process(msg.uid, msg.cmd, msg.args);
 }
 
 worker.oncronsyncer = function(msg) {
@@ -290,65 +290,59 @@ var CronSync = (function() {
 })();
 
 /* TCP Socket */
-
-function copy(buffer) {
-  var bytes = new Uint8Array(buffer);
-  var output = new ArrayBuffer(buffer.byteLength);
-  var outputBytes = new Uint8Array(output);
-  for (var i = 0; i < buffer.byteLength; i++) {
-    outputBytes[i] = bytes[i];
-  }
-
-  return output;
-}
-
 var TCPSocket = {
-  _sock: null,
+  _sock: {},
 
-  process: function(cmd, args) {
-    function postMessage(cmd, args) {
+  process: function(uid, cmd, args) {
+    dump("TCPSocket: " + uid + ", " + cmd + ", " + JSON.stringify(args) + "\n");
+
+    var postMessage = (function(uid, cmd, args) {
       worker.postMessage({
         type: 'tcpsocket',
+        uid: uid,
         cmd: cmd,
         args: args
       });
-    }
+    }).bind(this, uid);
 
     switch(cmd) {
       case 'open':
         var socket = navigator.mozTCPSocket;
-        var sock = this._sock = socket.open(args[0], args[1], args[2]);
+        var sock = this._sock[uid] = socket.open(args[0], args[1], args[2]);
         sock.onopen = function(evt) {
-          debug('onopen: ' + evt.data.toString());
-          postMessage('onopen', evt.data.toString());
+          debug('onopen ' + uid + ": " + evt.data.toString());
+          postMessage('onopen', evt.data);
         }
         sock.onerror = function(evt) {
-          debug('onerror: ' + evt.data.toString());
-          postMessage('onerror', evt.data.toString());
+          debug('onerror ' + uid + ": " + evt.data.toString());
+          postMessage('onerror', evt.data);
         }
         sock.ondata = function(evt) {
-          debug('ondata: ' + evt.data);
-          postMessage('ondata', copy(evt.data));
+          try {
+            var str = 'NetSocket ondata: ';
+            for (var i = 0; i < evt.data.byteLength; i++) {
+              str += String.fromCharCode(evt.data[i]);
+            }
+            dump(str + '\n');
+          } catch(e) {
+          }
+          debug('ondata ' + uid + ": " + new Uint8Array(evt.data));
+          postMessage('ondata', new Uint8Array(evt.data));
         }
         sock.onclose = function(evt) {
-          debug('onclose: ' + evt.data.toString());
+          debug('onclose ' + uid + ": " + evt.data.toString());
           postMessage('onclose', evt.data.toString());
         }
         break;
 
       case 'end':
+        this._sock[uid].close();
+        break;
+
       case 'write':
-        this[cmd].apply(this, args);
+        this._sock[uid].send(new Uint8Array(args[0]));
         break;
     }
-  },
-
-  write: function(buffer) {
-    this._sock.send(buffer);
-  },
-
-  end: function() {
-    this._sock.close();
   }
 }
 

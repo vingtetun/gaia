@@ -1594,6 +1594,7 @@ MailAPIBase.prototype = {
 
   _recv_tryToCreateAccountResults:
       function ma__recv_tryToCreateAccountResults(msg) {
+    dump("MailAPI: tryToCreateAccountResults\n");
     var req = this._pendingRequests[msg.handle];
     if (!req) {
       unexpectedBridgeDataError('Bad handle for create account:', msg.handle);

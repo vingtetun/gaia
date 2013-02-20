@@ -36,7 +36,11 @@ exports.CONNECT_TIMEOUT_MS = 30000;
  * If we succeed at that, we hand off the established connection to our caller
  * so they can reuse it.
  */
+function debug(str) {
+  dump("IMAP: " + str + "\n");
+}
 function ImapProber(credentials, connInfo, _LOG) {
+  debug("ImapProber");
   var opts = {
     host: connInfo.hostname,
     port: connInfo.port,
@@ -62,6 +66,7 @@ function ImapProber(credentials, connInfo, _LOG) {
 exports.ImapProber = ImapProber;
 ImapProber.prototype = {
   onLoggedIn: function ImapProber_onLoggedIn(err) {
+    debug('onloggedin');
     if (err) {
       this.onError(err);
       return;
@@ -71,6 +76,7 @@ ImapProber.prototype = {
   },
 
   onGotTZOffset: function ImapProber_onGotTZOffset(err, tzOffset) {
+    debug('ongottzoffset');
     if (err) {
       this.onError(err);
       return;
@@ -89,6 +95,7 @@ ImapProber.prototype = {
   },
 
   onError: function ImapProber_onError(err) {
+    debug('onerror');
     if (!this.onresult)
       return;
     console.warn('PROBE:IMAP sad', err);
@@ -104,6 +111,7 @@ ImapProber.prototype = {
     }
     this._conn = null;
 
+    dump("tryToCreateAccount: imapprobe: " + this.error + "\n");
     this.onresult(this.error, null, this.errorDetails);
     // we could potentially see many errors...
     this.onresult = false;
@@ -140,6 +148,7 @@ ImapProber.prototype = {
  * ]]
  */
 var normalizeError = exports.normalizeError = function normalizeError(err) {
+    debug('nromalizeerror');
   var errName, reachable = false, retry = true, reportProblem = false;
   // We want to produce error-codes as defined in `MailApi.js` for
   // tryToCreateAccount.  We have also tried to make imap.js produce
@@ -246,6 +255,7 @@ var extractTZFromHeaders = exports._extractTZFromHeaders =
  * what UIDs are valid.
  */
 var getTZOffset = exports.getTZOffset = function getTZOffset(conn, callback) {
+    debug('gettzoffset');
   function gotInbox(err, box) {
     if (err) {
       callback(err);

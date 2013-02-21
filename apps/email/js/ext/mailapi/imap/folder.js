@@ -695,6 +695,7 @@ console.warn('  FLAGS: "' + header.flags.toString() + '" VS "' +
 
   downloadMessageAttachments: function(uid, partInfos, callback, progress) {
     var conn = this._conn;
+    var self = this;
     var mparser = new $mailparser.MailParser();
 
     // I actually implemented a usable shim for the checksum purposes, but we

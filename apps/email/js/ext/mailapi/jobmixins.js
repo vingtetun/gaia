@@ -12,6 +12,42 @@ define('mailapi/jobmixins',
     exports
   ) {
 
+function debug(str) {
+  dump("JobMixin: " + str + "\n");
+}
+
+var uid = 0;
+var callbacks = {};
+function sendMessage(cmd, args, callback) {
+  if (callback) {
+    callbacks[uid] = callback;
+  }
+
+  if (!Array.isArray(args)) {
+    args = args ? [args] : [];
+  }
+
+  dump("DeviceStorage: sendMessage " + cmd + "\n");
+  self.postMessage({ uid: uid++, type: 'devicestorage', cmd: cmd, args: args });
+}
+
+function receiveMessage(evt) {
+  var data = evt.data;
+  if (data.type != 'devicestorage')
+    return;
+
+  dump("DeviceStorage: receiveMessage " + data.cmd + "\n");
+
+  var callback = callbacks[data.uid];
+  if (!callback)
+    return;
+  delete callbacks[data.uid];
+
+  dump("DeviceStorage: receiveMessage fire callback\n");
+  callback.apply(callback, data.args);
+}
+self.addEventListener('message', receiveMessage);
+
 exports.local_do_modtags = function(op, doneCallback, undo) {
   var addTags = undo ? op.removeTags : op.addTags,
       removeTags = undo ? op.addTags : op.removeTags;
@@ -186,6 +222,7 @@ exports.local_undo_delete = function(op, doneCallback) {
 };
 
 exports.do_download = function(op, callback) {
+  debug("do_download");
   var self = this;
   var idxLastSlash = op.messageSuid.lastIndexOf('/'),
       folderId = op.messageSuid.substring(0, idxLastSlash);
@@ -193,6 +230,7 @@ exports.do_download = function(op, callback) {
   var folderConn, folderStorage;
   // Once we have the connection, get the current state of the body rep.
   var gotConn = function gotConn(_folderConn, _folderStorage) {
+    debug("gotConn");
     folderConn = _folderConn;
     folderStorage = _folderStorage;
 
@@ -206,11 +244,13 @@ exports.do_download = function(op, callback) {
   // once.
   var partsToDownload = [], storePartsTo = [], header, bodyInfo, uid;
   var gotHeader = function gotHeader(_headerInfo) {
+    debug("gotHeader");
     header = _headerInfo;
     uid = header.srvid;
     folderStorage.getMessageBody(op.messageSuid, op.messageDate, gotBody);
   };
   var gotBody = function gotBody(_bodyInfo) {
+    debug("gotBody");
     bodyInfo = _bodyInfo;
     var i, partInfo;
     for (i = 0; i < op.relPartIndices.length; i++) {
@@ -218,6 +258,7 @@ exports.do_download = function(op, callback) {
       if (partInfo.file)
         continue;
       partsToDownload.push(partInfo);
+      debug("store to idb");
       storePartsTo.push('idb');
     }
     for (i = 0; i < op.attachmentIndices.length; i++) {
@@ -226,6 +267,7 @@ exports.do_download = function(op, callback) {
         continue;
       partsToDownload.push(partInfo);
       // right now all attachments go in pictures
+      debug("store to pictures");
       storePartsTo.push('pictures');
     }
 
@@ -237,34 +279,36 @@ exports.do_download = function(op, callback) {
    * encounter a collision.
    */
   function saveToStorage(blob, storage, filename, partInfo, isRetry) {
+    debug("saveToStorage");
     pendingStorageWrites++;
-    var dstorage = navigator.getDeviceStorage(storage);
-    var req = dstorage.addNamed(blob, filename);
-    req.onerror = function() {
-      console.warn('failed to save attachment to', storage, filename,
-                   'type:', blob.type);
-      pendingStorageWrites--;
-      // if we failed to unique the file after appending junk, just give up
-      if (isRetry) {
-        if (pendingStorageWrites === 0)
+
+    var callback = function(success) {
+      if (success) {
+        console.log('saved attachment to', storage, filename, 'type:', blob.type);
+        partInfo.file = [storage, filename];
+        if (--pendingStorageWrites === 0)
           done();
-        return;
+      } else {
+        console.warn('failed to save attachment to', storage, filename,
+                     'type:', blob.type);
+        pendingStorageWrites--;
+        // if we failed to unique the file after appending junk, just give up
+        if (isRetry) {
+          if (pendingStorageWrites === 0)
+            done();
+          return;
+        }
+        // retry by appending a super huge timestamp to the file before its
+        // extension.
+        var idxLastPeriod = filename.lastIndexOf('.');
+        if (idxLastPeriod === -1)
+          idxLastPeriod = filename.length;
+        filename = filename.substring(0, idxLastPeriod) + '-' + Date.now() +
+                     filename.substring(idxLastPeriod);
+        saveToStorage(blob, storage, filename, partInfo, true);
       }
-      // retry by appending a super huge timestamp to the file before its
-      // extension.
-      var idxLastPeriod = filename.lastIndexOf('.');
-      if (idxLastPeriod === -1)
-        idxLastPeriod = filename.length;
-      filename = filename.substring(0, idxLastPeriod) + '-' + Date.now() +
-                   filename.substring(idxLastPeriod);
-      saveToStorage(blob, storage, filename, partInfo, true);
-    };
-    req.onsuccess = function() {
-      console.log('saved attachment to', storage, filename, 'type:', blob.type);
-      partInfo.file = [storage, filename];
-      if (--pendingStorageWrites === 0)
-        done();
-    };
+    }
+    sendMessage('save', [storage, blob, filename], callback);
   }
   var gotParts = function gotParts(err, bodyBlobs) {
     if (bodyBlobs.length !== partsToDownload.length) {

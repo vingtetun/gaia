@@ -516,9 +516,10 @@ if (("indexedDB" in window) && window.indexedDB) {
  *
  * Explanation of most recent bump:
  *
- * Bumping to 16 because header/body size estimates have been adjusted.
+ * Bumping to 17 because we changed the folder representation to store
+ * hierarchy.
  */
-var CUR_VERSION = 16;
+var CUR_VERSION = 17;
 
 /**
  * What is the lowest database version that we are capable of performing a

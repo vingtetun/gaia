@@ -1602,7 +1602,9 @@ MailAPIBase.prototype = {
     }
     delete this._pendingRequests[msg.handle];
 
-    req.callback.call(null, msg.error, msg.errorDetails);
+    // The account info here is currently for unit testing only; it's our wire
+    // protocol instead of a full MailAccount.
+    req.callback.call(null, msg.error, msg.errorDetails, msg.account);
   },
 
   _clearAccountProblems: function ma__clearAccountProblems(account) {

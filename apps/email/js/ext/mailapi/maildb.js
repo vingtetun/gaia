@@ -30,7 +30,7 @@ function receiveMessage(evt) {
   if (data.type != 'maildb')
     return;
 
-  dump("MailDB: receiveMessage " + data.op + "\n");
+  dump("MailDB: receiveMessage " + data.cmd + "\n");
 
   var callback = callbacks[data.uid];
   if (!callback)

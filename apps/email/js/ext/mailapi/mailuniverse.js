@@ -493,8 +493,11 @@ MailUniverse.prototype = {
    * Perform initial initialization based on our configuration.
    */
   _initFromConfig: function() {
+    this._cronSyncer.setSyncIntervalMS(100);
+/*
     this._cronSyncer.setSyncIntervalMS(
       $syncbase.CHECK_INTERVALS_ENUMS_TO_MS[this.config.syncCheckIntervalEnum]);
+*/
   },
 
   /**

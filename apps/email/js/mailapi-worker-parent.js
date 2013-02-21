@@ -26,6 +26,7 @@ worker.onhello = function() {
 
   // XXX Ensure that it works ???
   navigator.mozSetMessageHandler('alarm', function(msg) {
+    dump("CronSyncer (main) - receive an alarm via a message handler\n");
     worker.postMessage({ type: 'alarm', args: msg });
   });
 }
@@ -71,6 +72,7 @@ worker.ontcpsocket = function(msg) {
 }
 
 worker.oncronsyncer = function(msg) {
+  dump("CronSyncer (main) " + msg.cmd + "\n");
   CronSync.process(msg.uid, msg.cmd, msg.args);
 }
 
@@ -247,6 +249,19 @@ worker.onmessage = function(event) {
 
 /* Cron Sync */
 var CronSync = (function() {
+  function debug(str) {
+    dump("CronSyncer (main): " + str + "\n");
+  }
+
+  var postMessage = function(uid, cmd, args) {
+    worker.postMessage({
+      type: 'cronsyncer',
+      uid: uid,
+      cmd: cmd,
+      args: Array.isArray(args) ? args : [args]
+    });
+  }
+
   function clearAlarms() {
     var req = navigator.mozAlarms.getAll();
     req.onsuccess = function(event) {
@@ -254,6 +269,8 @@ var CronSync = (function() {
       for (var i = 0; i < alarms.length; i++) {
         navigator.mozAlarms.remove(alarms[i].id);
       }
+
+      debug("alarms deleted");
     };
   }
 
@@ -261,14 +278,45 @@ var CronSync = (function() {
     var req = navigator.mozAlarms.add(time, 'ignoreTimezone', {});
 
     req.onsuccess = function() {
-      console.log('addAlarm: scheduled!');
+      debug('addAlarm: scheduled!');
     };
 
     req.onerror = function(event) {
-      console.warn('addAlarm: scheduling problem!');
+      debug('addAlarm: scheduling problem!');
       var target = event.target;
       console.warn(' err:', target && target.error && target.error.name);
     };
+  }
+
+  var gApp, gIconUrl;
+  navigator.mozApps.getSelf().onsuccess = function(event) {
+    gApp = event.target.result;
+    gIconUrl = gApp.installOrigin + '/style/icons/Email.png';
+  };
+
+  /**
+   * Try and bring up the given header in the front-end.
+   *
+   * XXX currently, we just cause the app to display, but we don't do anything
+   * to cause the actual message to be displayed.  Right now, since the back-end
+   * and the front-end are in the same app, we can easily tell ourselves to do
+   * things, but in the separated future, we might want to use a webactivity,
+   * and as such we should consider using that initially too.
+   */
+  function displayHeaderInFrontEnd(header) {
+    gApp.launch();
+  }
+
+  function showNotification(uid, title, body) {
+    var success = function() {
+      postMessage(uid, 'showNotification', true);
+    }
+
+    var close = function() {
+      postMessage(uid, 'showNotification', false);
+    }
+
+    NotificationHelper.send(title, body, gIconUrl, success, close);
   }
 
   function process(uid, cmd, args) {
@@ -280,6 +328,13 @@ var CronSync = (function() {
         break;
       case 'addAlarm':
         addAlarm.apply(this, args);
+        break;
+      case 'showNotification':
+        args.unshift(uid);
+        showNotification.apply(this, args);
+        break;
+      case 'showApp':
+        displayHeaderInFrontEnd.apply(this, args);
         break;
     }
   }

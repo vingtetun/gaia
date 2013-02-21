@@ -149,38 +149,21 @@ console.log('sync done!');
 };
 
 function generateNotificationForMessage(header, onClick, onClose) {
-  // NB: We don't need to use NotificationHelper because we end up doing
-  // something similar ourselves.
 console.log('generating notification for:', header.suid, header.subject);
-  var notif = navigator.mozNotification.createNotification(
-    header.author.name || header.author.address,
-    header.subject,
-    // XXX it makes no sense that the back-end knows the path of the icon,
-    // but this specific function may need to vary based on host environment
-    // anyways...
-    gIconUrl);
-  notif.onclick = onClick.bind(null, header, notif);
-  notif.onclose = onClose.bind(null, header, notif);
-  notif.show();
+  var notif = header.suid;
+
+  sendMessage(
+    'showNotification',
+    [header.author.name || header.author.address, header.subject],
+    function(click) {
+      click ? onClick(header, notif) : onClose(header, notif);
+    });
   return notif;
 }
 
-var gApp, gIconUrl;
-navigator.mozApps.getSelf().onsuccess = function(event) {
-  gApp = event.target.result;
-  gIconUrl = gApp.installOrigin + '/style/icons/Email.png';
-};
-/**
- * Try and bring up the given header in the front-end.
- *
- * XXX currently, we just cause the app to display, but we don't do anything
- * to cause the actual message to be displayed.  Right now, since the back-end
- * and the front-end are in the same app, we can easily tell ourselves to do
- * things, but in the separated future, we might want to use a webactivity,
- * and as such we should consider using that initially too.
- */
-function displayHeaderInFrontend(header) {
-  gApp.launch();
+
+function debug(str) {
+  dump("CronSyncer: " + str + "\n");
 }
 
 var uid = 0;
@@ -194,30 +177,36 @@ function sendMessage(cmd, args, callback) {
     args = args ? [args] : [];
   }
 
+  debug("sendMessage - " + cmd);
+
   self.postMessage({ uid: uid++, type: 'cronsyncer', cmd: cmd, args: args });
 }
 
 function receiveMessage(evt) {
   var data = evt.data;
-  if (data.type != 'maildb')
+  if (data.type != 'cronsyncer')
     return;
 
-  dump("MailWorker (cronsyncer): receiveMessage " + data.op + "\n");
+  debug("receiveMessage - " + data.cmd);
 
   var callback = callbacks[data.uid];
   if (!callback)
     return;
   delete callbacks[data.uid];
 
-  dump("MailWorker (cronsyncer): receiveMessage fire callback\n");
-  callback.apply(callback, data.args);
+  setTimeout(function() {
+    callback.apply(callback, data.args);
+  });
 }
+
+window.addEventListener("message", receiveMessage);
 
 /**
  * Creates the synchronizer.  It is does not do anything until the first call
  * to setSyncInterval.
  */
 function CronSyncer(universe, _logParent) {
+  debug("Instantiated");
   this._universe = universe;
   this._syncIntervalMS = 0;
 
@@ -253,14 +242,15 @@ CronSyncer.prototype = {
   _scheduleNextSync: function() {
     if (!this._syncIntervalMS)
       return;
-    console.log("scheduling sync for " + (this._syncIntervalMS / 1000) +
-                " seconds in the future.");
+    debug("scheduling sync for " + (this._syncIntervalMS / 1000) +
+          " seconds in the future.");
 
     sendMessage('addAlarm', [new Date(Date.now() + this._syncIntervalMS)]);
   },
 
   setSyncIntervalMS: function(syncIntervalMS) {
-    console.log('setSyncIntervalMS:', syncIntervalMS);
+    debug('setSyncIntervalMS:' + syncIntervalMS);
+
     var pendingAlarm = false;
     if (!this._initialized) {
       this._initialized = true;
@@ -271,6 +261,7 @@ CronSyncer.prototype = {
       window.addEventListener('message', (function(evt) {
         switch(evt.data.type) {
           case 'alarm':
+            dump("CronSyncer - receive an alarm via a message handler\n");
             this.onAlarm(evt.data.args);
             break;
         }
@@ -320,7 +311,6 @@ CronSyncer.prototype = {
     // XXX check when the folder was most recently synchronized and skip this
     // sync if it is sufficiently recent.
 
-    // - Figure out how many additional notifications we can generate
     var outstandingInfo;
     if (this._outstandingNotesPerAccount.hasOwnProperty(account.id)) {
       outstandingInfo = this._outstandingNotesPerAccount[account.id];
@@ -333,7 +323,7 @@ CronSyncer.prototype = {
             console.warn('bad note index!');
           outstandingInfo.notes.splice(idx);
           // trigger the display of the app!
-          displayHeaderInFrontend(header);
+          sendMessage('showApp', [header]);
         },
         closeHandler: function(header, note, event) {
           var idx = outstandingInfo.notes.indexOf(note);
@@ -369,6 +359,8 @@ CronSyncer.prototype = {
   },
 
   onAlarm: function() {
+    debug("onAlarm");
+
     this._LOG.alarmFired();
     // It would probably be better if we only added the new alarm after we
     // complete our sync, but we could have a problem if our sync progress

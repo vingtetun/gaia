@@ -452,7 +452,8 @@ ActiveSyncFolderConn.prototype = {
                          function(node) {
         var id, guid, msg;
 
-        for (var child in Iterator(node.children)[1]) {
+        for (var iter in Iterator(node.children)) {
+          var child = iter[1];
           switch (child.tag) {
           case as.ServerId:
             guid = child.children[0].textContent;
@@ -486,7 +487,8 @@ ActiveSyncFolderConn.prototype = {
                          function(node) {
         var guid;
 
-        for (var child in Iterator(node.children)[1]) {
+        for (var iter in Iterator(node.children)) {
+          var child = iter[1];
           switch (child.tag) {
           case as.ServerId:
             guid = child.children[0].textContent;
@@ -587,7 +589,8 @@ ActiveSyncFolderConn.prototype = {
         flags: [],
         mergeInto: function(o) {
           // Merge flags
-          for (var flagstate in Iterator(this.flags)[1]) {
+          for (var iter in Iterator(this.flags)) {
+            var flagstate = iter[1];
             if (flagstate[1]) {
               o.flags.push(flagstate[0]);
             }
@@ -627,7 +630,8 @@ ActiveSyncFolderConn.prototype = {
 
     var bodyType, bodyText;
 
-    for (var child in Iterator(node.children)[1]) {
+    for (var iter in Iterator(node.children)) {
+      var child = iter[1];
       var childText = child.children.length ? child.children[0].textContent :
                                               null;
 
@@ -654,13 +658,15 @@ ActiveSyncFolderConn.prototype = {
         flagHeader('\\Seen', childText === '1');
         break;
       case em.Flag:
-        for (var grandchild in Iterator(child.children)[1]) {
+        for (var iter in Iterator(child.children)) {
+          var grandchild = iter[1];
           if (grandchild.tag === em.Status)
             flagHeader('\\Flagged', grandchild.children[0].textContent !== '0');
         }
         break;
       case asb.Body: // ActiveSync 12.0+
-        for (var grandchild in Iterator(child.children)[1]) {
+        for (var iter in Iterator(child.children)) {
+          var grandchild = iter[1];
           switch (grandchild.tag) {
           case asb.Type:
             bodyType = grandchild.children[0].textContent;
@@ -677,7 +683,8 @@ ActiveSyncFolderConn.prototype = {
         break;
       case asb.Attachments: // ActiveSync 12.0+
       case em.Attachments:  // pre-ActiveSync 12.0
-        for (var attachmentNode in Iterator(child.children)[1]) {
+        for (var iter in Iterator(child.children)) {
+          var attachmentNode = iter[1];
           if (attachmentNode.tag !== asb.Attachment &&
               attachmentNode.tag !== em.Attachment)
             continue;
@@ -693,7 +700,8 @@ ActiveSyncFolderConn.prototype = {
           };
 
           var isInline = false;
-          for (var attachData in Iterator(attachmentNode.children)[1]) {
+          for (var iter in Iterator(attachmentNode.children)) {
+            var attachData = iter[1];
             var dot, ext;
             var attachDataText = attachData.children.length ?
                                  attachData.children[0].textContent : null;
@@ -784,7 +792,8 @@ ActiveSyncFolderConn.prototype = {
         return;
       }
 
-      for (var message in Iterator(added)[1]) {
+      for (var iter in Iterator(added)) {
+        var message = iter[1];
         // If we already have this message, it's probably because we moved it as
         // part of a local op, so let's assume that the data we already have is
         // ok. XXX: We might want to verify this, to be safe.
@@ -796,7 +805,8 @@ ActiveSyncFolderConn.prototype = {
         addedMessages++;
       }
 
-      for (var message in Iterator(changed)[1]) {
+      for (var iter in Iterator(changed)) {
+        var message = iter[1];
         // If we don't know about this message, just bail out.
         if (!storage.hasMessageWithServerId(message.header.srvid))
           continue;
@@ -810,7 +820,8 @@ ActiveSyncFolderConn.prototype = {
         // XXX: update bodies
       }
 
-      for (var messageGuid in Iterator(deleted)[1]) {
+      for (var iter in Iterator(deleted)) {
+        var messageGuid = iter[1];
         // If we don't know about this message, it's probably because we already
         // deleted it.
         if (!storage.hasMessageWithServerId(messageGuid))
@@ -945,7 +956,8 @@ ActiveSyncFolderConn.prototype = {
 
     var w = new $wbxml.Writer('1.3', 1, 'UTF-8');
     w.stag(io.ItemOperations);
-    for (var part in Iterator(partInfos)[1]) {
+    for (var iter in Iterator(partInfos)) {
+      var part = iter[1];
       w.stag(io.Fetch)
          .tag(io.Store, 'Mailbox')
          .tag(asb.FileReference, part.part)
@@ -971,7 +983,8 @@ ActiveSyncFolderConn.prototype = {
                          function(node) {
         var part = null, attachment = {};
 
-        for (var child in Iterator(node.children)[1]) {
+        for (var iter in Iterator(node.children)) {
+          var child = iter[1];
           switch (child.tag) {
           case io.Status:
             attachment.status = child.children[0].textContent;
@@ -982,7 +995,8 @@ ActiveSyncFolderConn.prototype = {
           case io.Properties:
             var contentType = null, data = null;
 
-            for (var grandchild in Iterator(child.children)[1]) {
+            for (var iter in Iterator(child.children)) {
+              var grandchild = iter[1];
               var textContent = grandchild.children[0].textContent;
 
               switch (grandchild.tag) {
@@ -1008,7 +1022,8 @@ ActiveSyncFolderConn.prototype = {
 
       var error = globalStatus !== ioStatus.Success ? 'unknown' : null;
       var bodies = [];
-      for (var part in Iterator(partInfos)[1]) {
+      for (var iter in Iterator(partInfos)) {
+        var part = iter[1];
         if (attachments.hasOwnProperty(part.part) &&
             attachments[part.part].status === ioStatus.Success) {
           bodies.push(attachments[part.part].data);

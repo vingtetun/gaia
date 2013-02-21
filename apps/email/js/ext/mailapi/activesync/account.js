@@ -166,7 +166,8 @@ ActiveSyncAccount.prototype = {
                                                   reason) {
     var account = this;
     var perFolderStuff = [];
-    for (var folder in Iterator(this.folders)[1]) {
+    for (var iter in Iterator(this.folders)) {
+      var folder = iter[1];
       var folderStuff = this._folderStorages[folder.id]
                            .generatePersistenceInfo();
       if (folderStuff)
@@ -237,8 +238,10 @@ ActiveSyncAccount.prototype = {
       e.addEventListener([fh.FolderSync, fh.Changes, [fh.Add, fh.Delete]],
                          function(node) {
         var folder = {};
-        for (var child in Iterator(node.children)[1])
+        for (var iter in Iterator(node.children)) {
+          var child = iter[1];
           folder[child.localTagName] = child.children[0].textContent;
+        }
 
         if (node.tag === fh.Add) {
           if (!account._addedFolder(folder.ServerId, folder.ParentId,
@@ -265,7 +268,8 @@ ActiveSyncAccount.prototype = {
       // done.
       while (deferredAddedFolders.length) {
         var moreDeferredAddedFolders = [];
-        for (var folder in Iterator(deferredAddedFolders)[1]) {
+        for (var iter in Iterator(deferredAddedFolders)) {
+          var folder = iter[1];
           if (!account._addedFolder(folder.ServerId, folder.ParentId,
                                     folder.DisplayName, folder.Type))
             moreDeferredAddedFolders.push(folder);
@@ -449,7 +453,8 @@ ActiveSyncAccount.prototype = {
         new $mailslice.FolderStorage(self, folderId, folderInfo, self._db,
                                      $asfolder.ActiveSyncFolderSyncer,
                                      self._LOG);
-      for (var slice in Iterator(self._folderStorages[folderId]._slices)[1]) {
+      for (var iter in Iterator(self._folderStorages[folderId]._slices)) {
+        var slice = iter[1];
         slice._storage = newStorage;
         slice._resetHeadersBecauseOfRefreshExplosion(true);
         newStorage.sliceOpenFromNow(slice);

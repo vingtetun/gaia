@@ -349,7 +349,7 @@ var TCPSocket = {
   _sock: {},
 
   process: function(uid, cmd, args) {
-    dump("TCPSocket: " + uid + ", " + cmd + ", " + JSON.stringify(args) + "\n");
+    //dump("TCPSocket: " + uid + ", " + cmd + ", " + JSON.stringify(args) + "\n");
 
     var postMessage = (function(uid, cmd, args) {
       worker.postMessage({
@@ -366,13 +366,14 @@ var TCPSocket = {
         var sock = this._sock[uid] = socket.open(args[0], args[1], args[2]);
         sock.onopen = function(evt) {
           debug('onopen ' + uid + ": " + evt.data.toString());
-          postMessage('onopen', evt.data);
+          postMessage('onopen', evt.data.toString());
         }
         sock.onerror = function(evt) {
-          debug('onerror ' + uid + ": " + evt.data.toString());
-          postMessage('onerror', evt.data);
+          debug('onerror ' + uid + ": " + new Uint8Array(evt.data));
+          postMessage('onerror', new Uint8Array(evt.data));
         }
         sock.ondata = function(evt) {
+          /*
           try {
             var str = 'NetSocket ondata: ';
             for (var i = 0; i < evt.data.byteLength; i++) {
@@ -381,6 +382,7 @@ var TCPSocket = {
             dump(str + '\n');
           } catch(e) {
           }
+          */
           debug('ondata ' + uid + ": " + new Uint8Array(evt.data));
           postMessage('ondata', new Uint8Array(evt.data));
         }
@@ -406,27 +408,27 @@ var TCPSocket = {
 
 var MailIndexedDB = (function() {
   function debug(str) {
-    dump("MailWorker (main) IndexedDB: " + str + "\n");
+    dump("MailDB (main) IndexedDB: " + str + "\n");
   }
 
   var db = null;
   return {
     process: function(uid, cmd, args) {
-      debug("receive: " + args);
+      debug("receive: " + cmd + " args= " + JSON.stringify(args));
 
       function postMessage(args) {
         worker.postMessage({
           uid: uid,
           type: 'maildb',
           cmd: cmd,
-          args: Array.prototype.slice.call(args)
+          args: Array.isArray(args) ? args : [args]
         });
       }
 
       switch (cmd) {
         case 'open':
           var onsuccess = function() {
-            postMessage(arguments);
+            postMessage(Array.prototype.slice.call(arguments));
           }
 
           db = new MailDB(args[0], onsuccess);
@@ -435,15 +437,19 @@ var MailIndexedDB = (function() {
         case 'getConfig':
         case 'loadHeaderBlock':
         case 'loadBodyBlock':
-        case 'saveaccountfolderstates':
+        case 'saveAccountFolderStates':
         case 'deleteAccount':
         case 'saveAccountDef':
         case 'saveConfig':
         case 'close':
           args.push(function() {
-            postMessage(arguments);
+            postMessage(Array.prototype.slice.call(arguments));
           });
-          db[cmd].apply(db, args);
+          try {
+            db[cmd].apply(db, args);
+          } catch(e) {
+            debug("Error: " + e + "\n");
+          }
           break;
       }
     }
@@ -800,21 +806,20 @@ MailDB.prototype = {
    * ]
    */
   saveAccountFolderStates: function(accountId, folderInfo, perFolderStuff,
-                                    deletedFolderIds,
-                                    callback, reuseTrans) {
-    var trans = reuseTrans ||
-      this._db.transaction([TBL_FOLDER_INFO, TBL_HEADER_BLOCKS,
-                           TBL_BODY_BLOCKS],
-                           'readwrite');
+                                    deletedFolderIds, callback) {
+    var trans = this._db.transaction([TBL_FOLDER_INFO, TBL_HEADER_BLOCKS,
+                                      TBL_BODY_BLOCKS], 'readwrite');
     trans.onerror = this._fatalError;
     trans.objectStore(TBL_FOLDER_INFO).put(folderInfo, accountId);
     var headerStore = trans.objectStore(TBL_HEADER_BLOCKS),
         bodyStore = trans.objectStore(TBL_BODY_BLOCKS), i;
 
+    debug("perFolderStuff: " + perFolderStuff.length + "\n");
     for (i = 0; i < perFolderStuff.length; i++) {
       var pfs = perFolderStuff[i], block;
 
       for (var headerBlockId in pfs.headerBlocks) {
+        debug("headerBlock");
         block = pfs.headerBlocks[headerBlockId];
         if (block)
           headerStore.put(block, pfs.id + ':' + headerBlockId);
@@ -823,6 +828,7 @@ MailDB.prototype = {
       }
 
       for (var bodyBlockId in pfs.bodyBlocks) {
+        debug("bodyBlock");
         block = pfs.bodyBlocks[bodyBlockId];
         if (block)
           bodyStore.put(block, pfs.id + ':' + bodyBlockId);
@@ -842,8 +848,11 @@ MailDB.prototype = {
       }
     }
 
-    if (callback)
-      trans.addEventListener('complete', callback);
+    if (callback) {
+      trans.addEventListener('complete', function() {
+        callback();
+      });
+    }
 
     return trans;
   },
@@ -851,11 +860,11 @@ MailDB.prototype = {
   /**
    * Delete all traces of an account from the database.
    */
-  deleteAccount: function(accountId, reuseTrans) {
-    var trans = reuseTrans ||
-      this._db.transaction([TBL_CONFIG, TBL_FOLDER_INFO, TBL_HEADER_BLOCKS,
-                           TBL_BODY_BLOCKS],
-                           'readwrite');
+  deleteAccount: function(accountId) {
+    debug("deleteAccount: " + accountId);
+    var trans = this._db.transaction([TBL_CONFIG, TBL_FOLDER_INFO,
+                                      TBL_HEADER_BLOCKS, TBL_BODY_BLOCKS],
+                                      'readwrite');
     trans.onerror = this._fatalError;
 
     trans.objectStore(TBL_CONFIG).delete('accountDef:' + accountId);

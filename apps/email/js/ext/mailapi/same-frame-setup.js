@@ -65,7 +65,7 @@ function onUniverse() {
 var universe = null;
 self.addEventListener('message', function(evt) {
   var data = evt.data;
-  debug("same-frame-setup.js: " + JSON.stringify(data));
+  //debug("same-frame-setup.js: " + JSON.stringify(data));
 
   switch (data.type) {
     case 'hello': {

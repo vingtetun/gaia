@@ -30,14 +30,14 @@ function receiveMessage(evt) {
   if (data.type != 'maildb')
     return;
 
-  dump("MailWorker (maildb): receiveMessage " + data.op + "\n");
+  dump("MailDB: receiveMessage " + data.op + "\n");
 
   var callback = callbacks[data.uid];
   if (!callback)
     return;
   delete callbacks[data.uid];
 
-  dump("MailWorker (maildb): receiveMessage fire callback\n");
+  dump("MailDB: receiveMessage fire callback\n");
   callback.apply(callback, data.args);
 }
 

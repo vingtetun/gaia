@@ -53,7 +53,7 @@ function createBridgePair(universe) {
   // corresponding mailAPI.
   TMB.__sendMessage({
     type: 'hello',
-    args: universe.exposeConfigForClient()
+    config: universe.exposeConfigForClient()
   });
 }
 

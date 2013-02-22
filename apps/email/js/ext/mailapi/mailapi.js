@@ -2197,17 +2197,34 @@ var WorkerListener = (function() {
   var worker = null;
 
   function init() {
-    worker = new Worker('js/mailapi-worker.js');
+    worker = new Worker('js/ext/apis/mailapi-worker.js');
 
-    worker.onmessage = function dispatchToListener(event) {
-      debug(JSON.stringify(event.data) + "\n");
-      listeners['on' + event.data.type](event.data);
+    worker.onmessage = function dispatchToListener(evt) {
+      try {
+        var data = evt.data;
+        debug(JSON.stringify(data) + "\n");
+        listeners['on' + data.type](data);
+      } catch(e) {
+        debug("Error - nobody to listen for messages of type: " + data.type +
+              " with content: " + JSON.stringify(data));
+      }
     }
 
     register(hello);
     //register(bridge);
 
-    // XXX Load the js file at this point
+    // Load the js files that serves as bridge for apis use in the worker.
+    var scripts = [
+      'js/ext/apis/net-main.js',
+      'js/ext/apis/maildb-main.js',
+      'js/ext/apis/cronsync-main.js',
+      'js/ext/apis/devicestorage-main.js',
+      'js/ext/apis/configparser-main.js'
+    ].forEach(function attachScript(path) {
+      var script = document.createElement('script');
+      script.src = path;
+      document.head.appendChild(script);
+    });
   }
 
   function register(module) {

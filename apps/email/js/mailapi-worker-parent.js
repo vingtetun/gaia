@@ -64,11 +64,6 @@ worker.onbridge = function(data) {
   window.dispatchEvent(evt);
 }
 
-worker.ondevicestorage = function(msg) {
-  dump("DeviceStorage (main) " + msg.cmd + "\n");
-  DeviceStorage.process(msg.uid, msg.cmd, msg.args);
-}
-
 worker.ondomparser = function(msg) {
   dump("ACCOUNT: asked for: " + msg.cmd + "\n");
   if (msg.cmd == 'parseconfig') { // accountcommon
@@ -259,44 +254,6 @@ WorkerListener = {
     }
   }
 }
-
-
-/* Cron Sync */
-var DeviceStorage = (function() {
-  function debug(str) {
-    dump("DeviceStorage (main): " + str + "\n");
-  }
-
-  var postMessage = function(uid, cmd, args) {
-    worker.postMessage({
-      type: 'devicestorage',
-      uid: uid,
-      cmd: cmd,
-      args: Array.isArray(args) ? args : [args]
-    });
-  };
-
-  function process(uid, cmd, args) {
-    switch (cmd) {
-      case 'save':
-        var storage = args[0], blob = args[1], filename = args[2];
-        var dstorage = navigator.getDeviceStorage(storage);
-        var req = dstorage.addNamed(blob, filename);
-        req.onerror = function() {
-          postMessage(uid, cmd, false);
-        }
-
-        req.onsuccess = function() {
-          postMessage(uid, cmd, true);
-        }
-        break;
-    }
-  }
-
-  return {
-    process: process
-  }
-})();
 
 })();
 

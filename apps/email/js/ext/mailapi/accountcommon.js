@@ -825,24 +825,22 @@ Autoconfigurator.prototype = {
       // running XPath queries. So let's just do an end-run around the
       // "security".
       self.postMessage({
-        type: 'domparser',
-        cmd: 'parseconfig',
-        text: xhr.responseText
+        uid: 0,
+        type: 'configparser',
+        cmd: 'accountcommon',
+        args: [xhr.responseText]
       });
 
-      // XXX urgh!
-        dump("ACCOUNT: waiting for a domparser message..\n");
       self.addEventListener('message', function onworkerresponse(evt) {
-        if (evt.data.type != 'parseconfig') {
+        var data = evt.data;
+        if (data.type != 'configparser' || data.cmd != 'accountcommon') {
           return;
         }
         self.removeEventListener(evt.type, onworkerresponse);
 
-        dump("ACCOUNT: receive a domparser message..\n");
-        var data = evt.data.data; 
-        callback(data.config ? null : 'no-config-info',
-                 data.config,
-                  { status: data.status });
+        var args = data.args; 
+        var config = args[0], status = args[1];
+        callback(config ? null : 'no-config-info', config, { status: status });
       });
     };
 

@@ -201,25 +201,27 @@
         return aCallback(new HttpError(xhr.statusText, xhr.status));
 
       self.postMessage({
-        type: 'domparser',
-        cmd: 'parseactivesync',
-        text: xhr.responseText
+        uid: 0,
+        type: 'configparser',
+        cmd: 'accountactivesync',
+        args: [xhr.responseText]
       });
 
       self.addEventListener('message', function onworkerresponse(evt) {
-        if (evt.data.type != 'parseactivesync') {
+        var data = evt.data;
+        if (data.type != 'configparser' || data.cmd != 'accountactivesync') {
           return;
         }
         self.removeEventListener(evt.type, onworkerresponse);
 
-        dump("ACCOUNT: receive a parseractivesync message..\n");
-        var data = evt.data.data; 
-        if (data.error) {
-          aCallback(new AutodiscoverDomainError(data.error), data.config);
-        } else if (data.redirectedEmail) {
-          autodiscover(data.redirectedEmail, aPassword, aTimeout, aCallback, true);
+        var args = data.args; 
+        var config = args[0], error = args[1], redirectedEmail = args[2];
+        if (error) {
+          aCallback(new AutodiscoverDomainError(error), config);
+        } else if (redirectedEmail) {
+          autodiscover(redirectedEmail, aPassword, aTimeout, aCallback, true);
         } else {
-          aCallback(null, data.config);
+          aCallback(null, config);
         }
       });
     };

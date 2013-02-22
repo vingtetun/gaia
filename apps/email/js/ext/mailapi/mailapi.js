@@ -2309,4 +2309,6 @@ var WorkerListener = (function() {
   }
 })();
 
-WorkerListener.init();
+window.addEventListener('load', function() {
+  WorkerListener.init();
+});

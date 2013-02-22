@@ -2274,7 +2274,6 @@ var WorkerListener = (function() {
     var msg = data.msg;
     if (msg.type != 'hello')
       return;
-    delete listeners['onbridge'];
 
     var uid = data.uid;
 

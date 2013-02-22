@@ -1,7 +1,8 @@
 
 'use strict';
 
-setTimeout(function() {
+var WorkerListener;
+
 (function() {
 
 function debug(str) {
@@ -65,10 +66,6 @@ worker.onbridge = function(data) {
 
 worker.onmaildb = function(msg) {
   MailIndexedDB.process(msg.uid, msg.cmd, msg.args);
-}
-
-worker.ontcpsocket = function(msg) {
-  TCPSocket.process(msg.uid, msg.cmd, msg.args);
 }
 
 worker.oncronsyncer = function(msg) {
@@ -251,6 +248,28 @@ worker.onmessage = function(event) {
   this['on' + event.data.type](event.data);
 }
 
+WorkerListener = {
+  register: function(module) {
+    var name = module.name;
+
+    worker['on' + name] = function(msg) {
+      dump("WL process " + name + ": " + msg.uid + " - " + msg.cmd + "\n");
+      module.process(msg.uid, msg.cmd, msg.args);
+    };
+
+    module.onmessage = function(uid, cmd, args) {
+      dump("WL: onmessage " + name + ": " + uid + " - " + cmd + "\n");
+      worker.postMessage({
+        type: name,
+        uid: uid,
+        cmd: cmd,
+        args: Array.isArray(args) ? args : [args]
+      });
+    }
+  }
+}
+
+
 /* Cron Sync */
 var DeviceStorage = (function() {
   function debug(str) {
@@ -386,64 +405,6 @@ var CronSync = (function() {
   }
 })();
 
-/* TCP Socket */
-var TCPSocket = {
-  _sock: {},
-
-  process: function(uid, cmd, args) {
-    //dump("TCPSocket: " + uid + ", " + cmd + ", " + JSON.stringify(args) + "\n");
-
-    var postMessage = (function(uid, cmd, args) {
-      worker.postMessage({
-        type: 'tcpsocket',
-        uid: uid,
-        cmd: cmd,
-        args: args
-      });
-    }).bind(this, uid);
-
-    switch(cmd) {
-      case 'open':
-        var socket = navigator.mozTCPSocket;
-        var sock = this._sock[uid] = socket.open(args[0], args[1], args[2]);
-        sock.onopen = function(evt) {
-          debug('onopen ' + uid + ": " + evt.data.toString());
-          postMessage('onopen', evt.data.toString());
-        }
-        sock.onerror = function(evt) {
-          debug('onerror ' + uid + ": " + new Uint8Array(evt.data));
-          postMessage('onerror', new Uint8Array(evt.data));
-        }
-        sock.ondata = function(evt) {
-          /*
-          try {
-            var str = 'NetSocket ondata: ';
-            for (var i = 0; i < evt.data.byteLength; i++) {
-              str += String.fromCharCode(evt.data[i]);
-            }
-            dump(str + '\n');
-          } catch(e) {
-          }
-          */
-          debug('ondata ' + uid + ": " + new Uint8Array(evt.data));
-          postMessage('ondata', new Uint8Array(evt.data));
-        }
-        sock.onclose = function(evt) {
-          debug('onclose ' + uid + ": " + evt.data.toString());
-          postMessage('onclose', evt.data.toString());
-        }
-        break;
-
-      case 'end':
-        this._sock[uid].close();
-        break;
-
-      case 'write':
-        this._sock[uid].send(new Uint8Array(args[0]));
-        break;
-    }
-  }
-}
 
 
 /* Mail Database */
@@ -923,4 +884,3 @@ MailDB.prototype = {
 })();
 
 // XXX Let's start the network a bit later.
-});

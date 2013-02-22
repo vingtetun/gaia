@@ -59,7 +59,7 @@ function NetSocket(port, host, crypto) {
       return;
 
     dump("MailWorker (tcpsocket): receiveMessage fire callback for " + data.cmd + "\n");
-    callback.call(callback, { data: data.args });
+    callback.call(callback, { data: data.args[0] });
   });
 
   var callbacks = {

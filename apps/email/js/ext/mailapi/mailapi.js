@@ -2188,3 +2188,109 @@ MailAPIBase.prototype = {
   //////////////////////////////////////////////////////////////////////////////
 };
 
+var WorkerListener = (function() {
+  function debug(str) {
+    dump('WorkerListener: ' + str + '\n');
+  }
+
+  var listeners = {};
+  var worker = null;
+
+  function init() {
+    worker = new Worker('js/mailapi-worker.js');
+
+    worker.onmessage = function dispatchToListener(event) {
+      debug(JSON.stringify(event.data) + "\n");
+      listeners['on' + event.data.type](event.data);
+    }
+
+    register(hello);
+    //register(bridge);
+
+    // XXX Load the js file at this point
+  }
+
+  function register(module) {
+    var name = module.name;
+
+    listeners['on' + name] = function(msg) {
+      debug('on' + name + ': ' + msg.uid + ' - ' + msg.cmd);
+      module.process(msg.uid, msg.cmd, msg.args);
+    };
+
+    module.onmessage = function(uid, cmd, args) {
+      debug('onmessage: ' + name + ": " + uid + " - " + cmd);
+      worker.postMessage({
+        type: name,
+        uid: uid,
+        cmd: cmd,
+        args: Array.isArray(args) ? args : [args]
+      });
+    }
+  }
+
+  function unregister(module) {
+    delete listeners['on' + module.name];
+  }
+
+  var hello = {
+    name: 'hello',
+    onmessage: null,
+    process: function(uid, cmd, args) {
+      var online = navigator.onLine;
+      var hasPendingAlarm = navigator.mozHasPendingMessage('alarm');
+      hello.onmessage(uid, cmd, [online, hasPendingAlarm]);
+
+      window.addEventListener('online', function() {
+        hello.onmessage.postMessage(uid, cmd, true);
+      });
+      window.addEventListener('offline', function() {
+        hello.onnmessage.postMessage(uid, cmd, true);
+      });
+      navigator.mozSetMessageHandler('alarm', function(msg) {
+        hello.onmessage(uid, cmd, [msg]);
+      });
+    }
+  }
+
+  listeners['onbridge'] = function(data) {
+    var msg = data.msg;
+    if (msg.type != 'hello')
+      return;
+    delete listeners['onbridge'];
+
+    var uid = data.uid;
+
+    var mailAPI = new MailAPIBase();
+    mailAPI.__bridgeSend = function(msg) {
+      worker.postMessage({
+        uid: uid,
+        type: 'bridge',
+        msg: msg
+      });
+    };
+
+    worker.addEventListener('message', function(evt) {
+      if (evt.data.type != 'bridge' || evt.data.uid != uid)
+        return;
+
+      dump("MailAPI receiveMessage: " + JSON.stringify(evt.data) + "\n");
+      mailAPI.__bridgeReceive(evt.data.msg);
+    });
+
+    debug("config: " + data.msg.config);
+    mailAPI.config = data.msg.config;
+
+    var evt = document.createEvent('CustomEvent')
+    evt.initCustomEvent('mailapi', true, false, { mailAPI: mailAPI });
+    window.dispatchEvent(evt);
+  }
+
+  return {
+    init: init,
+    register: register,
+    unregister: unregister,
+  }
+})();
+
+WorkerListener.init();

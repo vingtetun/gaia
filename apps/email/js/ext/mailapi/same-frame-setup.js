@@ -53,7 +53,7 @@ function createBridgePair(universe) {
   // corresponding mailAPI.
   TMB.__sendMessage({
     type: 'hello',
-    config: universe.exposeConfigForClient()
+    args: universe.exposeConfigForClient()
   });
 }
 
@@ -67,26 +67,19 @@ self.addEventListener('message', function(evt) {
   var data = evt.data;
   //debug("same-frame-setup.js: " + JSON.stringify(data));
 
+  var args = data.args;
   switch (data.type) {
-    case 'hello': {
-      navigator.onLine = data.online;
-      navigator.hasPendingAlarm = data.hasPendingAlarm;
+    case 'hello':
+      navigator.onLine = args[0];
+      navigator.hasPendingAlarm = args[1];
 
       universe = new $mailuniverse.MailUniverse(onUniverse);
       break;
-    }
 
-    case 'online': {
-      navigator.onLine = true;
+    case 'online':
+    case 'offline':
+      navigator.onLine = args[0];
       break;
-    }
-
-    case 'offline': {
-      navigator.onLine = false;
-      break;
-    }
-
-    break;
   }
 });
 self.postMessage({ type: "hello" });

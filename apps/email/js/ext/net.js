@@ -33,7 +33,7 @@ function sendMessage(cmd, uid, args, callback) {
     args = args ? [args] : [];
   }
 
-  self.postMessage({ type: 'tcpsocket', uid: uid, cmd: cmd, args: args });
+  self.postMessage({ type: 'netsocket', uid: uid, cmd: cmd, args: args });
 }
 
 var socketId = 0;
@@ -46,19 +46,19 @@ function NetSocket(port, host, crypto) {
 
   self.addEventListener('message', function(evt) {
     var data = evt.data;
-    if (data.type != 'tcpsocket')
+    if (data.type != 'netsocket')
       return;
 
     if (data.uid != uid)
       return;
 
-    dump("MailWorker (tcpsocket): receiveMessage " + data.cmd + "\n");
+    dump("NetSocket: receiveMessage " + data.cmd + "\n");
 
     var callback = callbacks[data.cmd];
     if (!callback)
       return;
 
-    dump("MailWorker (tcpsocket): receiveMessage fire callback for " + data.cmd + "\n");
+    dump("NetSocket: receiveMessage fire callback for " + data.cmd + "\n");
     callback.call(callback, { data: data.args[0] });
   });
 

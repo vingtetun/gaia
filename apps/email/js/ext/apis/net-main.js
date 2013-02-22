@@ -26,13 +26,12 @@ var NetSocket = (function() {
     sock.ondata = function(evt) {
       /*
       try {
-        var str = 'NetSocket ondata: ';
+        var str = '';
         for (var i = 0; i < evt.data.byteLength; i++) {
           str += String.fromCharCode(evt.data[i]);
         }
-        dump(str + '\n');
-      } catch(e) {
-      }
+        debug(str + '\n');
+      } catch(e) {}
       */
       debug('ondata ' + uid + ": " + new Uint8Array(evt.data));
       self.onmessage(uid, 'ondata', [new Uint8Array(evt.data)]);
@@ -54,7 +53,7 @@ var NetSocket = (function() {
   }
 
   var self = {
-    name: 'tcpsocket',
+    name: 'netsocket',
     onmessage: null,
     process: function(uid, cmd, args) {
       debug('process ' + cmd);

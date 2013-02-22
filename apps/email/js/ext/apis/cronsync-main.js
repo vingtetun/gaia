@@ -3,7 +3,7 @@
 
 var CronSync = (function() {
   function debug(str) {
-    dump('CronSync: ' + str + '\n');
+    //dump('CronSync: ' + str + '\n');
   }
 
   function clearAlarms() {

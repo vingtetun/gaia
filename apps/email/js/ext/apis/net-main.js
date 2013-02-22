@@ -3,7 +3,7 @@
 
 var NetSocket = (function() {
   function debug(str) {
-    dump('NetSocket: ' + str + '\n');
+    //dump('NetSocket: ' + str + '\n');
   }
 
   // Maintain a list of active sockets

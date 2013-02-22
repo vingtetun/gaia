@@ -3,7 +3,7 @@
 
 var DeviceStorage = (function() {
   function debug(str) {
-    dump('DeviceStorage: ' + str + '\n');
+    //dump('DeviceStorage: ' + str + '\n');
   }
 
   function save(uid, cmd, storage, blob, filename) {

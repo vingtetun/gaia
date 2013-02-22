@@ -22,7 +22,7 @@
 define('net',['require','exports','module','util','events'],function(require, exports, module) {
 
 function debug(str) {
-  dump("NetSocket: (" + Date.now() + ") :" + str + "\n");
+  //dump("NetSocket: (" + Date.now() + ") :" + str + "\n");
 }
 
 var util = require('util'),
@@ -52,13 +52,10 @@ function NetSocket(port, host, crypto) {
     if (data.uid != uid)
       return;
 
-    dump("NetSocket: receiveMessage " + data.cmd + "\n");
-
     var callback = callbacks[data.cmd];
     if (!callback)
       return;
 
-    dump("NetSocket: receiveMessage fire callback for " + data.cmd + "\n");
     callback.call(callback, { data: data.args[0] });
   });
 

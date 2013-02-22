@@ -65,10 +65,14 @@ function onUniverse() {
 var universe = null;
 self.addEventListener('message', function(evt) {
   var data = evt.data;
-  //debug("same-frame-setup.js: " + JSON.stringify(data));
+  //dump("WorkerListener: same-frame-setup.js: " + JSON.stringify(data) + "\n");
+
+  if (data.type != 'hello') {
+    return;
+  }
 
   var args = data.args;
-  switch (data.type) {
+  switch (data.cmd) {
     case 'hello':
       navigator.onLine = args[0];
       navigator.hasPendingAlarm = args[1];

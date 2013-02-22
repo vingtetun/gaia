@@ -2190,7 +2190,7 @@ MailAPIBase.prototype = {
 
 var WorkerListener = (function() {
   function debug(str) {
-    dump('WorkerListener: ' + str + '\n');
+    //dump('WorkerListener: ' + str + '\n');
   }
 
   var listeners = {};
@@ -2200,14 +2200,8 @@ var WorkerListener = (function() {
     worker = new Worker('js/ext/apis/mailapi-worker.js');
 
     worker.onmessage = function dispatchToListener(evt) {
-      try {
-        var data = evt.data;
-        debug(JSON.stringify(data) + "\n");
-        listeners['on' + data.type](data);
-      } catch(e) {
-        debug("Error - nobody to listen for messages of type: " + data.type +
-              " with content: " + JSON.stringify(data));
-      }
+      var data = evt.data;
+      listeners['on' + data.type](data);
     }
 
     register(hello);
@@ -2231,12 +2225,12 @@ var WorkerListener = (function() {
     var name = module.name;
 
     listeners['on' + name] = function(msg) {
-      debug('on' + name + ': ' + msg.uid + ' - ' + msg.cmd);
+      //debug('on' + name + ': ' + msg.uid + ' - ' + msg.cmd);
       module.process(msg.uid, msg.cmd, msg.args);
     };
 
     module.onmessage = function(uid, cmd, args) {
-      debug('onmessage: ' + name + ": " + uid + " - " + cmd);
+      //debug('onmessage: ' + name + ": " + uid + " - " + cmd);
       worker.postMessage({
         type: name,
         uid: uid,
@@ -2256,17 +2250,19 @@ var WorkerListener = (function() {
     process: function(uid, cmd, args) {
       var online = navigator.onLine;
       var hasPendingAlarm = navigator.mozHasPendingMessage('alarm');
-      hello.onmessage(uid, cmd, [online, hasPendingAlarm]);
+      hello.onmessage(uid, 'hello', [online, hasPendingAlarm]);
 
-      window.addEventListener('online', function() {
-        hello.onmessage.postMessage(uid, cmd, true);
+      window.addEventListener('online', function(evt) {
+        hello.onmessage.postMessage(uid, evt.type, true);
       });
-      window.addEventListener('offline', function() {
-        hello.onnmessage.postMessage(uid, cmd, true);
+      window.addEventListener('offline', function(evt) {
+        hello.onmessage.postMessage(uid, evt.type, false);
       });
       navigator.mozSetMessageHandler('alarm', function(msg) {
-        hello.onmessage(uid, cmd, [msg]);
+        hello.onmessage(uid, 'alarm', [msg]);
       });
+
+      unregister(hello);
     }
   }
 
@@ -2290,7 +2286,7 @@ var WorkerListener = (function() {
       if (evt.data.type != 'bridge' || evt.data.uid != uid)
         return;
 
-      dump("MailAPI receiveMessage: " + JSON.stringify(evt.data) + "\n");
+      //dump("MailAPI receiveMessage: " + JSON.stringify(evt.data) + "\n");
       mailAPI.__bridgeReceive(evt.data.msg);
     });
 

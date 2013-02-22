@@ -584,7 +584,7 @@ console.log('  fetching body for', chewRep.msg.id, bodyPart.partID);
 try {
               fetcher = conn.fetch(chewRep.msg.id, opts);
 } catch (ex) {
-  console.warn('!failure fetching body', ex);
+  console.warn('!failure fetching body' + ex);
   return;
 }
               setupBodyParser(bodyPart);
@@ -599,7 +599,7 @@ try {
                 msg.on('end', function() {
                   updateProgress(NEW_BODIES_PER_COST);
                   partsReceived.push(finishBodyParsing());
-console.log('  !fetched body part for', chewRep.msg.id, bodyPart.partID,
+console.log('  !fetched body part for'+ chewRep.msg.id + ':' + bodyPart.partID,
             partsReceived.length, chewRep.bodyParts.length);
 
                   // -- Process
@@ -619,7 +619,7 @@ console.log('  !fetched body part for', chewRep.msg.id, bodyPart.partID,
                     }
                     catch (ex) {
                       self._LOG.bodyChewError(ex);
-                      console.error('Failure processing body:', ex, '\n',
+                      console.error('Failure processing body:' + ex + '\n' + 
                                     ex.stack);
                     }
                   }

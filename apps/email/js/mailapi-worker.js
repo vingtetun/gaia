@@ -1,22 +1,11 @@
 
 'use strict';
 
+var window = self;
+
 function debug(str) {
   dump('MailWorker (remote): ' + str + '\n');
 }
-
-var window = self;
-
-// XXX Move it to the other side
-navigator.mozApps = {
-  getSelf: function() {
-    return {
-      onsuccess: null,
-      onerror: null
-    }
-  }
-}
-
 
 var console = {
   log: function (str) {

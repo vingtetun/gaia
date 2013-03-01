@@ -37,16 +37,16 @@
       if (!menu || !menu.items ||
         (menu.items.length == 1 && menu.items[0] === null)) {
         debug('No STK available - exit');
-        document.getElementById('icc-mainheader').hidden = true;
-        document.getElementById('icc-mainentry').hidden = true;
+        document.getElementById('icc-mainheader').style.visibility = 'hidden';
+        document.getElementById('icc-mainentry').style.visibility = 'hidden';
         return;
       }
 
       // update and show the entry in settings
       debug('STK Main App Menu title: ' + menu.title);
       document.getElementById('menuItem-icc').textContent = menu.title;
-      document.getElementById('icc-mainheader').hidden = false;
-      document.getElementById('icc-mainentry').hidden = false;
+      document.getElementById('icc-mainheader').style.visibility = '';
+      document.getElementById('icc-mainentry').style.visibility = '';
     };
 
     var reqIccData = lock.get('icc.data');

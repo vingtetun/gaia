@@ -481,8 +481,8 @@
       if (!menu || !menu.items ||
         (menu.items.length == 1 && menu.items[0] === null)) {
         debug('No STK available - hide & exit');
-        document.getElementById('icc-mainheader').hidden = true;
-        document.getElementById('icc-mainentry').hidden = true;
+        document.getElementById('icc-mainheader').style.visibility = 'hidden';
+        document.getElementById('icc-mainentry').style.visibility = 'hidden';
         return;
       }
 

@@ -258,11 +258,16 @@ var CardsView = (function() {
 
       cardsList.appendChild(card);
 
+      // Set up event handling
+      // A click elsewhere in the card switches to that task
+      card.addEventListener('tap', runApp);
+
       // If we have a cached screenshot, use that first
       // We then 'res-in' the correctly sized version
       var cachedLayer = WindowManager.screenshots[origin];
       if (cachedLayer) {
         card.style.backgroundImage = 'url(' + cachedLayer + ')';
+        return;
       }
 
       // rect is the final size (considering CSS transform) of the card.
@@ -270,31 +275,30 @@ var CardsView = (function() {
 
       // And then switch it with screenshots when one will be ready
       // (instead of -moz-element backgrounds)
-      if (typeof frameForScreenshot.getScreenshot === 'function') {
-        frameForScreenshot.getScreenshot(rect.width, rect.height).onsuccess =
-          function gotScreenshot(screenshot) {
-            if (screenshot.target.result) {
-              var objectURL = URL.createObjectURL(screenshot.target.result);
-
-              // Overwrite the cached image to prevent flickering
-              card.style.backgroundImage = 'url(' + objectURL + '), url(' + cachedLayer + ')';
-
-              // setTimeout is needed to ensure that the image is fully drawn
-              // before we remove it. Otherwise the rendering is not smooth.
-              // See: https://bugzilla.mozilla.org/show_bug.cgi?id=844245
-              setTimeout(function() {
-
-                // Override the cached image
-                URL.revokeObjectURL(cachedLayer);
-                WindowManager.screenshots[origin] = objectURL;
-              }, 200);
-            }
-          };
+      if (typeof frameForScreenshot.getScreenshot !== 'function') {
+        return;
       }
 
-      // Set up event handling
-      // A click elsewhere in the card switches to that task
-      card.addEventListener('tap', runApp);
+      frameForScreenshot.getScreenshot(rect.width, rect.height).onsuccess =
+        function gotScreenshot(screenshot) {
+          if (screenshot.target.result) {
+            var objectURL = URL.createObjectURL(screenshot.target.result);
+
+            // Overwrite the cached image to prevent flickering
+            card.style.backgroundImage = 'url(' + objectURL + '), url(' + cachedLayer + ')';
+
+            // setTimeout is needed to ensure that the image is fully drawn
+            // before we remove it. Otherwise the rendering is not smooth.
+            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=844245
+            setTimeout(function() {
+
+              // Override the cached image
+              URL.revokeObjectURL(cachedLayer);
+              WindowManager.screenshots[origin] = objectURL;
+            }, 200);
+          }
+        };
+
     }
   }
 

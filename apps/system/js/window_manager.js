@@ -145,7 +145,7 @@ var WindowManager = (function() {
   }
 
   function isRunning(origin) {
-    return runningApps.hasOwnProperty(origin);
+    return runningApps[origin];
   }
 
   function getAppFrame(origin) {
@@ -195,9 +195,6 @@ var WindowManager = (function() {
     if (!app)
       return;
 
-    var frame = app.frame;
-    var manifest = app.manifest;
-
     var cssHeight =
       window.innerHeight - StatusBar.height - keyboardHeight + 'px';
 
@@ -206,7 +203,7 @@ var WindowManager = (function() {
       cssHeight = window.innerHeight - keyboardHeight + 'px';
     }
 
-    frame.style.height = cssHeight;
+    app.frame.style.height = cssHeight;
 
     setInlineActivityFrameSize();
   }
@@ -241,10 +238,14 @@ var WindowManager = (function() {
 
     var objectURL = URL.createObjectURL(blob);
     frame.dataset.bgObjectURL = objectURL;
-    var backgroundCSS =
-      '-moz-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 100%),' +
-      'url(' + objectURL + '),' +
-      ((transparent) ? 'transparent' : '#fff');
+
+    if (frame.firstChild.dataset.packaged) {
+      var backgroundCSS = 'url(' + objectURL + ')';
+    } else {
+      var backgroundCSS =
+        '-moz-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 100%),' +
+        'url(' + objectURL + ')';
+    }
 
     frame.style.background = backgroundCSS;
   }
@@ -300,24 +301,12 @@ var WindowManager = (function() {
     });
   }
 
-  windows.addEventListener('transitionend', function frameTransitionend(evt) {
-    var prop = evt.propertyName;
+  windows.addEventListener('transitionend', function closeEnd(evt) {
     var frame = evt.target;
-    if (prop !== 'transform')
-      return;
-
     var classList = frame.classList;
 
     if (classList.contains('inlineActivity')) {
-      if (classList.contains('active')) {
-        if (openFrame)
-          openFrame.firstChild.focus();
-
-        setOpenFrame(null);
-      } else {
-        windows.removeChild(frame);
-      }
-
+      windows.removeChild(frame);
       return;
     }
 
@@ -343,8 +332,35 @@ var WindowManager = (function() {
         windowClosed(frame);
         setTimeout(closeCallback);
         closeCallback = null;
+      }
 
-      } else if (classList.contains('opening-switching')) {
+      return;
+    }
+
+    if (classList.contains('closing')) {
+      windowClosed(frame);
+
+      setTimeout(closeCallback);
+      closeCallback = null;
+
+      setCloseFrame(null);
+    }
+  });
+
+  windows.addEventListener('animationend', function openEnd(evt) {
+    var frame = evt.target;
+    var classList = frame.classList;
+
+    if (classList.contains('inlineActivity')) {
+      if (openFrame)
+        openFrame.firstChild.focus();
+
+      setOpenFrame(null);
+      return;
+    }
+
+    if (screenElement.classList.contains('switch-app')) {
+      if (classList.contains('opening-switching')) {
         // If the opening app need to be full screen, switch to full screen
         if (classList.contains('fullscreen-app')) {
           screenElement.classList.add('fullscreen-app');
@@ -373,12 +389,13 @@ var WindowManager = (function() {
         setTimeout(openCallback);
         openCallback = null;
 
+        saveScreenShotAndReplace(openFrame);
         setOpenFrame(null);
       };
 
       // If this is a cold launch let's wait for the app to load first
       var iframe = openFrame.firstChild;
-      if ('unpainted' in iframe.dataset) {
+      if ('unloaded' in iframe.dataset) {
         iframe.addEventListener('mozbrowserloadend', function on(e) {
           iframe.removeEventListener('mozbrowserloadend', on);
           onWindowReady();
@@ -386,13 +403,6 @@ var WindowManager = (function() {
       } else {
         onWindowReady();
       }
-    } else if (classList.contains('closing')) {
-      windowClosed(frame);
-
-      setTimeout(closeCallback);
-      closeCallback = null;
-
-      setCloseFrame(null);
     }
   });
 
@@ -400,6 +410,7 @@ var WindowManager = (function() {
   // to full size.
   function windowOpened(frame) {
     var iframe = frame.firstChild;
+    frame.dataset.visible = true;
 
     frame.classList.add('active');
     windows.classList.add('active');
@@ -497,27 +508,8 @@ var WindowManager = (function() {
     });
   }
 
-  windows.addEventListener('mozbrowserfirstpaint', function firstpaint(evt) {
-    var iframe = evt.target;
-    var frame = iframe.parentNode;
-
-    // remove the unpainted flag
-    delete iframe.dataset.unpainted;
-  });
-
-  // We're saving the screenshot once the iframe is loaded _and_ painted
-  windows.addEventListener('mozbrowserloadend', function loadend(evt) {
-    var iframe = evt.target;
-    var frame = iframe.parentNode;
-
-    if (iframe.dataset.unpainted) {
-      iframe.addEventListener('mozbrowserfirstpaint', function painted() {
-        iframe.removeEventListener('mozbrowserfirstpaint', painted);
-        saveScreenShotAndReplace(frame);
-      });
-    } else {
-      saveScreenShotAndReplace(frame);
-    }
+  windows.addEventListener('mozbrowserloadend', function loaded(evt) {
+    delete evt.target.dataset.unloaded;
   });
 
   // setFrameBackground() will attach the screenshot background to
@@ -526,9 +518,9 @@ var WindowManager = (function() {
   // the screenshot from database or not)
   function setFrameBackground(frame, callback, transparent) {
     var iframe = frame.firstChild;
-    // If the frame is painted, or there is already background image present
+    // If the frame is loaded, or there is already background image present
     // start the transition right away.
-    if (!('unpainted' in iframe.dataset) ||
+    if (!('unloaded' in iframe.dataset) ||
         ('bgObjectURL' in frame.dataset)) {
       callback();
       return;
@@ -539,7 +531,7 @@ var WindowManager = (function() {
       function(screenshot) {
         // If firstpaint is faster than database, we will not transition
         // with screenshot.
-        if (!('unpainted' in iframe.dataset)) {
+        if (!('unloaded' in iframe.dataset)) {
           callback();
           return;
         }
@@ -737,8 +729,8 @@ var WindowManager = (function() {
       }
     };
 
-    if ('unpainted' in openFrame.firstChild.dataset) {
-      waitForNextPaintOrBackground(openFrame, transitionOpenCallback);
+    if ('unloaded' in openFrame.firstChild.dataset) {
+      setFrameBackground(openFrame, transitionOpenCallback);
     } else {
       waitForNextPaint(openFrame, transitionOpenCallback);
     }
@@ -1051,7 +1043,7 @@ var WindowManager = (function() {
 
       var iframe = app.iframe;
 
-      // unpainted means that the app is cold booting
+      // unloaded means that the app is cold booting
       // if it is, we're going to listen for Browser API's loadend event
       // which indicates that the iframe's document load is complete
       //
@@ -1067,7 +1059,7 @@ var WindowManager = (function() {
       // [c] - cold boot (app has to be booted, we show it's document load
       // time)
       var type;
-      if ('unpainted' in iframe.dataset) {
+      if ('unloaded' in iframe.dataset) {
         type = 'mozbrowserloadend';
       } else {
         iframe.dataset.start = Date.now();
@@ -1183,8 +1175,8 @@ var WindowManager = (function() {
     // Note that we don't set the frame size here.  That will happen
     // when we display the app in setDisplayedApp()
 
-    // frames are began unpainted.
-    iframe.dataset.unpainted = true;
+    // frames start unloaded (surprisingly!).
+    iframe.dataset.unloaded = true;
 
     if (!manifestURL) {
       frame.setAttribute('data-wrapper', 'true');
@@ -1442,7 +1434,12 @@ var WindowManager = (function() {
       return;
 
     var manifest = app.manifest;
-    var name = new ManifestHelper(manifest).name;
+    var helper = new ManifestHelper(manifest);
+    var packaged = helper.type == 'certified' || helper.type == 'privileged' ||
+                   !!helper.package_path;
+                   
+
+    var name = helper.name;
     var origin = app.origin;
 
     // Check if it's a virtual app from a entry point.
@@ -1469,6 +1466,7 @@ var WindowManager = (function() {
         }
       }
     }
+
     switch (e.detail.type) {
       // mozApps API is asking us to launch the app
       // We will launch it in foreground
@@ -1478,13 +1476,17 @@ var WindowManager = (function() {
           setDisplayedApp();
         } else {
           if (!isRunning(origin)) {
-            appendFrame(null, origin, e.detail.url,
-                        name, app.manifest, app.manifestURL);
+            var app = appendFrame(null, origin, e.detail.url,
+                                  name, app.manifest, app.manifestURL);
+            app.iframe.dataset.start = startTime;
+            if (packaged) {
+              app.iframe.dataset.packaged = packaged;
+            }
           }
-          runningApps[origin].iframe.dataset.start = startTime;
           setDisplayedApp(origin, null, 'window');
         }
         break;
+
       // System Message Handler API is asking us to open the specific URL
       // that handles the pending system message.
       // We will launch it in background if it's not handling an activity.

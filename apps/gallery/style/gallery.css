@@ -10,7 +10,6 @@ html {
 }
 
 body {
-  background-color: black;
   color: #fff;
   font-family: "MozTT", sans-serif;
   font-size: 10px;
@@ -27,6 +26,7 @@ section {
   padding: 0;
   overflow: hidden;
   font-size: 1.4rem;
+  background-color: black;
 }
 
 .hidden {

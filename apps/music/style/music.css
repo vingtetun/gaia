@@ -8,7 +8,6 @@ html {
 }
 
 body {
-  background-color: #000;
   color: #fff;
   font-family: "MozTT", sans-serif;
   margin: 0;
@@ -182,12 +181,13 @@ body {
   text-overflow: ellipsis;
 }
 
-body.tiles-mode #title-back {
+#title-back {
   display: none;
 }
 
-body.list-mode #title-back {
-  display: none;
+body.sublist-mode #title-back,
+body.player-mode #title-back {
+  display: block;
 }
 
 body.player-mode #tabs {
@@ -228,7 +228,7 @@ body.player-mode #title-player {
   position: relative;
   width: 100%;
   height: calc(100% - 5rem);
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 1);
   transition: transform 300ms ease;
 }
 

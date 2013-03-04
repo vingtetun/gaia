@@ -5,7 +5,7 @@
 
 /* loading */
 
-body.loading {
+body.loading #view-selector {
   visibility: hidden;
 }
 

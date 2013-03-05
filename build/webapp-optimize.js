@@ -20,7 +20,7 @@ const { JSMin } = scope;
 
 let cssScope = {
   CSSRule: {
-    STYLE_RULE: 1
+    STYLE_RULE: Ci.nsIDOMCSSRule.STYLE_RULE
   }
 };
 
@@ -93,6 +93,7 @@ function optimize_criticalCSSResources(doc, webapp, htmlFile) {
     let links = Array.slice(doc.head.querySelectorAll(selector.selector));
     links.forEach(function(link) {
       let css = optimize_getFileContent(webapp, htmlFile, link.href);
+      link.outerHTML = '<!-- ' + link.outerHTML + ' -->';
 
       // Adding the stylesheets to the document
       let style = doc.createElementNS('http://www.w3.org/1999/xhtml', 'style');
@@ -104,8 +105,27 @@ function optimize_criticalCSSResources(doc, webapp, htmlFile) {
     });
   });
 
+  // XXX still need to build delayed from css_optimize!
   let [startup, delayed] = CSSOptimizer(doc);
-  debug(startup);
+
+  let links = doc.documentElement.querySelectorAll("style");
+  for (let i = links.length - 1; i >= 0; i--) {
+    doc.documentElement.removeChild(links[i]);
+  };
+
+  let style = doc.createElement("link");
+  style.setAttribute("rel", "stylesheet");
+  style.setAttribute("type", "text/css");
+  style.setAttribute("href", "/style/critical.css");
+  doc.head.insertBefore(style, doc.head.firstChild);
+
+  // XXX it seems like images are still broken! bitch!
+  let rootDirectory = htmlFile.parent;
+  let target = rootDirectory.clone();
+  target.append("style");
+  target.append("critical.css");
+  writeContent(target, startup);
+
 }
 
 /**

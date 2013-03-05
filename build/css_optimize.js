@@ -3,7 +3,7 @@
 
 var CSSOptimizer = (function() {
   function debug(str) {
-    dump("CSSOptimizer: " + str + "\n");
+    //dump("CSSOptimizer: " + str + "\n");
   }
 
   function report(doc, useful, useless, maybe) {
@@ -11,11 +11,10 @@ var CSSOptimizer = (function() {
           "useless: " + useless.length + "\t" +
           "maybe: " + maybe.length + "\n");
 
-    var result = "";
+    var result = "", delayed = "";
 
     try {
-      debug("A startup css file can be: ");
-      var urlhelper = doc.createElement('a');
+      let urlhelper = doc.createElementNS('http://www.w3.org/1999/xhtml', 'a');
       useful.forEach(function useRuleForStartup(rule) {
         if ('cssText' in rule) {
           result += rule.cssText + "\n";
@@ -45,7 +44,7 @@ var CSSOptimizer = (function() {
           }
         }
 
-        result += rule.selector + "{" + rule.content + "}\n";
+        result += rule.selector + "{" + content + "}\n";
       });
     } catch(e) {
       debug(e);
@@ -60,12 +59,10 @@ var CSSOptimizer = (function() {
                           "::before", "::after"];
 
     var stylesheets = doc.styleSheets;
-    debug(stylesheets.length);
     for (var i = 0; i < stylesheets.length; i++) {
       var stylesheet = stylesheets[i];
 
       var href = stylesheet.href || stylesheet.originalHref;
-      debug(href);
 
       var rules = stylesheet.cssRules;
       for (var j = 0; j < rules.length; j++) {

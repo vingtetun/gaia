@@ -1,7 +1,7 @@
 
 'use strict';
 
-const LandingPage = (function() {
+var LandingPage = (function() {
 
   var _ = navigator.mozL10n.get;
   var dateTimeFormat = new navigator.mozL10n.DateTimeFormat();

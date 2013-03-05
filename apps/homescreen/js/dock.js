@@ -1,7 +1,7 @@
 
 'use strict';
 
-const DockManager = (function() {
+var DockManager = (function() {
 
   var container, dock;
 

@@ -1,6 +1,6 @@
 Calendar.ns('Views').TimeHeader = (function() {
 
-  const SETTINGS = /settings/;
+  var SETTINGS = /settings/;
 
   function TimeHeader() {
     Calendar.View.apply(this, arguments);

@@ -1,6 +1,6 @@
   Calendar.ns('Provider').Local = (function() {
 
-  const LOCAL_CALENDAR_ID = 'local-first';
+  var LOCAL_CALENDAR_ID = 'local-first';
 
   function Local() {
     Calendar.Provider.Abstract.apply(this, arguments);

@@ -1,7 +1,7 @@
 
 'use strict';
 
-const Configurator = (function() {
+var Configurator = (function() {
   var conf = {};
 
   var dummyProvider = {

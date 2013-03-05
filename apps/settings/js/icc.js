@@ -7,9 +7,9 @@
   var _ = navigator.mozL10n.get;
 
   // Consts
-  const STK_SCREEN_DEFAULT = 0x00;
-  const STK_SCREEN_MAINMENU = 0x01;
-  const STK_SCREEN_HELP = 0x02;
+  var STK_SCREEN_DEFAULT = 0x00;
+  var STK_SCREEN_MAINMENU = 0x01;
+  var STK_SCREEN_HELP = 0x02;
 
   /**
    * Init

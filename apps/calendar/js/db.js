@@ -1,6 +1,6 @@
 (function(window) {
   var idb = window.indexedDB;
-  const VERSION = 13;
+  var VERSION = 13;
   var debug = Calendar.debug('database');
 
   var store = {

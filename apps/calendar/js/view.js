@@ -36,7 +36,7 @@
     this.hideErrors = this.hideErrors.bind(this);
   }
 
-  const INVALID_CSS = /([^a-zA-Z\-\_0-9])/g;
+  var INVALID_CSS = /([^a-zA-Z\-\_0-9])/g;
 
   View.ACTIVE = 'active';
 

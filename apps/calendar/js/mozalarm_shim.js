@@ -15,7 +15,7 @@
   console.log('(Debug mode on) navigator.mozAlarm shim active');
 
   // check every 10 seconds
-  const DEFAULT_INTERVAL = 10000;
+  var DEFAULT_INTERVAL = 10000;
 
   /** mozSetMessageHandler */
 

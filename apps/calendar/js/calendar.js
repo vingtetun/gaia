@@ -1,6 +1,6 @@
 (function(window) {
 
-  const NEXT_TICK = 'calendar-next-tick';
+  var NEXT_TICK = 'calendar-next-tick';
   var nextTickStack = [];
 
   window.Calendar = {

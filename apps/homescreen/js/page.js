@@ -858,7 +858,7 @@ dockProto.getChildren = function dk_getChildren() {
 
 HTMLCollection.prototype.indexOf = Array.prototype.indexOf;
 
-const TextOverflowDetective = (function() {
+var TextOverflowDetective = (function() {
 
   var iconFakeWrapperWidth;
   var iconFakeLabel;

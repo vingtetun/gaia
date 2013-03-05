@@ -1,7 +1,7 @@
 
 'use strict';
 
-const HomeState = (function() {
+var HomeState = (function() {
   var DB_NAME = 'homescreen';
   var GRID_STORE_NAME = 'grid';
   var DB_VERSION = 1;

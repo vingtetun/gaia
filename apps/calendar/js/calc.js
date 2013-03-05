@@ -1,8 +1,8 @@
 Calendar.Calc = (function() {
 
-  const SECOND = 1000;
-  const MINUTE = (SECOND * 60);
-  const HOUR = MINUTE * 60;
+  var SECOND = 1000;
+  var MINUTE = (SECOND * 60);
+  var HOUR = MINUTE * 60;
 
   var Calc = {
 

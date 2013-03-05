@@ -34,7 +34,8 @@ l10nDictionary.locales[GAIA_DEFAULT_LOCALE] = {};
  */
 const JS_AGGREGATION_BLACKLIST = [
   // https://bugzilla.mozilla.org/show_bug.cgi?id=839574
-  'system'
+  'system',
+  'keyboard'
 ];
 
 /**
@@ -189,6 +190,35 @@ function optimize_aggregateJsResources(doc, webapp, htmlFile) {
     // write the contents of the aggregated script
     writeContent(target, config.content);
 
+    // Minify the script
+    var applyMinification = GAIA_OPTIMIZE >= 2 &&
+       JS_AGGREGATION_BLACKLIST.indexOf(webapp.sourceDirectoryName) === -1;
+    if (applyMinification) {
+      var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      file.initWithPath("/usr/bin/java");
+      if (!file.exists()) {
+        dump("Can't find /usr/bin/java");
+        return;
+      }
+
+      var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+      process.init(file);
+
+      var compiler = getFile(GAIA_DIR);
+      compiler.append("build");
+      compiler.append("compiler.jar");
+
+      dump(target.path + "\n");
+      var args = ["-jar", compiler.path,
+                  "--js=" + target.path,
+                  "--compilation_level=SIMPLE_OPTIMIZATIONS",
+                  "--js_output_file=" + target.path.replace(".js", ".closure.js"),
+                  "--language_in=ECMASCRIPT5"];
+      process.run(true, args, args.length);
+
+      scriptBaseName = scriptBaseName.replace(".js", ".closure.js");
+    }
+
     let script = doc.createElement('script');
     let lastScript = config.lastNode;
 
@@ -323,7 +353,7 @@ function optimize_compile(webapp, file) {
       let newFile = new FileUtils.File(newPath);
       optimize_embedl10nResources(win.document, dictionary);
 
-      if (GAIA_OPTIMIZE == 1 &&
+      if (GAIA_OPTIMIZE >= 1 &&
           JS_AGGREGATION_BLACKLIST.indexOf(webapp.sourceDirectoryName) === -1) {
         optimize_aggregateJsResources(win.document, webapp, newFile);
         dump(

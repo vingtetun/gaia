@@ -68,8 +68,8 @@ Calendar.IntervalTree = (function() {
    *       into a more flexible system later.
    */
 
-  const START = '_startDateMS';
-  const END = '_endDateMS';
+  var START = '_startDateMS';
+  var END = '_endDateMS';
 
   function compareObjectStart(a, b) {
     return Calendar.compare(a[START], b[START]);

@@ -4,7 +4,7 @@ Calendar.ns('Views').DayBased = (function() {
   var hoursOfOccurance = Calendar.Calc.hoursOfOccurance;
   var OrderedMap = Calendar.Utils.OrderedMap;
 
-  const MINUTES_IN_HOUR = 60;
+  var MINUTES_IN_HOUR = 60;
 
   /**
    * Ordered map for storing relevant

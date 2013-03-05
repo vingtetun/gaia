@@ -1,5 +1,5 @@
 Calendar.ns('Worker').Manager = (function(global) {
-  const IDLE_CLEANUP_TIME = 5000;
+  var IDLE_CLEANUP_TIME = 5000;
 
   /**
    * Worker manager. Each worker/thread

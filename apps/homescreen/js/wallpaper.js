@@ -1,6 +1,6 @@
 'use strict';
 
-const Wallpaper = (function() {
+var Wallpaper = (function() {
   var overlay = document.getElementById('icongrid');
 
   function onHomescreenContextmenu() {

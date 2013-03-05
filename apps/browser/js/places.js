@@ -167,8 +167,8 @@ Places.db = {
     '/start.html',
 
   open: function db_open(callback) {
-    const DB_VERSION = 5;
-    const DB_NAME = 'browser';
+    var DB_VERSION = 5;
+    var DB_NAME = 'browser';
     var request = idb.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = (function onUpgradeNeeded(e) {

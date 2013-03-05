@@ -45,11 +45,11 @@ var CSSOptimizer = (function() {
           }
         }
 
-        result += rule.selector + "{" + rule.cssText + "}\n";
+        result += rule.selector + "{" + rule.content + "}\n";
       });
     } catch(e) {
       debug(e);
-    } 
+    }
 
     return [result, null];
   }
@@ -63,8 +63,8 @@ var CSSOptimizer = (function() {
     debug(stylesheets.length);
     for (var i = 0; i < stylesheets.length; i++) {
       var stylesheet = stylesheets[i];
-      
-      var href = stylesheet.href;
+
+      var href = stylesheet.href || stylesheet.originalHref;
       debug(href);
 
       var rules = stylesheet.cssRules;

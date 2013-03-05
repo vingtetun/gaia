@@ -109,7 +109,9 @@ var Settings = {
     navigator.mozSetMessageHandler('activity', this.webActivityHandler);
 
     // preset all inputs that have a `name' attribute
-    this.presetPanel();
+    setTimeout(function afterScreenshot(self) {
+      self.presetPanel();
+    }, 1000, this);
   },
 
   loadPanel: function settings_loadPanel(panel) {
@@ -251,6 +253,9 @@ var Settings = {
         var key = checkboxes[i].name;
         if (key && result[key] != undefined) {
           checkboxes[i].checked = !!result[key];
+          setTimeout(function nextTick(input) {
+            input.classList.remove('uninit');
+          }, 200 /* transition duration */, checkboxes[i]);
         }
       }
 

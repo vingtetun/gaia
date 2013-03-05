@@ -18,6 +18,10 @@ Services.scriptloader.loadSubScript('file:///' + GAIA_DIR +
     '/build/jsmin.js?reload=' + new Date().getTime(), scope);
 const { JSMin } = scope;
 
+Services.scriptloader.loadSubScript('file:///' + GAIA_DIR +
+    '/build/css_optimize.js?reload=' + new Date().getTime(), scope);
+const { CSSOptimizer } = scope;
+
 /**
  * Locale list -- by default, only the default one
  */
@@ -36,6 +40,9 @@ const JS_AGGREGATION_BLACKLIST = [
   // https://bugzilla.mozilla.org/show_bug.cgi?id=839574
   'system',
   'keyboard'
+];
+
+const CSS_AGGREGATION_BLACKLIST = [
 ];
 
 /**
@@ -72,6 +79,52 @@ function optimize_getFileContent(webapp, htmlFile, relativePath) {
   }
 }
 
+function optimize_aggregateCSSResources(doc, webapp, htmlFile) {
+  var selectors = [
+    { selector: "link[rel=stylesheet][href^=style]", dir: "style" },
+  ];
+
+  selectors.forEach(function(selector) {
+    let content = '';
+
+    let links = Array.slice(doc.head.querySelectorAll(selector.selector));
+    links.forEach(function(link) {
+      content += optimize_getFileContent(webapp, htmlFile, link.href);
+      link.parentNode.removeChild(link);
+    });
+
+    content = content.replace(/}\n/g, '');
+    dump(content);
+
+    return;
+    let [startup, delayed] = CSSOptimizer(doc);
+    debug(startup);
+
+    content = content.replace(/[\t\n]/g, '');
+    content = content.replace(/([:,;{}])\s+/g, '$1');
+    content = content.replace(/\s+{/g, '{');
+    content = content.replace(/\s*>\s*/g, '>');
+    content = content.replace(/["']/g, '');
+    content = content.replace(/\/\*[^*]*\*+([^/*][^*]*\*+)*\//g, '');
+    content = content.replace(/([: ]0)(px|rem)/g, '$1');
+
+    let baseName = htmlFile.path.split('/').pop().split('.')[0];
+
+    let newLink = doc.createElement('link');
+    newLink.href = selector.dir + '/' + baseName + '.css';
+    newLink.rel = 'stylesheet';
+    doc.head.appendChild(newLink);
+
+    let rootDirectory = htmlFile.parent;
+    let target = rootDirectory.clone();
+    selector.dir.split('/').forEach(function appendDirectory(dir) {
+      target.append(dir);
+    });
+    target.append(baseName + '.css');
+    writeContent(target, content);
+    debug(content);
+  });
+}
 /**
  * Aggregates javascript files by type to reduce the IO overhead.
  * Depending on the script tags there are two files made:
@@ -191,7 +244,7 @@ function optimize_aggregateJsResources(doc, webapp, htmlFile) {
     writeContent(target, config.content);
 
     // Minify the script
-    var applyMinification = GAIA_OPTIMIZE >= 2 &&
+    var applyMinification = GAIA_OPTIMIZE >= 3 &&
        JS_AGGREGATION_BLACKLIST.indexOf(webapp.sourceDirectoryName) === -1;
     if (applyMinification) {
       var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -353,13 +406,17 @@ function optimize_compile(webapp, file) {
       let newFile = new FileUtils.File(newPath);
       optimize_embedl10nResources(win.document, dictionary);
 
+      let dir = webapp.sourceDirectoryName;
       if (GAIA_OPTIMIZE >= 1 &&
-          JS_AGGREGATION_BLACKLIST.indexOf(webapp.sourceDirectoryName) === -1) {
+          JS_AGGREGATION_BLACKLIST.indexOf(dir) === -1) {
         optimize_aggregateJsResources(win.document, webapp, newFile);
-        dump(
-          '[optimize] aggregating javascript for : "' +
-          webapp.sourceDirectoryName + '" \n'
-        );
+        dump('[optimize] aggregating javascript for : "' + dir + '" \n');
+      }
+
+      if (GAIA_OPTIMIZE >= 2 &&
+          CSS_AGGREGATION_BLACKLIST.indexOf(dir) === -1) {
+        optimize_aggregateCSSResources(win.document, webapp, newFile);
+        dump('[optimize] aggregating css for : "' + dir + '" \n');
       }
 
       optimize_serializeHTMLDocument(win.document, newFile);

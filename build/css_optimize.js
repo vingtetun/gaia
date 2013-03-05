@@ -6,17 +6,19 @@ var CSSOptimizer = (function() {
     dump("CSSOptimizer: " + str + "\n");
   }
 
-  function report(useful, useless, maybe) {
+  function report(doc, useful, useless, maybe) {
     debug("useful: " + useful.length + "\t" +
           "useless: " + useless.length + "\t" +
           "maybe: " + maybe.length + "\n");
 
+    var result = "";
+
     try {
       debug("A startup css file can be: ");
-      var urlhelper = document.createElement('a');
+      var urlhelper = doc.createElement('a');
       useful.forEach(function useRuleForStartup(rule) {
         if ('cssText' in rule) {
-          dump(rule.cssText + "\n");
+          result += rule.cssText + "\n";
           return;
         }
 
@@ -43,19 +45,22 @@ var CSSOptimizer = (function() {
           }
         }
 
-        dump(rule.selector + "{" + content + "}\n");
+        result += rule.selector + "{" + rule.cssText + "}\n";
       });
     } catch(e) {
       debug(e);
     } 
+
+    return [result, null];
   }
 
-  function run() {
+  function run(doc) {
     var useful = [], useless = [], maybe = [];
     var pseudoElements = [":before", ":after", ":first-letter", ":first-line",
                           "::before", "::after"];
 
-    var stylesheets = document.styleSheets;
+    var stylesheets = doc.styleSheets;
+    debug(stylesheets.length);
     for (var i = 0; i < stylesheets.length; i++) {
       var stylesheet = stylesheets[i];
       
@@ -106,7 +111,7 @@ var CSSOptimizer = (function() {
 
           // Now let's check if there is a rule that match in the document.
           try {
-            if (document.querySelector(selector)) {
+            if (doc.querySelector(selector)) {
               useful.push(data);
             } else {
               useless.push(data);
@@ -118,12 +123,9 @@ var CSSOptimizer = (function() {
       }
     }
 
-    report(useful, useless, maybe);
+    return report(doc, useful, useless, maybe);
   }
 
   return run;
 })();
 
-window.addEventListener("load", function() {
-  setTimeout(CSSOptimizer, 3000);
-});

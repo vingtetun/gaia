@@ -101,31 +101,33 @@ function optimize_criticalCSSResources(doc, webapp, htmlFile) {
       style.appendChild(doc.createTextNode(css));
       doc.documentElement.appendChild(style);
       styleSheet = doc.styleSheets[doc.styleSheets.length - 1];
-      styleSheet.originalHref = link.href;
+
+      // The fake href needs a domain for the "urlhelper" to work
+      let joiner = (link.href[0] === '/') ? '' : '/';
+      styleSheet.originalHref = ['http://localhost', link.href].join(joiner);
     });
   });
 
   // XXX still need to build delayed from css_optimize!
   let [startup, delayed] = CSSOptimizer(doc);
 
-  let links = doc.documentElement.querySelectorAll("style");
+  let links = doc.documentElement.querySelectorAll('style');
   for (let i = links.length - 1; i >= 0; i--) {
     doc.documentElement.removeChild(links[i]);
   };
 
-  let style = doc.createElement("link");
-  style.setAttribute("rel", "stylesheet");
-  style.setAttribute("type", "text/css");
-  style.setAttribute("href", "/style/critical.css");
+  let style = doc.createElement('link');
+  style.setAttribute('rel', 'stylesheet');
+  style.setAttribute('type', 'text/css');
+  style.setAttribute('href', 'style/' + Gaia.aggregatePrefix + 'critical.css');
   doc.head.insertBefore(style, doc.head.firstChild);
 
   // XXX it seems like images are still broken! bitch!
   let rootDirectory = htmlFile.parent;
   let target = rootDirectory.clone();
-  target.append("style");
-  target.append("critical.css");
+  target.append('style');
+  target.append(Gaia.aggregatePrefix + 'critical.css');
   writeContent(target, startup);
-
 }
 
 /**

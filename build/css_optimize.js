@@ -56,7 +56,7 @@ var CSSOptimizer = (function() {
   function run(doc) {
     var useful = [], useless = [], maybe = [];
     var pseudoElements = [":before", ":after", ":first-letter", ":first-line",
-                          "::before", "::after"];
+                          "::before", "::after", ":target"];
 
     var stylesheets = doc.styleSheets;
     for (var i = 0; i < stylesheets.length; i++) {

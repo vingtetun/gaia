@@ -43,6 +43,9 @@
   window.addEventListener('mouseup', discardEvent, true);
   window.addEventListener('mousemove', discardEvent, true);
   window.addEventListener('click', discardEvent, true);
+  window.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
 
   function discardEvent(e) {
     if (e.isTrusted) {

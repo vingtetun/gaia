@@ -1,19 +1,20 @@
 'use strict';
 
 requireApp('homescreen/test/unit/mock_app.js');
-// import both MockPage and MockDock
-requireApp('homescreen/test/unit/mock_page.js');
+requireApp('homescreen/test/unit/mock_home_state.js');
 
 requireApp('homescreen/js/dock.js');
+requireApp('homescreen/js/grid.js');
+requireApp('homescreen/js/page.js');
 
 var mocksHelper = new MocksHelper([
-  'Page',
-  'Dock'
+  'HomeState'
 ]);
 
 mocksHelper.init();
 
 suite('dock.js >', function() {
+
   var wrapperNode;
   var dock;
   var dockContainer;
@@ -25,21 +26,54 @@ suite('dock.js >', function() {
   var tinyImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///' +
                   'ywAAAAAAQABAAACAUwAOw==';
 
+  function getIcon() {
+    var app = new MockApp();
+    var icon = new Icon(
+      {
+        manifestURL: app.manifestURL,
+        name: app.name,
+        icon: tinyImage
+      },
+      app
+    );
+    //testSupport.renderIcon(iconsContainer, icon, next);
+    icon.render(iconsContainer);
+    return icon;
+  }
+
+  /**
+   * Gets a number of icons
+   * @param {Integer} number of icons to create.
+   */
+  function getIcons(numIcons) {
+
+    if (numIcons === 0) {
+      return [];
+    }
+
+    var allIcons = [];
+    var pending = numIcons;
+
+    for (var i = 0; i < numIcons; i++) {
+      allIcons.push(getIcon());
+    }
+
+    return allIcons;
+  }
+
   suiteSetup(function() {
     mocksHelper.suiteSetup();
+    defaultGridGetIcon = GridManager.getIcon;
+    GridManager.getIcon = function(descriptor) {
+      return {
+        descriptor: descriptor
+      };
+    };
   });
 
   suiteTeardown(function() {
     mocksHelper.suiteTeardown();
-  });
-
-  setup(function() {
-    mocksHelper.setup();
-    setupDom();
-  });
-
-  teardown(function() {
-    mocksHelper.teardown();
+    GridManager.getIcon = defaultGridGetIcon;
   });
 
   function setupDom() {
@@ -64,14 +98,18 @@ suite('dock.js >', function() {
 
   suite('with 1 icon >', function() {
 
-    setup(function() {
-      dock = new MockDock(dockContainer);
+    setup(function(done) {
+      setupDom();
+      dock = new Dock(dockContainer, getIcons(1));
       DockManager.init(dockContainer, dock, tapThreshold);
+      done();
     });
 
     teardown(teardownDom);
 
     test('looks ok', function() {
+      assert.ok(dock);
+      assert.equal(1, dock.getNumIcons());
       assert.isFalse(DockManager.isFull());
     });
 
@@ -80,27 +118,29 @@ suite('dock.js >', function() {
       assert.notEqual(0, DockManager.cellWidth);
     });
 
-    test('dock is not scrollable', function() {
-      assert.isFalse(dockContainer.classList.contains('scrollable'));
+    test('#getRight', function() {
+      assert.ok(dock.getRight() > 0);
     });
 
-    test('moveBy was called', function() {
-      assert.ok(MockDock.mMoveByArg);
+    test('#getLeft', function() {
+      assert.isTrue(dock.getLeft() >= 0);
     });
+
   });
 
   suite('with 0 icons >', function() {
 
     setup(function() {
-      MockPage.mIcons = [];
-      dock = new MockDock(dockContainer);
+      setupDom();
+      dock = new Dock(dockContainer, getIcons(0));
       DockManager.init(dockContainer, dock, tapThreshold);
+      assert.isFalse(DockManager.isFull());
     });
 
     teardown(teardownDom);
 
     test('looks ok', function() {
-      assert.isFalse(DockManager.isFull());
+      assert.ok(dock);
       assert.equal(0, dock.getNumIcons());
     });
 
@@ -109,34 +149,13 @@ suite('dock.js >', function() {
       assert.equal(0, DockManager.cellWidth);
     });
 
-    test('dock is not scrollable', function() {
-      assert.isFalse(dockContainer.classList.contains('scrollable'));
+    test('#getRight', function() {
+      assert.equal(dock.getRight(), 0);
     });
 
-    test('moveBy was called', function() {
-      assert.ok(MockDock.mMoveByArg);
-    });
-  });
-
-  suite('with more than 4 icons >', function() {
-    setup(function() {
-      MockPage.mIcons = [
-        new MockIcon(),
-        new MockIcon(),
-        new MockIcon(),
-        new MockIcon(),
-        new MockIcon()
-      ];
-      dock = new MockDock(dockContainer);
-      DockManager.init(dockContainer, dock, tapThreshold);
+    test('#getLeft', function() {
+      assert.isTrue(dock.getLeft() >= 0);
     });
 
-    test('dock is scrollable', function() {
-      assert.ok(dockContainer.classList.contains('scrollable'));
-    });
-
-    test('moveBy was not called', function() {
-      assert.isUndefined(MockDock.mMoveByArg);
-    });
   });
 });

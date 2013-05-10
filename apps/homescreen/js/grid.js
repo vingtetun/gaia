@@ -434,17 +434,6 @@ var GridManager = (function() {
     }
   }
 
-  var captureHashchange = false;
-
-  function hashchange(evt) {
-    if (!captureHashchange) {
-      return;
-    }
-
-    captureHashchange = false;
-    evt.stopImmediatePropagation();
-  }
-
   function goToPageCallback(index, fromPage, toPage, dispatchEvents, callback) {
     delete document.body.dataset.transitioning;
 
@@ -486,16 +475,9 @@ var GridManager = (function() {
   var lastGoingPageTimestamp = 0;
 
   function goToPage(index, callback) {
+    document.location.hash = (index === landingPage ? 'root' : '');
     if (index < 0 || index >= pages.length)
       return;
-
-    if (index === landingPage) {
-      // Homescreen won't call to this method due to stop the propagation
-      captureHashchange = true;
-      document.location.hash = 'root';
-    } else {
-      document.location.hash = '';
-    }
 
     var delay = touchEndTimestamp - lastGoingPageTimestamp ||
                 kPageTransitionDuration;
@@ -1123,8 +1105,6 @@ var GridManager = (function() {
     swipeFriction = options.swipeFriction || defaults.swipeFriction; // Not zero
     kPageTransitionDuration = options.swipeTransitionDuration;
     overlayTransition = 'opacity ' + kPageTransitionDuration + 'ms ease';
-
-    window.addEventListener('hashchange', hashchange);
 
     // Initialize the grid from the state saved in IndexedDB.
     HomeState.init(function eachPage(pageState) {

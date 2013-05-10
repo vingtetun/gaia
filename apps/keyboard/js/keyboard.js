@@ -291,7 +291,7 @@ function getKeyboardSettings() {
     'keyboard.autocorrect': true,
     'keyboard.vibration': false,
     'keyboard.clicksound': false,
-    'audio.volume.notification': 7
+    'ring.enabled': true
   };
 
   // Add the keyboard group settings to our query, too.
@@ -307,7 +307,7 @@ function getKeyboardSettings() {
     correctionsEnabled = values['keyboard.autocorrect'];
     vibrationEnabled = values['keyboard.vibration'];
     clickEnabled = values['keyboard.clicksound'];
-    isSoundEnabled = !!values['audio.volume.notification'];
+    isSoundEnabled = values['ring.enabled'];
 
     handleKeyboardSound();
 
@@ -354,8 +354,8 @@ function initKeyboard() {
     vibrationEnabled = e.settingValue;
   });
 
-  navigator.mozSettings.addObserver('audio.volume.notification', function(e) {
-    isSoundEnabled = !!e.settingValue;
+  navigator.mozSettings.addObserver('ring.enabled', function(e) {
+    isSoundEnabled = e.settingValue;
     handleKeyboardSound();
   });
 
@@ -572,6 +572,16 @@ function modifyLayout(keyboardName) {
     space = copy(space);   // and the original space key
     row[c] = space;
 
+    // switch languages button
+    if (enabledKeyboardNames.length > 1 && !layout['hidesSwitchKey']) {
+      space.ratio -= 1;
+      row.splice(c, 0, {
+        value: '&#x1f310;',
+        ratio: 1,
+        keyCode: SWITCH_KEYBOARD
+      });
+      c += 1;
+    }
 
     // Alternate layout key
     // This gives the author the ability to change the alternate layout
@@ -589,32 +599,21 @@ function modifyLayout(keyboardName) {
     }
 
     if (!layout['disableAlternateLayout']) {
-      space.ratio -= 1.5;
+      space.ratio -= 2;
       if (layoutPage === LAYOUT_PAGE_DEFAULT) {
         row.splice(c, 0, {
           keyCode: ALTERNATE_LAYOUT,
           value: alternateLayoutKey,
-          ratio: 1.5
+          ratio: 2
         });
 
       } else {
         row.splice(c, 0, {
           keyCode: BASIC_LAYOUT,
           value: basicLayoutKey,
-          ratio: 1.5
+          ratio: 2
         });
       }
-      c += 1;
-    }
-
-    // switch languages button
-    if (enabledKeyboardNames.length > 1 && !layout['hidesSwitchKey']) {
-      space.ratio -= 1.5;
-      row.splice(c, 0, {
-        value: '&#x1f310;',
-        ratio: 1.5,
-        keyCode: SWITCH_KEYBOARD
-      });
       c += 1;
     }
 
@@ -647,29 +646,26 @@ function modifyLayout(keyboardName) {
         // adds . and , to both sides of the space bar
       case 'text':
         var overwrites = layout.textLayoutOverwrite || {};
-        var next = c;
+        var next = c + 1;
         if (overwrites['.'] !== false) {
           space.ratio -= 1;
-          next++;
+          next = c + 2;
         }
+        if (overwrites[','] !== false)
+          space.ratio -= 1;
 
-        // Add ',' to 2nd level
-        if (layoutPage !== LAYOUT_PAGE_DEFAULT) {
-
-          if (overwrites[','] !== false) {
-            space.ratio -= 1;
-            next++;
-          }
-
-          var commaKey = {value: ',', keyCode: 44, ratio: 1};
-
-          if (overwrites[',']) {
-            commaKey.value = overwrites[','];
-            commaKey.keyCode = overwrites[','].charCodeAt(0);
-            row.splice(c, 0, commaKey);
-          } else if (overwrites[','] !== false) {
-            row.splice(c, 0, commaKey);
-          }
+        if (overwrites[',']) {
+          row.splice(c, 0, {
+            value: overwrites[','],
+            ratio: 1,
+            keyCode: overwrites[','].charCodeAt(0)
+          });
+        } else if (overwrites[','] !== false) {
+          row.splice(c, 0, {
+            value: ',',
+            ratio: 1,
+            keyCode: 44
+          });
         }
 
         if (overwrites['.']) {
@@ -725,13 +721,11 @@ function renderKeyboard(keyboardName) {
     var keyboard = Keyboards[keyboardName];
     IMERender.setInputMethodName(keyboard.imEngine || 'default');
 
-    IMERender.ime.classList.remove('full-candidate-panel');
-
     // And draw the layout
     IMERender.draw(currentLayout, {
       uppercase: isUpperCase,
       inputType: currentInputType,
-      showCandidatePanel: needsCandidatePanel()
+      showCandidatePanel: Keyboards[keyboardName].needsCandidatePanel
     });
 
     IMERender.setUpperCaseLock(isUpperCaseLocked ? 'locked' : isUpperCase);
@@ -746,12 +740,10 @@ function renderKeyboard(keyboardName) {
 
   // XXX: if we are going to hide the candidatePanel, notify keyboard manager
   // first to update the app window size
-  if (!currentLayout.needsCandidatePanel && candidatePanelEnabled) {
+  if (!Keyboards[keyboardName].needsCandidatePanel && candidatePanelEnabled) {
     var candidatePanel = document.getElementById('keyboard-candidate-panel');
-    var candidatePanelHeight = (candidatePanel) ?
-                               candidatePanel.scrollHeight : 0;
     document.location.hash = 'show=' +
-      (IMERender.ime.scrollHeight - candidatePanelHeight);
+      (IMERender.ime.scrollHeight - candidatePanel.scrollHeight);
 
     window.setTimeout(drawKeyboard, CANDIDATE_PANEL_SWITCH_TIMEOUT);
   } else {
@@ -780,7 +772,7 @@ function setUpperCase(upperCase, upperCaseLocked) {
   IMERender.draw(currentLayout, {
     uppercase: isUpperCaseLocked || isUpperCase,
     inputType: currentInputType,
-    showCandidatePanel: needsCandidatePanel()
+    showCandidatePanel: Keyboards[keyboardName].needsCandidatePanel
   });
   // And make sure the caps lock key is highlighted correctly
   IMERender.setUpperCaseLock(isUpperCaseLocked ? 'locked' : isUpperCase);
@@ -1422,6 +1414,8 @@ function showKeyboard(state) {
   currentInputMode = state.inputmode;
   currentInputType = mapInputType(state.type);
 
+  // reset the flag for candidate show/hide workaround
+  candidatePanelEnabled = false;
 
   resetKeyboard();
 
@@ -1432,6 +1426,16 @@ function showKeyboard(state) {
     });
   }
 
+  if (!inputMethod.displaysCandidates ||
+      inputMethod.displaysCandidates())
+  {
+    IMERender.ime.classList.add('candidate-panel');
+  }
+  else {
+    IMERender.ime.classList.remove('candidate-panel');
+  }
+  IMERender.ime.classList.remove('full-candidate-panel');
+
 }
 
 // Hide keyboard
@@ -1439,9 +1443,6 @@ function hideKeyboard() {
   IMERender.hideIME();
   if (inputMethod.deactivate)
     inputMethod.deactivate();
-
-  // reset the flag for candidate show/hide workaround
-  candidatePanelEnabled = false;
 }
 
 // Resize event handler
@@ -1629,15 +1630,5 @@ function getSettings(settings, callback) {
     if (numResults === numSettings) {
       callback(results);
     }
-  }
-}
-
-// To determine if the candidate panel for word suggestion is needed
-function needsCandidatePanel() {
-  if (Keyboards[keyboardName].needsCandidatePanel &&
-      (!inputMethod.displaysCandidates || inputMethod.displaysCandidates())) {
-    return true;
-  } else {
-    return false;
   }
 }

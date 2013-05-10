@@ -227,8 +227,8 @@ var Recents = {
   },
 
   filter: function re_filter(event) {
-    // Do nothing if the selected tab is same that current
-    if (event.target.parentNode.getAttribute('aria-selected') === 'true') {
+    // do nothing if selected tab is same that current
+    if (event.target.parentNode.classList.contains('selected')) {
       return;
     }
     var action = event.target.dataset.action;
@@ -326,16 +326,8 @@ var Recents = {
         this._missedViewGroupingPending = false;
       }
     }
-    if (this.allFilter.getAttribute('aria-selected') === 'true') {
-      this.allFilter.removeAttribute('aria-selected');
-    } else {
-      this.allFilter.setAttribute('aria-selected', 'true');
-    }
-    if (this.missedFilter.getAttribute('aria-selected') === 'true') {
-      this.missedFilter.removeAttribute('aria-selected');
-    } else {
-      this.missedFilter.setAttribute('aria-selected', 'true');
-    }
+    this.allFilter.classList.toggle('selected');
+    this.missedFilter.classList.toggle('selected');
     this.limitVisibleEntries(100);
   },
 
@@ -616,7 +608,7 @@ var Recents = {
         '</div>';
       navigator.mozL10n.translate(this.recentsContainer);
       this.recentsIconEdit.parentNode.setAttribute('aria-disabled', 'true');
-      this.allFilter.setAttribute('aria-selected', 'true');
+      this.allFilter.classList.add('selected');
       return;
     }
 
@@ -652,18 +644,18 @@ var Recents = {
       var event = new Object();
       self._allViewGroupingPending = true;
       self._missedViewGroupingPending = true;
-      if (self.missedFilter.getAttribute('aria-selected') === 'true') {
-        self.missedFilter.removeAttribute('aria-selected');
+      if (self.missedFilter.classList.contains('selected')) {
+        self.missedFilter.classList.remove('selected');
         event.target = self.missedFilter.children[0];
         self.filter(event);
-        self.missedFilter.setAttribute('aria-selected', 'true');
-        self.allFilter.removeAttribute('aria-selected');
+        self.missedFilter.classList.add('selected');
+        self.allFilter.classList.remove('selected');
       } else {
-        self.allFilter.removeAttribute('aria-selected');
+        self.allFilter.classList.remove('selected');
         event.target = self.allFilter.children[0];
         self.filter(event);
-        self.missedFilter.removeAttribute('aria-selected');
-        self.allFilter.setAttribute('aria-selected', 'true');
+        self.missedFilter.classList.remove('selected');
+        self.allFilter.classList.add('selected');
       }
     });
   },

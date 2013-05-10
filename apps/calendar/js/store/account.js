@@ -23,11 +23,8 @@
 
         // check if this account is already registered
         for (var index in allAccounts) {
-          if (
-              allAccounts[index].user === model.user &&
-              allAccounts[index].fullUrl === model.fullUrl &&
-              allAccounts[index]._id !== model._id
-          ) {
+          if (allAccounts[index].user === model.user &&
+              allAccounts[index].fullUrl === model.fullUrl) {
 
             var dupErr = new Error(
               'Cannot add two accounts with the same url / entry point'

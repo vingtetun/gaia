@@ -104,15 +104,10 @@ var LockScreen = {
   */
   HANDLE_MAX: 70,
 
-  /**
-   * Object used for handling the clock UI element, wraps all related timers
-   */
-  clock: new Clock(),
-
   /* init */
   init: function ls_init() {
     if (this.ready) { // already initialized: just trigger a translation
-      this.refreshClock(new Date());
+      this.updateTime();
       this.updateConnState();
       return;
     }
@@ -172,8 +167,8 @@ var LockScreen = {
       self.setEnabled(value);
     });
 
-    SettingsListener.observe('audio.volume.notification', 7, function(value) {
-      self.mute.hidden = (value != 0);
+    SettingsListener.observe('ring.enabled', true, function(value) {
+      self.mute.hidden = value;
     });
 
     SettingsListener.observe('vibration.enabled', true, function(value) {
@@ -267,8 +262,6 @@ var LockScreen = {
           if (this.camera.firstElementChild)
             this.camera.removeChild(this.camera.firstElementChild);
 
-          // Stop refreshing the clock when the screen is turned off.
-          this.clock.stop();
         } else {
           var _screenOffInterval = new Date().getTime() - this._screenOffTime;
           if (_screenOffInterval > this.passCodeRequestTimeout * 1000) {
@@ -276,9 +269,6 @@ var LockScreen = {
           } else {
             this._passCodeTimeoutCheck = false;
           }
-
-          // Resume refreshing the clock when the screen is turned on.
-          this.clock.start(this.refreshClock.bind(this));
         }
 
         this.lockIfEnabled(true);
@@ -591,15 +581,13 @@ var LockScreen = {
     this.setElasticEnabled(false);
     this.mainScreen.focus();
     this.dispatchEvent('will-unlock');
-
-    // The lockscreen will be hidden, stop refreshing the clock.
-    this.clock.stop();
   },
 
   lock: function ls_lock(instant) {
     var wasAlreadyLocked = this.locked;
     this.locked = true;
 
+    navigator.mozL10n.ready(this.updateTime.bind(this));
     this.switchPanel();
 
     this.setElasticEnabled(ScreenManager.screenEnabled);
@@ -760,19 +748,25 @@ var LockScreen = {
     });
   },
 
-  refreshClock: function ls_refreshClock(now) {
+  updateTime: function ls_updateTime() {
     if (!this.locked)
       return;
 
+    var d = new Date();
     var f = new navigator.mozL10n.DateTimeFormat();
     var _ = navigator.mozL10n.get;
 
     var timeFormat = _('shortTimeFormat');
     var dateFormat = _('longDateFormat');
-    var time = f.localeFormat(now, timeFormat);
+    var time = f.localeFormat(d, timeFormat);
     this.clockNumbers.textContent = time.match(/([012]?\d).[0-5]\d/g);
     this.clockMeridiem.textContent = (time.match(/AM|PM/i) || []).join('');
-    this.date.textContent = f.localeFormat(now, dateFormat);
+    this.date.textContent = f.localeFormat(d, dateFormat);
+
+    var self = this;
+    window.setTimeout(function ls_clockTimeout() {
+      self.updateTime();
+    }, (59 - d.getSeconds()) * 1000);
   },
 
   updateConnState: function ls_updateConnState() {

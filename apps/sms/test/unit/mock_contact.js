@@ -39,10 +39,6 @@ function MockContact(name) {
   this.category = [
     'favorite'
   ];
-
-  this.org = [
-    ''
-  ];
 }
 
 /*

@@ -122,7 +122,6 @@ var SMIL = window.SMIL = {
     var attachments = message.attachments;
     var slides = [];
     var activeReaders = 0;
-    var attachmentsNotFound = false;
     var workingText = [];
     var doc;
     var parTags;
@@ -211,16 +210,12 @@ var SMIL = window.SMIL = {
     }
 
     function SMIL_parseHandleParTag(par, index) {
-      // stop parsing as soon as we fail to find one attachment
-      if (attachmentsNotFound) {
-        return;
-      }
-
       var mediaElement = par.querySelector('img, video, audio');
       var textElement = par.querySelector('text');
       var slide = {};
       var attachment;
       var src;
+      var blob;
 
       slides.push(slide);
       if (mediaElement) {
@@ -229,22 +224,19 @@ var SMIL = window.SMIL = {
         if (attachment) {
           slide.name = attachment.location;
           slide.blob = attachment.content;
-        } else {
-          attachmentsNotFound = true;
         }
       }
       if (textElement) {
         src = textElement.getAttribute('src');
         attachment = findAttachment(src);
         if (attachment) {
-          readTextBlob(attachment.content,
+          blob = attachment.content;
+          readTextBlob(blob,
             function SMIL_parseSMILAttachmentRead(event, text) {
               slide.text = text;
               exitPoint();
             }
           );
-        } else {
-          attachmentsNotFound = true;
         }
       }
     }
@@ -254,12 +246,7 @@ var SMIL = window.SMIL = {
       doc = (new DOMParser()).parseFromString(smil, 'application/xml');
       parTags = doc.documentElement.getElementsByTagName('par');
       Array.prototype.forEach.call(parTags, SMIL_parseHandleParTag);
-    }
-
-    // handle MMS attachments without SMIL / malformed SMIL
-    if (!smil || attachmentsNotFound || !slides.length) {
-      // reset slides in the attachments not found case
-      slides = [];
+    } else {
       attachments.forEach(SMIL_parseWithoutSMIL);
     }
     exitPoint();

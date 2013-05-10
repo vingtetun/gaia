@@ -43,14 +43,16 @@ navigator.mozL10n.ready(function wifiSettings() {
 
   // toggle wifi on/off
   gWifiCheckBox.onchange = function toggleWifi() {
-    settings.createLock().set({
-      'wifi.enabled': this.checked,
-      'wifi.suspended': !this.checked
-    }).onerror = function() {
+    var req = settings.createLock();
+    req.set({'wifi.enabled': this.checked});
+    req.set({'wifi.suspended' : !this.checked});
+    this.disabled = true;
+
+    req.onerror = function() {
       // Fail to write mozSettings, return toggle control to the user.
       gWifiCheckBox.disabled = false;
     };
-    this.disabled = true;
+
   };
 
   /**

@@ -195,7 +195,8 @@ var DockManager = (function() {
       container.classList.add('scrollable');
     }
 
-    cellWidth = numIcons ? dock.getFirstIcon().getWidth() : 0;
+    cellWidth = dock.olist.children.length > 0 ?
+        dock.olist.children[0].getBoundingClientRect().width : 0;
     maxOffsetLeft = windowWidth - numIcons * cellWidth;
   }
 

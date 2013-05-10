@@ -6,10 +6,10 @@
 require('/shared/js/lazy_loader.js');
 require('/shared/js/l10n.js');
 require('/shared/js/l10n_date.js');
+require('/shared/test/unit/load_body_html_helper.js');
 
 requireApp('sms/test/unit/mock_contact.js');
 requireApp('sms/test/unit/mock_l10n.js');
-requireApp('sms/test/unit/mock_navigatormoz_sms.js');
 
 requireApp('sms/js/link_helper.js');
 requireApp('sms/js/contacts.js');
@@ -17,6 +17,7 @@ requireApp('sms/js/fixed_header.js');
 requireApp('sms/js/utils.js');
 requireApp('sms/test/unit/utils_mockup.js');
 requireApp('sms/test/unit/messages_mockup.js');
+requireApp('sms/test/unit/sms_test_html_mockup.js');
 requireApp('sms/test/unit/thread_list_mockup.js');
 requireApp('sms/js/message_manager.js');
 requireApp('sms/js/thread_list_ui.js');
@@ -46,9 +47,7 @@ suite('SMS App Unit-Test', function() {
 
   var findByString;
   var nativeMozL10n = navigator.mozL10n;
-  var realMozMobileMessage;
   var boundOnHashChange;
-  var getContactDetails;
 
   suiteSetup(function() {
     navigator.mozL10n = MockL10n;
@@ -134,12 +133,9 @@ suite('SMS App Unit-Test', function() {
     window.addEventListener(
       'hashchange', boundOnHashChange
     );
-    realMozMobileMessage = ThreadUI._mozMobileMessage;
-    ThreadUI._mozMobileMessage = MockNavigatormozMobileMessage;
   });
 
   suiteTeardown(function() {
-    ThreadUI._mozMobileMessage = realMozMobileMessage;
     Contacts.findByString = findByString;
     // cleanup
     window.document.body.innerHTML = '';
@@ -160,33 +156,6 @@ suite('SMS App Unit-Test', function() {
     // We are gonna review the HTML structure with this suite
     suite('Threads-list rendering', function() {
 
-      test('properly updates in response to an arriving message of a ' +
-        'different type', function() {
-        var container = ThreadListUI.container;
-        MessageManager.getThreads(function(threads) {
-          threads.forEach(function(thread, idx) {
-            var newMessage = {
-              threadId: thread.id,
-              sender: thread.participants[0],
-              timestamp: thread.timestamp,
-              type: thread.lastMessageType === 'mms' ? 'sms' : 'mms'
-            };
-            MessageManager.onMessageReceived({
-              message: newMessage
-            });
-          });
-        });
-        var mmsThreads = container.querySelectorAll(
-          '[data-last-message-type="mms"]'
-        );
-        var smsThreads = container.querySelectorAll(
-          '[data-last-message-type="sms"]'
-        );
-
-        assert.equal(mmsThreads.length, 3);
-        assert.equal(smsThreads.length, 1);
-      });
-
       test('Check HTML structure', function() {
         // Check the HTML structure, and if it fits with Building Blocks
 
@@ -199,15 +168,6 @@ suite('SMS App Unit-Test', function() {
         // We know as well that we have, in total, 5 threads
         assertNumberOfElementsInContainerByTag(container, 4, 'li');
         assertNumberOfElementsInContainerByTag(container, 4, 'a');
-
-        var mmsThreads = container.querySelectorAll(
-          '[data-last-message-type="mms"]'
-        );
-        var smsThreads = container.querySelectorAll(
-          '[data-last-message-type="sms"]'
-        );
-        assert.equal(mmsThreads.length, 1);
-        assert.equal(smsThreads.length, 3);
 
         // In our mockup we shoul group the threads following day criteria
         // In the second group, we should have 2 threads
@@ -228,8 +188,7 @@ suite('SMS App Unit-Test', function() {
         var threadWithContact = document.getElementById('thread_1');
         var contactName =
           threadWithContact.getElementsByClassName('name')[0].innerHTML;
-        assert.equal(contactName,
-                     'contact-title-text{"name":"Pepito Grillo","n":0}');
+        assert.equal(contactName, 'Pepito Grillo');
       });
     });
 
@@ -291,7 +250,6 @@ suite('SMS App Unit-Test', function() {
           body: 'Recibidas!',
           id: 9999,
           timestamp: new Date(),
-          type: 'sms',
           channel: 'sms'
         });
 
@@ -324,7 +282,6 @@ suite('SMS App Unit-Test', function() {
           body: 'Recibidas!',
           id: 9999,
           timestamp: new Date(),
-          type: 'sms',
           channel: 'sms'
         });
 
@@ -446,7 +403,6 @@ suite('SMS App Unit-Test', function() {
           delivery: 'received',
           id: 9999,
           timestamp: new Date(),
-          type: 'sms',
           channel: 'sms'
         });
 
@@ -532,8 +488,7 @@ suite('SMS App Unit-Test', function() {
   suite('URL Links in SMS', function() {
     var Message = {
       id: '987',
-      body: 'Hello URL',
-      type: 'sms'
+      body: 'Hello URL'
     };
 
     //test
@@ -580,8 +535,7 @@ suite('SMS App Unit-Test', function() {
   suite('EmailAddress Links in SMS', function() {
     var Message = {
       id: '1234',
-      body: 'Hello n Welcome',
-      type: 'sms'
+      body: 'Hello n Welcome'
     };
 
     //test
@@ -627,8 +581,7 @@ suite('SMS App Unit-Test', function() {
   suite('Phone Links in SMS', function() {
     var Message = {
       id: '123',
-      body: 'Hello there',
-      type: 'sms'
+      body: 'Hello there'
     };
 
     //test
@@ -760,24 +713,15 @@ suite('SMS App Unit-Test', function() {
       return function mock() {
         mock.called = true;
         mock.args = [].slice.call(arguments);
-        return definition.apply(this, mock.args);
+        definition.apply(this, mock.args);
       };
     }
-    suiteSetup(function() {
-      getContactDetails = Utils.getContactDetails;
-      Utils.getContactDetails = mock(function(number, contacts) {
-        return {
-          isContact: !!contacts,
-          title: number
-        };
-      });
-    });
-
-    suiteTeardown(function() {
-      Utils.getContactDetails = getContactDetails;
-    });
 
     test('+99', function(done) {
+      var getPhoneDetails = Utils.getPhoneDetails;
+      Utils.getPhoneDetails = mock(function(number, contact, handler) {
+        handler({});
+      });
       var ul = document.createElement('ul');
 
       ThreadUI.recipients.value = '+99';
@@ -787,13 +731,18 @@ suite('SMS App Unit-Test', function() {
           tel: [{ value: '...' }]
         }, '+99', ul);
       });
-      assert.ok(Utils.getContactDetails.called);
-      assert.equal(Utils.getContactDetails.args[0], '...');
+      assert.ok(Utils.getPhoneDetails.called);
+      assert.equal(Utils.getPhoneDetails.args[0], '...');
 
+      Utils.getPhoneDetails = getPhoneDetails;
       done();
     });
 
     test('*67 [800]-555-1212', function(done) {
+      var getPhoneDetails = Utils.getPhoneDetails;
+      Utils.getPhoneDetails = mock(function(number, contact, handler) {
+        handler({});
+      });
       var ul = document.createElement('ul');
 
       assert.doesNotThrow(function() {
@@ -802,13 +751,18 @@ suite('SMS App Unit-Test', function() {
           tel: [{ value: '...' }]
         }, '*67 [800]-555-1212', ul);
       });
-      assert.ok(Utils.getContactDetails.called);
-      assert.equal(Utils.getContactDetails.args[0], '...');
+      assert.ok(Utils.getPhoneDetails.called);
+      assert.equal(Utils.getPhoneDetails.args[0], '...');
 
+      Utils.getPhoneDetails = getPhoneDetails;
       done();
     });
 
     test('\\^$*+?.', function(done) {
+      var getPhoneDetails = Utils.getPhoneDetails;
+      Utils.getPhoneDetails = mock(function(number, contact, handler) {
+        handler({});
+      });
       var ul = document.createElement('ul');
       assert.doesNotThrow(function() {
         ThreadUI.renderContact({
@@ -816,9 +770,10 @@ suite('SMS App Unit-Test', function() {
           tel: [{ value: '...' }]
         }, '\\^$*+?.', ul);
       });
-      assert.ok(Utils.getContactDetails.called);
-      assert.equal(Utils.getContactDetails.args[0], '...');
+      assert.ok(Utils.getPhoneDetails.called);
+      assert.equal(Utils.getPhoneDetails.args[0], '...');
 
+      Utils.getPhoneDetails = getPhoneDetails;
       done();
     });
   });

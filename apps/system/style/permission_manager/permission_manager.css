@@ -27,10 +27,15 @@
 }
 
 #permission-remember-section {
+  height: 6rem;
   border-top: 0.1rem solid #686868;
   font-size: 1.6rem;
-  display: block;
-  padding: 1.5rem;
+  width: 100%;
+  position: relative;
+}
+
+#permission-remember-section {
+  display: none;
 }
 
 #permission-message {
@@ -44,24 +49,22 @@
   background-position: 0 50%;
 }
 
+#permission-screen[data-type] #permission-remember-section,
 #permission-screen[data-type] #permission-icon {
   display: inherit;
 }
 
 #permission-screen[data-type] #permission-message {
-  padding-left: 7rem;
+  padding-left: 7.2rem;
 }
 
 #permission-remember-section label {
-  float: right;
-  width: 5.8rem;
-  height: 2rem;
+  position: absolute;
+  right: 0.4rem;
 }
 
 #permission-remember-label {
-  float: left;
-  width: calc(100% - 6rem);
-  line-height: 2.4rem;
+  line-height: 5rem;
 }
 
 #permission-screen[data-type="geolocation"] #permission-message {

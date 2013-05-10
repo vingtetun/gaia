@@ -125,14 +125,12 @@
       return this.rootFontSize;
     },
 
-    // We will apply createObjectURL for details.photoURL if contact image exist
-    // Please remember to revoke the photoURL after utilizing it.
-    getContactDetails: function ut_getContactDetails(number, contacts) {
-      var details = {};
-      function updateDetails(contact) {
-        var name, phone, carrier, i, length, subscriber, org;
+    getPhoneDetails: function ut_getPhoneDetails(number, contact, callback) {
+      var details = {},
+          name, phone, carrier, i, length, subscriber;
+
+      if (contact) {
         name = contact.name[0];
-        org = contact.org && contact.org[0];
         length = contact.tel ? contact.tel.length : 0;
         phone = length && contact.tel[0].value ? contact.tel[0] : {
           value: '',
@@ -172,39 +170,19 @@
           }
         }
 
-        details.name = name;
+        details.title = name || number;
         details.carrier = carrier || phone.value || '';
-        // We pick the first discovered org name as the phone number's detail
-        // org information.
-        details.org = details.org || org;
 
         if (phone.type) {
           details.carrier = phone.type + ' | ' + details.carrier;
         }
-      }
 
-      // In no contact or contact with empty information cases, we will leave
-      // the title as the empty string and let caller to decide the title.
-      if (!contacts || (Array.isArray(contacts) && contacts.length === 0)) {
-        details.title = '';
-      } else if (!Array.isArray(contacts)) {
-        updateDetails(contacts);
-        details.title = details.name || details.org;
+      // No contact argument was provided
       } else {
-        // Rule for fetching details with multiple contact entries:
-        // 1) If we got more than 1 contact entry, find another entry if
-        //    current entry got no name/company.
-        // 2) If we could not get any information from all the entries,
-        //    just display phone number.
-        for (var i = 0, l = contacts.length; i < l; i++) {
-          updateDetails(contacts[i]);
-          if (details.name)
-            break;
-        }
-        details.title = details.name || details.org;
+        details.title = number;
       }
 
-      return details;
+      callback(details);
     },
 
     getResizedImgBlob: function ut_getResizedImgBlob(blob, limit, callback) {

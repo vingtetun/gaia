@@ -283,6 +283,8 @@ var Cards = {
    */
   _eatingEventsUntilNextCard: false,
 
+  TRAY_GUTTER_WIDTH: 60,
+
   /**
    * Initialize and bind ourselves to the DOM which should now be fully loaded.
    */
@@ -327,18 +329,9 @@ var Cards = {
       this._popupActive.close();
       return;
     }
-
-    // Find the card containing the event target.
-    var cardNode = event.target;
-    for (cardNode = event.target; cardNode; cardNode = cardNode.parentNode) {
-      if (cardNode.classList.contains('card'))
-        break;
-    }
-
-    // If tray is active and the click is in the card that is after
-    // current card (in the gutter), then just transition back to
-    // that card.
-    if (this._trayActive && cardNode && cardNode.classList.contains('after')) {
+    if (this._trayActive &&
+        (event.clientX >
+         this._containerNode.offsetWidth - this.TRAY_GUTTER_WIDTH)) {
       event.stopPropagation();
 
       // Look for a card with a data-tray-target attribute

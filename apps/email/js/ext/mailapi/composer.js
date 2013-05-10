@@ -1987,12 +1987,12 @@ Composer.prototype = {
                            wireRep.customHeaders[iHead+1]);
       }
     }
-    mcomposer.addHeader('User-Agent', 'Mozilla Gaia Email Client 0.1alpha2');
+    mcomposer.addHeader('User-Agent', 'Mozilla Gaia Email Client 0.1alpha');
     mcomposer.addHeader('Date', this.sentDate.toUTCString());
 
     mcomposer.addHeader('Message-Id', this.messageId);
-    if (wireRep.referencesStr)
-      mcomposer.addHeader('References', wireRep.referencesStr);
+    if (wireRep.references)
+      mcomposer.addHeader('References', wireRep.references);
   },
 
   /**

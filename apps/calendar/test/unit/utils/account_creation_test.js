@@ -161,6 +161,7 @@ suiteGroup('Utils.AccountCreation', function() {
 
       test('duplicate account failure', function(done) {
         var authorizeErrorSent = false;
+
         subject.on('authorizeError', function() {
           authorizeErrorSent = Array.slice(arguments);
         });
@@ -170,10 +171,7 @@ suiteGroup('Utils.AccountCreation', function() {
             return done(err);
           }
 
-          var duplicateAccount = Factory('account', account.toJSON());
-          delete duplicateAccount._id;
-
-          subject.send(duplicateAccount, function(dupErr) {
+          subject.send(account, function(dupErr) {
             done(function() {
               assert.equal(dupErr.name, 'account-exist');
               assert.deepEqual(authorizeErrorSent, [dupErr]);

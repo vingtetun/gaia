@@ -153,67 +153,66 @@ suite('Utils', function() {
     */
   });
 
-  suite('Utils.getContactDetails', function() {
+  suite('Utils.getPhoneDetails', function() {
     test('(number, contact, callback)', function() {
       var contact = new MockContact();
 
-      var details = Utils.getContactDetails('346578888888', contact);
-      assert.deepEqual(details, {
-        isContact: true,
-        title: 'Pepito Grillo',
-        name: 'Pepito Grillo',
-        org: '',
-        carrier: 'Mobile | TEF'
+      Utils.getPhoneDetails('346578888888', contact, function(details) {
+        assert.deepEqual(details, {
+          isContact: true,
+          title: 'Pepito Grillo',
+          carrier: 'Mobile | TEF'
+        });
       });
 
-      details = Utils.getContactDetails('12125559999', contact);
-      assert.deepEqual(details, {
-        isContact: true,
-        title: 'Pepito Grillo',
-        name: 'Pepito Grillo',
-        org: '',
-        carrier: 'Batphone | XXX'
+      Utils.getPhoneDetails('12125559999', contact, function(details) {
+        assert.deepEqual(details, {
+          isContact: true,
+          title: 'Pepito Grillo',
+          carrier: 'Batphone | XXX'
+        });
       });
     });
 
     test('(number, null, callback)', function() {
       var contact = new MockContact();
 
-      var details = Utils.getContactDetails('346578888888', null);
-      assert.deepEqual(details, {
-        title: ''
+      Utils.getPhoneDetails('346578888888', null, function(details) {
+        assert.deepEqual(details, {
+          title: '346578888888'
+        });
       });
     });
 
     test('(number (wrong number), contact, callback)', function() {
       var contact = new MockContact();
 
-      var details = Utils.getContactDetails('99999999', contact);
-      assert.deepEqual(details, {
-        isContact: true,
-        title: 'Pepito Grillo',
-        name: 'Pepito Grillo',
-        org: '',
-        carrier: 'Mobile | TEF'
+      Utils.getPhoneDetails('99999999', contact, function(details) {
+        assert.deepEqual(details, {
+          isContact: true,
+          title: 'Pepito Grillo',
+          carrier: 'Mobile | TEF'
+        });
       });
     });
 
-    test('(number, contact (blank information), callback)', function() {
+    test('(number, contact (blank name), callback)', function() {
       var contact = new MockContact();
       var name = contact.name[0];
 
       // Remove the name value
       contact.name[0] = '';
 
-      var details = Utils.getContactDetails('346578888888', contact);
-      assert.deepEqual(details, {
-        isContact: true,
-        title: '',
-        name: '',
-        org: '',
-        carrier: 'Mobile | TEF'
-      });
+      Utils.getPhoneDetails('346578888888', contact, function(details) {
+        assert.deepEqual(details, {
+          isContact: true,
+          title: '346578888888',
+          carrier: 'Mobile | TEF'
+        });
 
+        // Restore the name
+        contact.name[0] = name;
+      });
     });
 
     suite('Defensive', function() {
@@ -222,13 +221,12 @@ suite('Utils', function() {
         var contact = new MockContact();
         contact.tel = null;
 
-        var details = Utils.getContactDetails('0', contact);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'Pepito Grillo',
-          name: 'Pepito Grillo',
-          org: '',
-          carrier: ''
+        Utils.getPhoneDetails('0', contact, function(details) {
+          assert.deepEqual(details, {
+            isContact: true,
+            title: 'Pepito Grillo',
+            carrier: ''
+          });
         });
       });
 
@@ -236,13 +234,12 @@ suite('Utils', function() {
         var contact = new MockContact();
         contact.tel.length = 0;
 
-        var details = Utils.getContactDetails('0', contact);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'Pepito Grillo',
-          name: 'Pepito Grillo',
-          org: '',
-          carrier: ''
+        Utils.getPhoneDetails('0', contact, function(details) {
+          assert.deepEqual(details, {
+            isContact: true,
+            title: 'Pepito Grillo',
+            carrier: ''
+          });
         });
       });
 
@@ -250,13 +247,12 @@ suite('Utils', function() {
         var contact = new MockContact();
         contact.tel[0].value = '';
 
-        var details = Utils.getContactDetails('0', contact);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'Pepito Grillo',
-          name: 'Pepito Grillo',
-          org: '',
-          carrier: ''
+        Utils.getPhoneDetails('0', contact, function(details) {
+          assert.deepEqual(details, {
+            isContact: true,
+            title: 'Pepito Grillo',
+            carrier: ''
+          });
         });
       });
 
@@ -264,50 +260,12 @@ suite('Utils', function() {
         var contact = new MockContact();
         contact.tel[0].value = '';
 
-        var details = Utils.getContactDetails('+12125559999', contact);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'Pepito Grillo',
-          name: 'Pepito Grillo',
-          org: '',
-          carrier: 'Batphone | XXX'
-        });
-      });
-
-      test('Multiple contact entries, showing the valid title', function() {
-        var contacts = new MockContact.list([
-          // Empty name should not show up
-          { givenName: [''], familyName: [''] },
-          { givenName: ['Jane'], familyName: ['Doozer'] }
-        ]);
-        var name = contacts[0].name[0];
-        contacts[0].name[0] = '';
-
-        var details = Utils.getContactDetails('346578888888', contacts);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'Jane Doozer',
-          name: 'Jane Doozer',
-          org: '',
-          carrier: 'Mobile | TEF'
-        });
-      });
-
-      test('number is empty, apply organization name if exist', function() {
-        var contact = new MockContact();
-        var name = contact.name[0];
-
-        // Remove the name value and add org name
-        contact.name[0] = '';
-        contact.org[0] = 'TEF';
-
-        var details = Utils.getContactDetails('346578888888', contact);
-        assert.deepEqual(details, {
-          isContact: true,
-          title: 'TEF',
-          name: '',
-          org: 'TEF',
-          carrier: 'Mobile | TEF'
+        Utils.getPhoneDetails('+12125559999', contact, function(details) {
+          assert.deepEqual(details, {
+            isContact: true,
+            title: 'Pepito Grillo',
+            carrier: 'Batphone | XXX'
+          });
         });
       });
     });

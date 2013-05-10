@@ -236,14 +236,12 @@ var Carrier = (function newCarrier(window, document, undefined) {
     var settings = Settings.mozSettings;
 
     /*
-     * settingKey              : The key of the setting
-     * dialogID                : The ID of the warning dialog
-     * explanationItemID       : The ID of the explanation item
-     * warningDisabledCallback : Callback when the warning is disabled
+     * settingKey        : The key of the setting
+     * dialogID          : The ID of the warning dialog
+     * explanationItemID : The ID of the explanation item
      */
     var initWarnings =
-      function initWarnings(settingKey, dialogID, explanationItemID,
-        warningDisabledCallback) {
+      function initWarnings(settingKey, dialogID, explanationItemID) {
         if (settings) {
           var warningDialogEnabledKey = settingKey + '.warningDialog.enabled';
           var explanationItem = document.getElementById(explanationItemID);
@@ -268,8 +266,6 @@ var Carrier = (function newCarrier(window, document, undefined) {
             window.asyncStorage.setItem(warningDialogEnabledKey, false);
             explanationItem.hidden = false;
             setState(true);
-            if (warningDisabledCallback)
-              warningDisabledCallback();
           };
 
           var onReset = function() {
@@ -308,8 +304,6 @@ var Carrier = (function newCarrier(window, document, undefined) {
               };
             } else {
               explanationItem.hidden = false;
-              if (warningDisabledCallback)
-                warningDisabledCallback();
             }
           });
         } else {
@@ -317,23 +311,21 @@ var Carrier = (function newCarrier(window, document, undefined) {
         }
       };
 
-    var onDCWarningDisabled = function() {
-      // Turn off data roaming automatically when users turn off data connection
-      if (settings) {
-        settings.addObserver('ril.data.enabled', function(event) {
-          if (!event.settingValue) {
-            var cset = {};
-            cset['ril.data.roaming_enabled'] = false;
-            settings.createLock().set(cset);
-          }
-        });
-      }
-    };
-
     initWarnings('ril.data.enabled', 'carrier-dc-warning',
-      'dataConnection-expl', onDCWarningDisabled);
+      'dataConnection-expl');
     initWarnings('ril.data.roaming_enabled', 'carrier-dr-warning',
       'dataRoaming-expl');
+
+    // Turn off data roaming automatically when users turn off data connection
+    if (settings) {
+      settings.addObserver('ril.data.enabled', function(event) {
+        if (!event.settingValue) {
+          var cset = {};
+          cset['ril.data.roaming_enabled'] = false;
+          settings.createLock().set(cset);
+        }
+      });
+    }
   }
 
   // network operator selection: auto/manual
@@ -485,7 +477,8 @@ var Carrier = (function newCarrier(window, document, undefined) {
       getMccMncCodes(function() {
         // XXX this should be done later -- not during init()
         Carrier.fillAPNList('data');
-        Carrier.fillAPNList('mms');
+        // XXX commented this line because MMS Settings is hidden
+        // Carrier.fillAPNList('mms');
         Carrier.fillAPNList('supl');
       });
     }

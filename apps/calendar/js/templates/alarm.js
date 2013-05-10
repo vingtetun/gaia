@@ -45,10 +45,7 @@
 
       // Format the display text based on a zero-offset trigger
       if (this.arg('layout') == 'allday') {
-        var options = layouts['allday'];
-        if (options.indexOf(trigger) !== -1) {
-          trigger -= MORNING;
-        }
+        trigger -= MORNING;
       }
 
       if (trigger == 0) {
@@ -81,14 +78,6 @@
 
       for (; i < iLen; i++) {
         selected = '';
-
-        //trigger option 'selected' by normalizing imported dates
-        if (layout == 'allday') {
-          if (options[i] == (trigger + MORNING)) {
-            trigger += MORNING;
-          }
-        }
-
         if (!selected && trigger && options[i] == trigger) {
           selected = ' selected';
           foundSelected = true;

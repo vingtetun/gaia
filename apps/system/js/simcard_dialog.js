@@ -107,7 +107,7 @@ var SimPinDialog = {
     if (!retryCount) {
       this.triesLeftMsg.hidden = true;
     } else {
-      var l10nArgs = { n: retryCount };
+      var l10nArgs = { n: triesLeft };
       this.triesLeftMsg.textContent = _('inputCodeRetriesLeft', l10nArgs);
       this.triesLeftMsg.hidden = false;
     }

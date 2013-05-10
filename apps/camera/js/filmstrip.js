@@ -650,9 +650,6 @@ var Filmstrip = (function() {
     // And we have to resize the frame (and its video player)
     frame.resize();
     frame.video.setPlayerSize();
-
-    // And inform the video player of new orientation
-    frame.video.setPlayerOrientation(orientation);
   }
 
   return {

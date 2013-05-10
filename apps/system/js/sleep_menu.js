@@ -37,9 +37,12 @@ var SleepMenu = {
     });
 
     var settings = navigator.mozSettings;
-
     SettingsListener.observe('audio.volume.notification', 7, function(value) {
-      self.isSilentModeEnabled = (value == 0);
+      settings.createLock().set({'ring.enabled': (value != 0)});
+    });
+
+    SettingsListener.observe('ring.enabled', true, function(value) {
+      self.isSilentModeEnabled = !value;
     });
   },
 
@@ -177,17 +180,29 @@ var SleepMenu = {
 
       // About silent and silentOff
       // * Turn on silent mode will cause:
-      //   send a custom event 'mute' to sound manager
+      //   * Turn off ringtone no matter if ring is on or off
+      //   * for sms and incoming calls.
       // * Turn off silent mode will cause:
-      //   send a custom event 'unmute' to sound manager
+      //   * Turn on ringtone no matter if ring is on or off
+      //   * for sms and incoming calls.
       case 'silent':
-        window.dispatchEvent(new Event('mute'));
+        if (!window.navigator.mozSettings)
+          return;
+
+        SettingsListener.getSettingsLock().set({
+          'ring.enabled': false
+        });
         this.isSilentModeEnabled = true;
 
         break;
 
       case 'silentOff':
-        window.dispatchEvent(new Event('unmute'));
+        if (!window.navigator.mozSettings)
+          return;
+
+        SettingsListener.getSettingsLock().set({
+          'ring.enabled': true
+        });
         this.isSilentModeEnabled = false;
 
         break;
@@ -297,13 +312,15 @@ var SleepMenu = {
   _actualPowerOff: function sm_actualPowerOff(isReboot) {
     var power = navigator.mozPower;
 
+    setTimeout(function() {
+      if (isReboot) {
+        power.reboot();
+      } else {
+        power.powerOff();
+      }
+    });
     // Paint screen to black before reboot/poweroff
     ScreenManager.turnScreenOff(true);
-    if (isReboot) {
-      power.reboot();
-    } else {
-      power.powerOff();
-    }
   }
 };
 

@@ -12,9 +12,8 @@ var MockUtils = {
   },
   getDayDate: Utils.getDayDate,
   getFormattedHour: Utils.getFormattedHour,
-  updateTimeHeaders: function() {},
+
   // real code needed here to map types
   typeFromMimeType: Utils.typeFromMimeType,
-  escapeHTML: Utils.escapeHTML,
-  escapeRegex: Utils.escapeRegex
+  escapeHTML: Utils.escapeHTML
 };

@@ -386,7 +386,6 @@ var Settings = {
     var key = input.name;
 
     var settings = window.navigator.mozSettings;
-    //XXX should we check data-ignore here?
     if (!key || !settings || event.type != 'change')
       return;
 
@@ -456,20 +455,6 @@ var Settings = {
                   break;
                 case 'checkbox':
                   input.checked = request.result[key] || false;
-                  break;
-                case 'select-one':
-                  input.value = request.result[key] || '';
-                  // Reset the select button content: We have to sync
-                  // the content to value in db before entering dialog
-                  var parent = input.parentElement;
-                  var button = input.previousElementSibling;
-                  // link the button with the select element
-                  var index = input.selectedIndex;
-                  if (index >= 0) {
-                    var selection = input.options[index];
-                    button.textContent = selection.textContent;
-                    button.dataset.l10nId = selection.dataset.l10nId;
-                  }
                   break;
                 default:
                   input.value = request.result[key] || '';
@@ -591,8 +576,8 @@ window.addEventListener('load', function loadSettings() {
       'js/utils.js',
       'js/airplane_mode.js',
       'js/battery.js',
-      'shared/js/async_storage.js',
-      'js/storage.js',
+      'js/app_storage.js',
+      'js/media_storage.js',
       'shared/js/mobile_operator.js',
       'js/connectivity.js',
       'js/security_privacy.js',
@@ -659,6 +644,12 @@ window.addEventListener('load', function loadSettings() {
           }
         });
         setTimeout(Settings.updateLanguagePanel);
+        break;
+      case 'mediaStorage':        // full media storage status + panel startup
+        MediaStorage.initUI();
+        break;
+      case 'deviceStorage':       // full device storage status
+        AppStorage.update();
         break;
       case 'battery':             // full battery status
         Battery.update();

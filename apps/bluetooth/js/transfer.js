@@ -274,19 +274,17 @@ window.addEventListener('localized', function showPanel() {
       // we could refine following code to pass blob to API directly.
       var filepaths = activity.source.data.filepaths;
       var storage = navigator.getDeviceStorage('sdcard');
-      filepaths.forEach(function(filepath) {
-        var getRequest = storage.get(filepath);
-        getRequest.onsuccess = function() {
-          defaultAdapter.sendFile(targetDevice.address, getRequest.result);
-        };
-        getRequest.onerror = function() {
-          var errmsg = getRequest.error && getRequest.error.name;
-          console.error('Bluetooth.getFile:', errmsg);
-        };
-      });
+      var getRequest = storage.get(filepaths[0]);
 
-      activity.postResult('transferred');
-      endTransfer();
+      getRequest.onsuccess = function() {
+        defaultAdapter.sendFile(targetDevice.address, getRequest.result);
+        activity.postResult('transferred');
+        endTransfer();
+      };
+      getRequest.onerror = function() {
+        var errmsg = getRequest.error && getRequest.error.name;
+        console.error('Bluetooth.getFile:', errmsg);
+      };
     };
 
     transferRequest.onerror = function bt_connError() {

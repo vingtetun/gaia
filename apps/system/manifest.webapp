@@ -21,7 +21,6 @@
     "device-storage:pictures":{ "access": "readwrite" },
     "device-storage:videos":{ "access": "readwrite" },
     "device-storage:music":{ "access": "readcreate" },
-    "device-storage:apps":{ "access": "readonly" },
     "settings":{ "access": "readwrite" },
     "storage":{},
     "camera":{},

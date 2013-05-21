@@ -1,1 +1,9 @@
 content desktop-helper.js content/
+resource desktop-helper.js resource/
+
+overlay chrome://browser/content/browser.xul chrome://desktop-helper.js/content/overlay.xul
+overlay chrome://browser/content/shell.xul chrome://desktop-helper.js/content/overlay.xul
+
+component {c83c02c0-5d43-4e3e-987f-9173b313e880} components/SimulatorScreen.js
+contract @mozilla.org/simulator-screen;1 {c83c02c0-5d43-4e3e-987f-9173b313e880}
+category JavaScript-global-property screen @mozilla.org/simulator-screen;1

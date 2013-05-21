@@ -6,6 +6,20 @@ stack.browserStack.os-mode box.devtools-responsiveui-resizebar {
   display: none;
 }
 
+/* Hide close button and resize menu */
+.devtools-toolbar .devtools-toolbarbutton:first-child,
+.devtools-toolbar menulist {
+  display: none;
+}
+
+/* XXX Should fix this in http://mxr.mozilla.org/mozilla-central/source/browser/themes/linux/devtools/common.css */
+.devtools-toolbarbutton[disabled] {
+  opacity: 0.3;
+  border-color: hsla(210,8%,5%,.45) !important;
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box !important;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15) !important;
+}
+
 /* Gives responsive mode a phone look'n feel */
 stack.browserStack.os-mode {
   padding: 60px 15px 0;

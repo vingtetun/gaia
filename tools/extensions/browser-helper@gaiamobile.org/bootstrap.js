@@ -7,8 +7,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-function debug(data) {
-  dump('browser-helper: ' + data + '\n');
+function debug() {
+  dump('browser-helper: ' + Array.slice(arguments) + '\n');
 }
 
 function startup(data, reason) {
@@ -49,8 +49,25 @@ function startup(data, reason) {
       }
     }, 'document-element-inserted', false);
 
-    Services.obs.addObserver(function() {
+
+    Services.obs.addObserver(function(subject, topic, data) {
       let browserWindow = Services.wm.getMostRecentWindow('navigator:browser');
+
+      function resizeTo(width, height) {
+        debug(width, height);
+        // We have to take into account padding and border introduced with the
+        // device look'n feel:
+        width += 15*2; // Horizontal padding
+        width += 1*2; // Vertical border
+        height += 60; // Top Padding
+        height += 1; // Top border
+        let args = {'width': width, 'height': height};
+        let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+        mgr.handleGcliCommand(browserWindow,
+                              browserWindow.gBrowser.selectedTab,
+                              'resize to',
+                              args);
+      }
 
       // Inject CSS in browser to customize responsive view
       let doc = browserWindow.document;
@@ -61,6 +78,33 @@ function startup(data, reason) {
       Cu.import('resource:///modules/devtools/responsivedesign.jsm');
       ResponsiveUIManager.once('on', function(event, tab, responsive) {
         let document = tab.ownerDocument;
+
+        // handling rotate button
+        var rotateButton = responsive.container.firstChild.lastChild;
+        browserWindow.addEventListener('click', function(e) {
+          if (e.originalTarget != rotateButton)
+            return;
+
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          Cu.import("resource://desktop-helper.js/modules/GlobalSimulatorScreen.jsm");
+          GlobalSimulatorScreen.flipScreen();
+        }, true);
+
+        Services.obs.addObserver(function(subject, topic, data) {
+          let msg = JSON.parse(data);
+          if (msg.locked) {
+            rotateButton.disabled = true;
+          } else {
+            rotateButton.disabled = false;
+          }
+        }, 'simulator-orientation-lock-change', false);
+
+        Services.obs.addObserver(function(subject, topic, data) {
+          let msg = JSON.parse(data);
+          resizeTo(msg.width, msg.height);
+        }, 'simulator-adjust-window-size', false);
 
         // Ensure tweaking only the first responsive mode opened
         responsive.stack.classList.add('os-mode');
@@ -155,19 +199,7 @@ function startup(data, reason) {
       });
 
       // Automatically toggle responsive design mode
-      let width = 320, height = 480;
-      // We have to take into account padding and border introduced with the
-      // device look'n feel:
-      width += 15*2; // Horizontal padding
-      width += 1*2; // Vertical border
-      height += 60; // Top Padding
-      height += 1; // Top border
-      let args = {'width': width, 'height': height};
-      let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-      mgr.handleGcliCommand(browserWindow,
-                            browserWindow.gBrowser.selectedTab,
-                            'resize to',
-                            args);
+      resizeTo(320, 480);
 
       // And devtool panel while maximizing its size according to screen size
       Services.prefs.setIntPref('devtools.toolbox.sidebar.width',

@@ -41,6 +41,7 @@ apps/system/resources/icc.json
 /tools/test-agent/node_modules
 /test-output.xml
 /mocha-test-results.html
+/build/custom-extensions.json
 /build/custom-prefs.js
 /build/custom-settings.json
 /local.mk

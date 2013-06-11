@@ -1,7 +1,7 @@
 
 'use strict';
 
-var PaginationBar = (function() {
+const PaginationBar = (function() {
   var style, previousTotal, scroller;
 
   var dir = document.documentElement.dir === 'rtl' ? -100 : 100;

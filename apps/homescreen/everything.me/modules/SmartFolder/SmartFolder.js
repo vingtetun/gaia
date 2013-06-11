@@ -2,19 +2,20 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
     var self = this, NAME = "SmartFolder",
         experienceId = '', query = '', image = '', scroll = null, shouldFadeImage = false, bgImage = null,
         el = null, elScreen = null, elTitle = null, elClose = null,
-        elAppsContainer = null, elApps = null, elLoading,
+        elAppsContainer = null, elApps = null,
         elImage = null, elImageOverlay = null, elImageFullscreen = null,
         reportedScrollMove = false, optionsOnScrollEnd = null,
         fadeBy = 1,
         
         SCROLL_BOTTOM_THRESHOLD = 5,
-        CLASS_WHEN_LOADING = 'show-loading-apps',
         CLASS_WHEN_VISIBLE = 'visible',
         CLASS_WHEN_IMAGE_FULLSCREEN = 'full-image',
         CLASS_WHEN_ANIMATING = 'animate',
+        CLASS_WHEN_MAX_HEIGHT = 'maxheight',
         SCROLL_TO_SHOW_IMAGE = 80,
         TRANSITION_DURATION = 400,
         LOAD_MORE_SCROLL_THRESHOLD = -30,
+        MAX_HEIGHT = 520,
         MAX_SCROLL_FADE = 200,
         FULLSCREEN_THRESHOLD = 0.8;
         
@@ -28,20 +29,13 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
         options.experienceId && self.setExperience(options.experienceId);
         options.image && self.setImage(options.image);
         options.elParent && self.appendTo(options.elParent);
+        (typeof options.maxHeight === "number") && (MAX_HEIGHT = options.maxHeight);
         
         optionsOnScrollEnd = options.onScrollEnd;
         
         self.MoreIndicator.init({
             "elParent": elApps
         });
-
-
-      
-        elLoading = Evme.$create('div',
-                    { 'class': 'loading-apps' },
-                    '<progress class="small skin-dark"></progress>');
-          
-        elAppsContainer.appendChild(elLoading);
         
         Evme.EventHandler.trigger(NAME, "init");
         
@@ -120,25 +114,19 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
                 }
             });
         
-        self.hideLoading();
-        
         Evme.EventHandler.trigger(NAME, "load");
         
         return iconsResult;
     };
     
-    this.showLoading = function showLoading() {
-      elLoading.style.transform = 'translateY(' + self.getInstalledHeight()/2 + 'px)';
-      elAppsContainer.classList.add(CLASS_WHEN_LOADING);
-    };
-    
-    this.hideLoading = function hideLoading() {
-      elAppsContainer.classList.remove(CLASS_WHEN_LOADING);
-    };
-    
     this.appendTo = function appendTo(elParent) {
         elParent.appendChild(el);
         elParent.appendChild(elScreen);
+        
+        if (el.offsetHeight > MAX_HEIGHT) {
+            el.classList.add(CLASS_WHEN_MAX_HEIGHT);
+            el.style.cssText += 'height: ' + MAX_HEIGHT + 'px; margin-top: ' + (-MAX_HEIGHT/2) + 'px;';
+        }
         
         return self;
     };
@@ -150,12 +138,9 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
         
         experienceId = newExperienceId;
         
-        Evme.Utils.log('Folder :: experienceId: ' + experienceId);
-        
         var l10nkey = 'id-' + Evme.Utils.shortcutIdToKey(experienceId),
             queryById = Evme.Utils.l10n('shortcut', l10nkey);
             
-        Evme.Utils.log('Folder :: queryById: ' + queryById);
         elTitle.innerHTML = '<em></em>' +
                             '<b ' + Evme.Utils.l10nAttr(NAME, 'title-prefix') + '></b> ' +
                             '<span ' + Evme.Utils.l10nAttr('shortcut', l10nkey) + '></span>';
@@ -175,10 +160,6 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
         }
         
         query = newQuery;
-        
-        elTitle.innerHTML = '<em></em>' +
-                            '<b ' + Evme.Utils.l10nAttr(NAME, 'title-prefix') + '></b> ' +
-                            '<span>' + query  + '</span>';
         
         return self;
     };
@@ -262,15 +243,7 @@ Evme.SmartFolder = function Evme_SartFolder(_options) {
     this.addInstalledSeparator = function addInstalledSeparator() {
         elApps.appendChild(Evme.$create('li', {'class': "installed-separator"}));
     };
-
-    this.getInstalledHeight = function getInstalledHeight() {
-      var elSeparator = (Evme.$('.installed-separator', elApps) || [])[0],
-          top = elSeparator? elSeparator.getBoundingClientRect().top : 0,
-          parentTop = elSeparator? elSeparator.parentNode.getBoundingClientRect().top : 0;
-      
-      return (top - parentTop);
-    };
-
+    
     this.MoreIndicator = new function MoreIndicator() {
         var self = this,
             el = null, elParent = null,

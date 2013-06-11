@@ -1,6 +1,6 @@
 Evme.Apps = new function Evme_Apps() {
     var NAME = "Apps", self = this,
-        el = null, elList = null, elLoading = null,
+        el = null, elList = null,
         appsArray = {}, appsDataArray = [], numberOfApps = 0,
         scroll = null, defaultIconToUse = 0,
         reportedScrollMove = false, shouldFadeBG = false,
@@ -15,12 +15,11 @@ Evme.Apps = new function Evme_Apps() {
         MAX_SCROLL_FADE = 200,
         FULLSCREEN_THRESHOLD = 0.8,
         MAX_APPS_CLASSES = 150,
-        APPS_PER_ROW = "FROM CONFIG",
+        APPS_PER_ROW = 4,
         ICONS_STYLE_ID = "apps-icons",
         MIN_HEIGHT_FOR_MORE_BUTTON = "FROM CONFIG",
         DEFAULT_ICON_URL = "FROM CONFIG",
         TIMEOUT_BEFORE_REPORTING_APP_HOLD = 800,
-        CLASS_WHEN_LOADING = 'show-loading-apps',
         ftr = {};
         
     this.APPS_SHADOW_OFFSET = 2 * Evme.Utils.devicePixelRatio;
@@ -28,7 +27,6 @@ Evme.Apps = new function Evme_Apps() {
     this.APPS_TEXT_HEIGHT = Evme.Utils.APPS_FONT_SIZE * 3;
     this.APPS_TEXT_WIDTH = 72 * Evme.Utils.devicePixelRatio;
     this.APPS_TEXT_MARGIN = 6 * Evme.Utils.devicePixelRatio;
-    MAX_SCROLL_FADE *= Evme.Utils.devicePixelRatio;
 
     this.init = function init(options) {
         !options && (options = {});
@@ -38,7 +36,6 @@ Evme.Apps = new function Evme_Apps() {
         APP_HEIGHT = options.appHeight;
         MIN_HEIGHT_FOR_MORE_BUTTON = options.minHeightForMoreButton;
         DEFAULT_SCREEN_WIDTH = options.defaultScreenWidth;
-        APPS_PER_ROW = options.appsPerRow;
         
         el = options.el;
         elList = Evme.$('ul', el)[0];
@@ -70,12 +67,6 @@ Evme.Apps = new function Evme_Apps() {
         });
         
         self.calcAppsPositions();
-
-        elLoading = Evme.$create('div',
-                    { 'class': 'loading-apps' },
-                    '<progress class="small skin-dark"></progress>');
-          
-        el.appendChild(elLoading);
         
         Evme.EventHandler.trigger(NAME, "init");
     };
@@ -99,8 +90,6 @@ Evme.Apps = new function Evme_Apps() {
         if (options.clear) {
             self.clear();
         }
-        
-        self.hideLoading();
         
         var missingIcons = drawApps(apps, isMore, iconsFormat, function onAppsDrawn(){
             if (options.installed && apps.length > 0) {
@@ -128,6 +117,10 @@ Evme.Apps = new function Evme_Apps() {
     };
 
     this.clear = function clear() {
+        if (appsDataArray.length === 0) {
+            return false;
+        }
+        
         window.clearTimeout(timeoutAppsToDrawLater);
         for (var id in appsArray) {
             appsArray[id].remove();
@@ -165,14 +158,6 @@ Evme.Apps = new function Evme_Apps() {
     
     this.addInstalledSeparator = function addInstalledSeparator() {
         elList.appendChild(Evme.$create('li', {'class': 'installed-separator'}));
-    };
-    
-    this.getInstalledHeight = function getInstalledHeight() {
-      var elSeparator = (Evme.$('.installed-separator', elList) || [])[0],
-          top = elSeparator? elSeparator.getBoundingClientRect().top : 0,
-          parentTop = elSeparator? elSeparator.parentNode.getBoundingClientRect().top : 0;
-      
-      return (top - parentTop);
     };
     
     this.disableScroll = function disableScroll() {
@@ -232,15 +217,6 @@ Evme.Apps = new function Evme_Apps() {
         }
         
         return defaultIcon;
-    };
-    
-    this.showLoading = function showLoading() {
-      elLoading.style.transform = 'translateY(' + self.getInstalledHeight()/2 + 'px)';      
-      el.classList.add(CLASS_WHEN_LOADING);
-    };
-    
-    this.hideLoading = function hideLoading() {
-      el.classList.remove(CLASS_WHEN_LOADING);
     };
     
     this.removeApp = function removeApp(id) {
@@ -382,7 +358,7 @@ Evme.Apps = new function Evme_Apps() {
                 app = appsArray[appData.id];
                 
             if (app) {
-                Evme.IconManager.add(appData.id, appData.icon, iconsFormat);
+                appData.icon = Evme.IconManager.parse(appData.id, appData.icon, iconsFormat);
                 
                 app.update(appData);
             }
@@ -401,7 +377,7 @@ Evme.Apps = new function Evme_Apps() {
             var _app = apps[i];
             var id = _app.id;
             if (appsArray[id]) {
-                Evme.IconManager.add(id, _app.icon, iconsFormat);
+                _app.icon = Evme.IconManager.parse(id, _app.icon, iconsFormat);
                 appsArray[id].update(_app);
 
                 if (appsArray[id].missingIcon()) {
@@ -472,63 +448,119 @@ Evme.IconManager = new function Evme_IconManager() {
     var NAME = "IconManager", self = this,
         _prefix = "_icon", CACHE_VERSION = "2.6";
     
-    this.add = function add(id, icon, iconsFormat) {
-        if (!icon) {
-            return false;
-        }
-
-        icon.format = iconsFormat;
-        icon.id = id;
-
-        if (!icon.format || !icon.revision || !icon.id) {
-            return false;
-        }
-
-        self.get(id, function fromCache(iconFromCache) {
-            if (!iconFromCache || iconFromCache.format < iconsFormat) {
-                Evme.Storage.set(_prefix + id, icon);
+    this.clear = function clear() {
+        var numIcons = 0;
+        var icons = Evme.Storage.get();
+        for (var k in icons) {
+            if (k.indexOf(_prefix) == 0) {
+                numIcons++;
+                Evme.Storage.remove(k);
             }
-        });
-  
-        return true;
+        }
+        return numIcons;
+    };
+    
+    this.validateCacheVersion = function validateCacheVersion() {
+        var currentVersion = Evme.Storage.get("iconsVersion");
+        if (!currentVersion || currentVersion != CACHE_VERSION) {
+            self.clear();
+            Evme.Storage.add("iconsVersion", CACHE_VERSION);
+        }
+    };
+    
+    this.parse = function parse(id, icon, iconsFormat) {
+        if (icon == null) {
+            // If icon from API is empty- it means it's in the user's cache
+            return self.get(id);
+        } else {
+            // Else add the icon to the user's cache and return it
+            return self.add(id, icon, iconsFormat);
+        }
     };
 
-    this.get = function get(id, callback) {
-        Evme.Storage.get(_prefix+id, callback);
+    this.add = function add(id, icon, iconsFormat) {
+        icon.format = iconsFormat;
+        icon.id = id;
+        
+        if (!icon.format || !icon.revision || !icon.id) {
+            return icon;
+        }
+        
+        var iconInCache = self.get(id);
+        
+        if (!iconInCache || iconInCache.format < iconsFormat) {
+            var sIcon = "";
+            try {
+                sIcon = JSON.stringify(icon);
+                Evme.Storage.add(_prefix + id, sIcon);
+            } catch(ex) {
+                
+            }
+            
+            return icon;
+        }
+        
+        return iconInCache;
+    };
+
+    this.get = function get(id) {
+        if (id) {
+            var icon = Evme.Storage.get(_prefix+id) || null;
+            
+            if (!icon) {
+                return null;
+            }
+            
+            // Icon in cache isn't a valid object (truncated or somthing perhaps?)
+            try {
+                icon = JSON.parse(icon);
+            } catch(ex) {
+                Evme.Storage.remove(_prefix+id);
+                return null;
+            }
+            
+            // Icon doesn't contain all the info (maybe it's from a previous version and failed removal)
+            if (!icon.id || !icon.revision || !icon.format) {
+                return null;
+            }
+            
+            return icon;
+        } else {
+            var _icons = {};
+            var icons = Evme.Storage.get();
+            
+            for (var k in icons) {
+                if (k.indexOf(_prefix) == 0) {
+                    _icons[k] = self.get(k.replace(_prefix, ""));
+                }
+            }
+            
+            return _icons;
+        }
     };
 };
 
 Evme.IconGroup = new function Evme_IconGroup() {
-  var ICON_HEIGHT,
-      TEXT_HEIGHT,
-      TEXT_MARGIN,
-      WIDTH,
-      HEIGHT;
+  var ICON_HEIGHT = 42 * Evme.Utils.devicePixelRatio,
+      TEXT_HEIGHT = Evme.Utils.APPS_FONT_SIZE * 3,
+      TEXT_MARGIN = 9 * Evme.Utils.devicePixelRatio,
+      WIDTH = 72 * Evme.Utils.devicePixelRatio,
+      HEIGHT = ICON_HEIGHT + TEXT_MARGIN + TEXT_HEIGHT;
   
-  this.init = function init(options) {
-    ICON_HEIGHT = 42 * Evme.Utils.devicePixelRatio,
-    TEXT_HEIGHT = Evme.Utils.APPS_FONT_SIZE * 3,
-    TEXT_MARGIN = 9 * Evme.Utils.devicePixelRatio,
-    WIDTH = 72 * Evme.Utils.devicePixelRatio,
-    HEIGHT = ICON_HEIGHT + TEXT_MARGIN + TEXT_HEIGHT;
-  };
-  
-  this.get = function get(ids, query, callback) {
-    var el = renderCanvas({
-      "apps": ids || [],
-      "icons": Evme.Utils.getIconGroup() || [],
-      "query": query,
-      "onReady": callback
-    });
+  this.get = function get(ids, query) {
+      var el = renderCanvas({
+        "apps": ids || [],
+        "icons": Evme.Utils.getIconGroup() || [],
+        "query": query
+      });
 
-    return el;
+      return el;
   };
 
   function renderCanvas(options) {
       var apps = options.apps,
           icons = options.icons,
           query = options.query,
-          onReady = options.onReady || function() {},
           elCanvas = document.createElement('canvas'),
           context = elCanvas.getContext('2d');
 
@@ -546,17 +578,11 @@ Evme.IconGroup = new function Evme_IconGroup() {
               };
           }
 
-          if (app.icon) {
-            loadIcon(Evme.Utils.formatImageData(app.icon), icons[i], context, i, onReady);
-          } else {
-            (function(app, icon, context, i, onReady){
-                Evme.IconManager.get(app.id, function onIconFromCache(appIcon) {
-                    loadIcon(Evme.Utils.formatImageData(appIcon), icon, context, i, onReady); 
-                });
-            }(app, icons[i], context, i, onReady));
-          }
+          app.icon = Evme.Utils.formatImageData(app.icon || Evme.IconManager.get(app.id));
+
+          loadIcon(app.icon, icons[i], context, i);   
       }
-  
+      
       // add the app name
       Evme.Utils.writeTextToCanvas({
         "context": context,
@@ -567,50 +593,44 @@ Evme.IconGroup = new function Evme_IconGroup() {
       return elCanvas;
   }
 
-  function loadIcon(iconSrc, icon, context, index, onReady) {
-    if (!iconSrc) {
-      onIconLoaded(context, null, icon, index, onReady);
-      return false;
-    }
-
+  function loadIcon(iconSrc, icon, context, index) {
     var image = new Image();
 
     image.onload = function onImageLoad() {
       var elImageCanvas = document.createElement('canvas'),
           imageContext = elImageCanvas.getContext('2d'),
-          fixedImage = new Image(),
-          size = icon.size * Evme.Utils.devicePixelRatio;
+          fixedImage = new Image();
 
-      elImageCanvas.width = elImageCanvas.height = size;
+      elImageCanvas.width = elImageCanvas.height = icon.size;
 
       imageContext.beginPath();
-      imageContext.arc(size/2, size/2, size/2, 0, Math.PI*2, false);
+      imageContext.arc(icon.size/2, icon.size/2, icon.size/2, 0, Math.PI*2, false);
       imageContext.closePath();
       imageContext.clip();
 
       //first we draw the image resized and clipped (to be rounded)
-      imageContext.drawImage(this, 0, 0, size, size);
+      imageContext.drawImage(this, 0, 0, icon.size, icon.size);
 
       // dark overlay
       if (icon.darken) {
         imageContext.fillStyle = 'rgba(0, 0, 0, ' + icon.darken + ')';
         imageContext.beginPath();
-        imageContext.arc(size/2, size/2, Math.ceil(size/2), 0, Math.PI*2, false);
+        imageContext.arc(icon.size/2, icon.size/2, Math.ceil(icon.size/2), 0, Math.PI*2, false);
         imageContext.fill();
         imageContext.closePath();
       }
       
       fixedImage.onload = function onImageLoad() {
-        onIconLoaded(context, this, icon, index, onReady);
+        onIconLoaded(context, this, icon, index);
       };
       
       fixedImage.src = elImageCanvas.toDataURL('image/png');
     };
 
-    image.src = Evme.Utils.formatImageData(iconSrc);
+    image.src = iconSrc;
   }
   
-  function onIconLoaded(context, image, icon, index, onAllIconsReady) {
+  function onIconLoaded(context, image, icon, index) {
     // once the image is ready to be drawn, we add it to an array
     // so when all the images are loaded we can draw them in the right order
     context.imagesLoaded.push({
@@ -628,12 +648,7 @@ Evme.IconGroup = new function Evme_IconGroup() {
       // finally we're ready to draw the icons!
       for (var i=0,obj; obj = context.imagesLoaded[i++];) {
         var image = obj.image,
-            icon = obj.icon,
-            size = icon.size * Evme.Utils.devicePixelRatio;
-        
-        if (!image) {
-          continue;
-        }
+            icon = obj.icon;
 
         // shadow
         context.shadowOffsetX = icon.shadowOffset;
@@ -643,14 +658,61 @@ Evme.IconGroup = new function Evme_IconGroup() {
 
         // rotation
         context.save();
-        context.translate(icon.x * Evme.Utils.devicePixelRatio + size/2, icon.y * Evme.Utils.devicePixelRatio + size/2);
+        context.translate(icon.x, icon.y);
+        context.translate(icon.size/2, icon.size/2);
         context.rotate((icon.rotate || 0) * Math.PI/180);
         // draw the icon already!
-        context.drawImage(image, -size/2, -size/2);
+        context.drawImage(image, -icon.size/2, -icon.size/2);
         context.restore();
       }
-      onAllIconsReady && onAllIconsReady(context.canvas);
     }
+  }
+
+  // used previously- here just in case
+  // renderCanvas is used instead- better performance
+  function renderHTML(options) {
+    var apps = options.apps,
+        icons = options.icons,
+        html = '';
+
+    for (var i=0; i<icons.length; i++) {
+      var app = apps[apps.length-1-i],
+          icon = icons[i],
+          y = icon.y,
+          x = icon.x,
+          size = icon.size;
+
+      if (typeof app != "object") {
+        app = {
+          "id": app,
+        };
+      }
+
+      if (!app.icon) {
+        app.icon = Evme.IconManager.get(app.id);
+      }
+
+      app.icon = Evme.Utils.formatImageData(app.icon);
+
+      var missingIcon = '';
+      if (!app.icon) {
+        missingIcon = ' iconToGet="' + app.id + '"';
+      }
+
+      html += '<span' + missingIcon + ' style="' +
+                  'top: ' + y + 'px;' +
+                  ' left: ' + x + 'px;' +
+                  ' width: ' + size + 'px;' +
+                  ' height: ' + size + 'px;' +
+                  (icon.rotate? ' transform: rotate(' + icon.rotate + 'deg);' : '') +
+                  ((icon.shadowOffset || icon.shadowBlur)? ' box-shadow: ' + (icon.shadowOffsetX || "0") + 'px ' + (icon.shadowOffset || "0") + 'px ' + (icon.shadowBlur || "0") + 'px 0 rgba(0, 0, 0, ' + icon.shadowOpacity + ');' : '') +
+                  (app.icon? ' background-image: url(' + app.icon + ');' : '') +
+                  '">' +
+                  (icon.darken? '<em style="opacity: ' + icon.darken + ';">&nbsp;</em>' : '') +
+                '</span>';
+    }
+
+    return Evme.$create('div', {'class': 'apps-group'}, html);
   }
 };
 
@@ -668,17 +730,11 @@ Evme.App = function Evme_App(__cfg, __index, __isMore, parent) {
             hadID = false;
             cfg.id = 'app-' + Evme.Utils.uuid();
         }
-
-        if (!cfg.icon) {
-            if (!hadID || cfg.preferences.defaultIcon) {
-                cfg.icon = Evme.Apps.getDefaultIcon();
-            } else {
-                Evme.IconManager.get(cfg.id, function onIconFromCache(iconFromCache) {
-                    self.setIcon(iconFromCache || Evme.Apps.getDefaultIcon());
-                });
-            }
-        } else {
-            Evme.IconManager.add(cfg.id, cfg.icon, cfg.iconFormat);
+        
+        // fill in default icon
+        // if there's no icon and it's a bing result / official website app
+        if (!cfg.icon && (!hadID || cfg.preferences.defaultIcon)){
+            cfg.icon = Evme.Apps.getDefaultIcon();
         }
     };
     

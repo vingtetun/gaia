@@ -87,11 +87,9 @@
       startPointer = [touch.pageX, touch.pageY];
       self.maxX = el.scrollWidth - el.offsetWidth;
       self.maxY = el.scrollHeight - el.offsetHeight;
-      self.distX = 0;
-      self.distY = 0;
 
       el.addEventListener('touchmove', onTouchMove);
-      el.addEventListener('touchend', onTouchEnd, true);
+      el.addEventListener('touchend', onTouchEnd);
 
       scrollEventListener.start();
       
@@ -126,7 +124,7 @@
       el.dataset.touched = false;
 
       el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd, true);
+      el.removeEventListener('touchend', onTouchEnd);
 
       scrollEventListener.stop();
 
@@ -205,3 +203,4 @@
   window.Scroll = NativeScroll;
 
 }());
+

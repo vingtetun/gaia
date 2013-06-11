@@ -5,8 +5,95 @@ html, body {
   margin: 0;
   border: none;
   font-size: 10px;
+  font-family:'MozTT', sans-serif;
   overflow: hidden;
+  background-color: #000;
 }
+
+#landing-page {
+  width: 100%;
+  overflow-y: scroll;
+  transform: translate3d(0,0,0);
+  transition-timing-function: ease-in-out;
+  transform: translate(0,0);
+  perspective: 800px;
+  transition: 500ms;
+  opacity: 1;
+}
+
+#icon-list li {
+  color: #FFFFFF;
+  list-style-type: none;
+  width: 96%;
+  margin: 2%;
+  font-size: 15px;
+  line-height: 5px;
+}
+
+#icon-list li.end-of-section {
+  border-bottom: 1px solid #fff;
+}
+
+#icon-list li img {
+  margin: 0 10px 0 0;
+  vertical-align: middle;
+}
+
+#icon-list {
+  margin:0;
+  padding:0;
+  width: 100%;
+}
+
+.app-tile {
+  width: 142px;
+  height: 142px;
+  background-color: menu;
+  margin: 5px;
+  float: left;
+  overflow:hidden;
+  background-size: 100px 100px;
+  background-position: center 10px;
+  background-repeat: no-repeat;
+  transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg); 
+  opacity: 1;
+}
+
+.app-tile.long-tile {
+  width: 294px;
+}
+
+.app-tile label{
+  color: menutext;
+  font-size: 20px;
+  font-family: "Tahoma";
+  line-height: 250px;
+}
+
+#landing-page.show .app-tile {
+ transform: translate3d(0,0,0) rotateY(-90deg) rotateZ(0deg) rotateX(0deg);   
+ opacity: 0;
+ transition: 800ms 0ms;
+}
+
+#landing-page.show .app-tile.tr1 {
+  transform: translate3d(0,0,0) rotateY(0deg) rotateZ(90deg) rotateX(0deg);  
+}
+
+#landing-page.show .app-tile.tr2 {
+  transform: translate3d(0,0,0) rotateZ(0deg) rotateY(0deg) rotateX(90deg);  
+}
+
+#landing-page .app-tile.animate {
+  -moz-animation: dance 0.8s linear 0s 2;
+}
+
+@-moz-keyframes dance {
+    0% { transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg);  opacity: 1;}
+    50% { transform: translate3d(0,0,0) rotateY(10deg) rotateZ(-10deg);  opacity: 0.3; }
+    100% { transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg);  opacity: 1;}
+}
+
 
 * {
   -moz-user-select: -moz-none;
@@ -95,12 +182,3 @@ li:active {
   opacity: 0.1;
 }
 
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > img,
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > span {
-  filter: url('app_offline_filter.svg#grayscale');
-  opacity: 0.3;
-}
-
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > span {
-  opacity: 0.5;
-}

@@ -1,19 +1,11 @@
 'use strict';
 
 var MockHomeState = {
-  init: function mhs_init(eachPageCallback, successCallback, errorCallback) {
+  init: function(eachPageCallback, onSuccessCallback, onErrorCallback) {
     // first page is the dock, let's say it's empty
     eachPageCallback({ index: 0, icons: [] });
-    successCallback();
+    onSuccessCallback();
   },
-
-  saveGrid: function mhs_saveGrid(state) {
-    this.mLastSavedGrid = state;
-  },
-
-  mLastSavedGrid: null,
-
-  mTeardown: function mhs_mTeardown() {
-    this.mLastSavedGrid = null;
+  saveGrid: function() {
   }
 };

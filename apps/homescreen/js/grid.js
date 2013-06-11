@@ -22,8 +22,6 @@ var GridManager = (function() {
 
   var dragging = false;
 
-  var defaultAppIcon, defaultBookmarkIcon;
-
   var opacityOnAppGridPageMax = .7;
   var kPageTransitionDuration, overlayTransition, overlay, overlayStyle;
 
@@ -436,17 +434,6 @@ var GridManager = (function() {
     }
   }
 
-  var captureHashchange = false;
-
-  function hashchange(evt) {
-    if (!captureHashchange) {
-      return;
-    }
-
-    captureHashchange = false;
-    evt.stopImmediatePropagation();
-  }
-
   function goToPageCallback(index, fromPage, toPage, dispatchEvents, callback) {
     delete document.body.dataset.transitioning;
 
@@ -488,16 +475,9 @@ var GridManager = (function() {
   var lastGoingPageTimestamp = 0;
 
   function goToPage(index, callback) {
+    document.location.hash = (index === landingPage ? 'root' : '');
     if (index < 0 || index >= pages.length)
       return;
-
-    if (index === landingPage) {
-      // Homescreen won't call to this method due to stop the propagation
-      captureHashchange = true;
-      document.location.hash = 'root';
-    } else {
-      document.location.hash = '';
-    }
 
     var delay = touchEndTimestamp - lastGoingPageTimestamp ||
                 kPageTransitionDuration;
@@ -571,7 +551,7 @@ var GridManager = (function() {
   }
 
   function updatePaginationBar() {
-    PaginationBar.update(currentPage, pages.length);
+//    PaginationBar.update(currentPage, pages.length);
   }
 
   /*
@@ -687,13 +667,6 @@ var GridManager = (function() {
 
       pageElement.className = 'page';
       container.appendChild(pageElement);
-
-      // If the new page is situated right after the current displayed page,
-      // makes it visible and move it to the right place.
-      if (currentPage == pages.length - 2) {
-        goToPage(currentPage);
-      }
-
       updatePaginationBar();
     },
 
@@ -756,13 +729,13 @@ var GridManager = (function() {
    */
 
   // Map 'bookmarkURL' -> Icon object.
-  var bookmarkIcons;
+  var bookmarkIcons = Object.create(null);
   // Map 'manifestURL' + 'entry_point' to Icon object.
-  var appIcons;
+  var appIcons = Object.create(null);
   // Map 'origin' -> app object.
-  var appsByOrigin;
+  var appsByOrigin = Object.create(null);
   // Map 'origin' for bookmarks -> bookmark object.
-  var bookmarksByOrigin;
+  var bookmarksByOrigin = Object.create(null);
 
   function rememberIcon(icon) {
     var descriptor = icon.descriptor;
@@ -959,17 +932,6 @@ var GridManager = (function() {
   }
 
   /*
-    Detect if an app can work offline
-  */
-  function isHosted(app) {
-    return app.origin.indexOf('app://') === -1;
-  }
-
-  function hasOfflineCache(app) {
-    return app.manifest.appcache_path != null;
-  }
-
-  /*
    * Create or update a single icon for an Application (or Bookmark) object.
    */
   function createOrUpdateIconForApp(app, entryPoint) {
@@ -1000,10 +962,7 @@ var GridManager = (function() {
       removable: app.removable,
       name: iconsAndNameHolder.name,
       icon: bestMatchingIcon(app, iconsAndNameHolder),
-      useAsyncPanZoom: app.useAsyncPanZoom,
-      isHosted: isHosted(app),
-      hasOfflineCache: hasOfflineCache(app),
-      isBookmark: app.isBookmark
+      useAsyncPanZoom: app.useAsyncPanZoom
     };
     if (haveLocale && !app.isBookmark) {
       descriptor.localizedName = iconsAndNameHolder.name;
@@ -1014,7 +973,6 @@ var GridManager = (function() {
     var existingIcon = getIcon(descriptor);
     if (existingIcon) {
       existingIcon.update(descriptor, app);
-      markDirtyState();
       return;
     }
 
@@ -1123,26 +1081,17 @@ var GridManager = (function() {
     return app.origin + url;
   }
 
-  function calculateDefaultIcons() {
-    defaultAppIcon = new TemplateIcon();
-    defaultAppIcon.loadDefaultIcon();
-    defaultBookmarkIcon = new TemplateIcon(true);
-    defaultBookmarkIcon.loadDefaultIcon();
-  }
-
   var defaults = {
     gridSelector: '.apps',
-    dockSelector: '.dockWrapper'
+    dockSelector: '.dockWrapper',
+    tapThreshold: 10,
+    swipeThreshold: 0.4,
+    swipeFriction: 0.1,
+    swipeTransitionDuration: 300
   };
 
   function doInit(options, callback) {
-    calculateDefaultIcons();
     pages = [];
-    bookmarkIcons = Object.create(null);
-    appIcons = Object.create(null);
-    appsByOrigin = Object.create(null);
-    bookmarksByOrigin = Object.create(null);
-
     initUI(options.gridSelector);
 
     tapThreshold = options.tapThreshold;
@@ -1151,28 +1100,25 @@ var GridManager = (function() {
     kPageTransitionDuration = options.swipeTransitionDuration;
     overlayTransition = 'opacity ' + kPageTransitionDuration + 'ms ease';
 
-    window.addEventListener('hashchange', hashchange);
-    IconRetriever.init();
-
     // Initialize the grid from the state saved in IndexedDB.
     HomeState.init(function eachPage(pageState) {
       // First 'page' is the dock.
-      if (pageState.index == 0) {
-        var dockContainer = document.querySelector(options.dockSelector);
-        var dock = new Dock(dockContainer,
-          convertDescriptorsToIcons(pageState));
-        DockManager.init(dockContainer, dock, tapThreshold);
-        return;
-      }
-      pageHelper.addPage(convertDescriptorsToIcons(pageState));
-    }, function onState() {
-      initApps();
-      callback();
-    }, function onError(error) {
-      var dockContainer = document.querySelector(options.dockSelector);
-      var dock = new Dock(dockContainer, []);
-      DockManager.init(dockContainer, dock, tapThreshold);
-      initApps();
+      // if (pageState.index == 0) {
+      //        var dockContainer = document.querySelector(options.dockSelector);
+      //        var dock = new Dock(dockContainer,
+      //          convertDescriptorsToIcons(pageState));
+      //        DockManager.init(dockContainer, dock, tapThreshold);
+      //        return;
+      //      }
+      //      pageHelper.addPage(convertDescriptorsToIcons(pageState));
+      //    }, function onState() {
+      //      initApps();
+      //      callback();
+      //    }, function onError(error) {
+      //      var dockContainer = document.querySelector(options.dockSelector);
+      //      var dock = new Dock(dockContainer, []);
+      //      DockManager.init(dockContainer, dock, tapThreshold);
+      //      initApps();
       callback();
     });
   }
@@ -1181,7 +1127,7 @@ var GridManager = (function() {
     /*
      * Initializes the grid manager
      *
-     * @param {Object} Hash of options passed from GridManager.init
+     * @param {Object} Hash of options
      *
      * @param {Function} Success callback
      *
@@ -1286,14 +1232,6 @@ var GridManager = (function() {
 
     get landingPage() {
       return landingPage;
-    },
-
-    getBlobByDefault: function(app) {
-      if (app && app.iconable) {
-        return defaultBookmarkIcon.descriptor.renderedIcon;
-      } else {
-        return defaultAppIcon.descriptor.renderedIcon;
-      }
     },
 
     showRestartDownloadDialog: showRestartDownloadDialog,

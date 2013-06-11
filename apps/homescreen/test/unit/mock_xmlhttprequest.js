@@ -37,16 +37,6 @@
     lastInstance && lastInstance.onerror && lastInstance.onerror();
   }
 
-  function mxhr_mOnLoad(states) {
-    if (lastInstance) {
-      lastInstance.status = 200;
-      for (var key in states) {
-        lastInstance[key] = states[key];
-      }
-      lastInstance.onload && lastInstance.onload();
-    }
-  }
-
   function mxhr_mSendReadyState(states) {
     if (lastInstance) {
       lastInstance.readyState = XMLHttpRequest.DONE;
@@ -61,14 +51,12 @@
   MockXMLHttpRequest.prototype = {
     open: mxhr_open,
     send: mxhr_send,
-    DONE: XMLHttpRequest.prototype.DONE,
-    overrideMimeType: function() {}
+    DONE: XMLHttpRequest.prototype.DONE
   };
 
   MockXMLHttpRequest.mThrowAtNextSend = mxhr_mThrowAtNextSend;
   MockXMLHttpRequest.mTeardown = mxhr_mTeardown;
   MockXMLHttpRequest.mSendError = mxhr_mSendError;
-  MockXMLHttpRequest.mSendOnLoad = mxhr_mOnLoad;
   MockXMLHttpRequest.mSendReadyState = mxhr_mSendReadyState;
   MockXMLHttpRequest.DONE = XMLHttpRequest.DONE;
 

@@ -1,169 +1,144 @@
 
 'use strict';
 
-var Homescreen = (function() {
-  var mode = 'normal';
-  var origin = document.location.protocol + '//homescreen.' +
-    document.location.host.replace(/(^[\w\d]+.)?([\w\d]+.[a-z]+)/, '$2');
-  var _ = navigator.mozL10n.get;
-  setLocale();
-  navigator.mozL10n.ready(function localize() {
-    setLocale();
-    GridManager.localize();
-  });
+const Homescreen = (function() {
+  var mgmt = navigator.mozApps.mgmt;
+  var page = document.getElementById('landing-page');
+  var iconList = document.getElementById('icon-list');
+  var HVGA = document.documentElement.clientWidth < 480;
+  var mainColor = {r:255, g:255, b:255};
+  
+  var tileSize = 142;
+  var tileClass = 'app-tile';
+  var longTilesOffset = 0;
+  //   ['<div class="app-tile">',
+  //     '<label>APP NAME</label>',
+  //     '</div>'];
+      
+  var updateCss = function updateCss() {
+    var file = 'style/homescreen.css';
+    var style = document.querySelector('link[href*="' + file + '"]');
+    if (style) {
+      style.href = '/' + file + '?reload=' + new Date().getTime();
+    }
+  }
 
-  var initialized = false, landingPage;
-  onConnectionChange(navigator.onLine);
+  var els = ['menu', 'menutext'];
+  for (var i=0; i < els.length; i++) {
+    window.navigator.mozSettings.addObserver('gaia.ui.'+els[i], updateCss);
+  };
+      
+  var req = mgmt.getAll();
+  req.onsuccess = function(e) {
+    var apps = req.result;
+    //getPaintingColor(function(color) {
+      //mainColor = color;
+      for (var i=0, l=apps.length; i<l; i++) {
+        renderIcon(apps[i]);
+      }
+    //});
+    
+    //setInterval(makeBlink, 3000);
+  }
+  
+  function getIconURI(manifest) {
+    console.log()
+    var icons = manifest.icons;
+    if (!icons) {
+      return null;
+    }
 
-  function initialize(lPage) {
-    if (initialized) {
+    var sizes = Object.keys(icons).map(function parse(str) {
+      return parseInt(str, 10);
+    });
+
+    sizes.sort(function(x, y) { return y - x; });
+
+    var index = sizes[(HVGA) ? sizes.length - 1 : 0];
+    var iconPath = icons[index];
+
+    return iconPath;
+  }
+  
+  var renderIcon = function(app, entryPoint) {
+    if (HIDDEN_APPS.indexOf(app.manifestURL) != -1 || HIDDEN_APPS.indexOf(entryPoint) != -1)
+      return;
+    
+    if (app.manifest["entry_points"] && !entryPoint) {
+      for (var entry in app.manifest["entry_points"]) {
+        renderIcon(app, entry);
+      }
       return;
     }
-
-    PaginationBar.init('.paginationScroller');
-
-    initialized = true;
-    landingPage = lPage;
-
-    var swipeSection = Configurator.getSection('swipe');
-    var options = {
-      gridSelector: '.apps',
-      dockSelector: '.dockWrapper',
-      tapThreshold: Configurator.getSection('tap_threshold'),
-      // It defines the threshold to consider a gesture like a swipe. Number
-      // in the range 0.0 to 1.0, both included, representing the screen width
-      swipeThreshold: swipeSection.threshold,
-      swipeFriction: swipeSection.friction,
-      swipeTransitionDuration: swipeSection.transition_duration
-    };
-
-    GridManager.init(options, function gm_init() {
-      window.addEventListener('hashchange', function() {
-        if (document.location.hash != '#root')
-          return;
-
-        // this happens when the user presses the 'home' button
-        if (Homescreen.isInEditMode()) {
-          exitFromEditMode();
-        } else {
-          GridManager.goToPage(landingPage);
-        }
-        GridManager.ensurePanning();
+    
+    var name, icon;
+    if (entryPoint) {
+      name = app.manifest.entry_points[entryPoint].name;
+      icon = getIconURI(app.manifest.entry_points[entryPoint]);
+    } else {
+      name = app.manifest.name;
+      icon = getIconURI(app.manifest);
+    }
+      
+    // var tile = document.createElement('div');
+    //     var label = document.createElement('label');
+    var tile = document.createElement('li');
+    var iconImage = new Image();
+    iconImage.width = iconImage.height = 35;
+    //var label = document.createElement('label');
+    //tile.classList.add(tileClass);
+    //label.textContent = name;
+    
+    if (icon) {
+      icon = app.manifestURL.replace('/manifest.webapp', '') + icon;
+    } else {
+      icon = window.location.protocol + '//' +
+              window.location.host + '/style/images/default.png';
+    }
+    iconImage.src = icon;
+    //tile.style.backgroundImage = 'url(' + icon +')';
+    //tile.classList.add('tr'+~~(Math.random()*3));
+    
+    //tile.style.listStyleImage = "url(" + icon + ")";
+    tile.appendChild(iconImage);
+    tile.innerHTML += name;
+    
+    //tile.appendChild(label);
+    tile.addEventListener('click', (function(application, entry) {
+      return function(){ 
+        page.addEventListener('transitionend', function runAppTrans() {
+          application.launch(entry ? entry : null);
+          page.removeEventListener('transitionend', runAppTrans);
+          setTimeout(function() {
+            page.classList.remove('show');
+          }, 500);
+        });
+        page.classList.add('show');
+      }
+    })(app, entryPoint));
+    
+    // if ((page.childNodes.length+longTilesOffset)%2===1) {
+    //   if (~~(Math.random()*3) === 0) {
+    //     longTilesOffset++;
+    //     tile.classList.add('long-tile');
+    //   }
+    // }
+    if ((iconList.children.length+1)%5 === 0) {
+      tile.classList.add('end-of-section');
+    }
+    iconList.appendChild(tile);
+  }
+  
+  var makeBlink = function(){
+    var randomChild = page.children[~~(Math.random()*page.children.length)];
+    if (randomChild) {
+      randomChild.addEventListener("animationend", function listener(){
+        randomChild.classList.remove('animate');
+        randomChild.removeEventListener("animationend", listener);
       });
-
-      PaginationBar.show();
-      if (document.location.hash === '#root') {
-        // Switch to the first page only if the user has not already
-        // start to pan while home is loading
-        GridManager.goToPage(landingPage);
-      }
-      DragDropManager.init();
-      Wallpaper.init();
-    });
-  }
-
-  function exitFromEditMode() {
-    Homescreen.setMode('normal');
-    ConfirmDialog.hide();
-    GridManager.exitFromEditMode();
-  }
-
-  document.addEventListener('mozvisibilitychange', function mozVisChange() {
-    if (document.mozHidden && Homescreen.isInEditMode()) {
-      exitFromEditMode();
+      randomChild.classList.add('animate');
     }
-
-    if (document.mozHidden == false) {
-      setTimeout(function forceRepaint() {
-        var helper = document.getElementById('repaint-helper');
-        helper.classList.toggle('displayed');
-      });
-    }
-  });
-
-  window.addEventListener('message', function hs_onMessage(event) {
-    if (event.origin === origin) {
-      var message = event.data;
-      switch (message.type) {
-        case Message.Type.ADD_BOOKMARK:
-          var app = new Bookmark(message.data);
-          GridManager.install(app);
-          break;
-      }
-    }
-  });
-
-  function setLocale() {
-    // set the 'lang' and 'dir' attributes to <html> when the page is translated
-    document.documentElement.lang = navigator.mozL10n.language.code;
-    document.documentElement.dir = navigator.mozL10n.language.direction;
   }
-
-  function onConnectionChange(isOnline) {
-    var mode = isOnline ? 'online' : 'offline';
-    document.body.dataset.online = mode;
-  }
-
-  window.addEventListener('online', function onOnline(evt) {
-    onConnectionChange(true);
-  });
-
-  window.addEventListener('offline', function onOnline(evt) {
-    onConnectionChange(false);
-  });
-
-  return {
-    /*
-     * Displays the contextual menu given an app.
-     *
-     * @param {Application} app
-     *                      The application object.
-     */
-    showAppDialog: function h_showAppDialog(app) {
-      var title, body;
-      var cancel = {
-        title: _('cancel'),
-        callback: ConfirmDialog.hide
-      };
-
-      var confirm = {
-        callback: function onAccept() {
-          ConfirmDialog.hide();
-          if (app.isBookmark) {
-            app.uninstall();
-          } else {
-            navigator.mozApps.mgmt.uninstall(app);
-          }
-        },
-        applyClass: 'danger'
-      };
-
-      // Show a different prompt if the user is trying to remove
-      // a bookmark shortcut instead of an app.
-      var manifest = app.manifest || app.updateManifest;
-      if (app.isBookmark) {
-        title = _('remove-title-2', { name: manifest.name });
-        body = _('remove-body', { name: manifest.name });
-        confirm.title = _('remove');
-      } else {
-        // Make sure to get the localized name
-        manifest = new ManifestHelper(manifest);
-        title = _('delete-title', { name: manifest.name });
-        body = _('delete-body', { name: manifest.name });
-        confirm.title = _('delete');
-      }
-
-      ConfirmDialog.show(title, body, cancel, confirm);
-    },
-
-    isInEditMode: function() {
-      return mode === 'edit';
-    },
-
-    init: initialize,
-
-    setMode: function(newMode) {
-      mode = document.body.dataset.mode = newMode;
-    }
-  };
+  
 })();
+

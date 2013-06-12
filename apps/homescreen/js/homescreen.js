@@ -3,10 +3,37 @@
 
 const Homescreen = (function() {
   var mgmt = navigator.mozApps.mgmt;
+  var grid = document.getElementById('icongrid');
   var page = document.getElementById('landing-page');
+  var groupsPage = document.getElementById('groups-page');
   var iconList = document.getElementById('icon-list');
+  var groupList = document.getElementById('group-list');
   var HVGA = document.documentElement.clientWidth < 480;
   var mainColor = {r:255, g:255, b:255};
+  var iconsInGroup = 2+~~(Math.random()*3);
+  var curIcons = 0;
+  var currentGroup;
+  var groupNames = [
+    'Utils',
+    'Apps',
+    'Favorites',
+    'Games',
+    'System apps',
+    'All your',
+    'Base Are',
+    'Belong to us'
+  ];
+  var gd = new GestureDetector(grid);
+  gd.startDetecting();
+  
+  grid.addEventListener('transform', function(e) {
+    var scale = e.detail.relative.scale;
+    if (scale < 1) {
+      page.classList.add('hide');
+    } else if (scale > 1 ) {
+      page.classList.remove('hide');
+    }
+  });
   
   var tileSize = 142;
   var tileClass = 'app-tile';
@@ -23,6 +50,16 @@ const Homescreen = (function() {
     }
   }
 
+  var createGroup = function() {
+    iconsInGroup = 2+~~(Math.random()*3);
+    currentGroup = document.createElement('li');
+    currentGroup.innerHTML = groupNames.shift();
+    groupList.appendChild(currentGroup);
+    curIcons = 0;
+  }
+  
+  createGroup();
+  
   var els = ['menu', 'menutext'];
   for (var i=0; i < els.length; i++) {
     window.navigator.mozSettings.addObserver('gaia.ui.'+els[i], updateCss);
@@ -42,7 +79,6 @@ const Homescreen = (function() {
   }
   
   function getIconURI(manifest) {
-    console.log()
     var icons = manifest.icons;
     if (!icons) {
       return null;
@@ -84,7 +120,7 @@ const Homescreen = (function() {
     //     var label = document.createElement('label');
     var tile = document.createElement('li');
     var iconImage = new Image();
-    iconImage.width = iconImage.height = 35;
+    var iconGroupImage = new Image();
     //var label = document.createElement('label');
     //tile.classList.add(tileClass);
     //label.textContent = name;
@@ -95,14 +131,19 @@ const Homescreen = (function() {
       icon = window.location.protocol + '//' +
               window.location.host + '/style/images/default.png';
     }
-    iconImage.src = icon;
+    iconImage.src = iconGroupImage.src = icon;
     //tile.style.backgroundImage = 'url(' + icon +')';
     //tile.classList.add('tr'+~~(Math.random()*3));
     
     //tile.style.listStyleImage = "url(" + icon + ")";
     tile.appendChild(iconImage);
     tile.innerHTML += name;
-    
+        
+    if (curIcons < iconsInGroup) {
+      curIcons++;
+      currentGroup.appendChild(iconGroupImage);
+    }
+  
     //tile.appendChild(label);
     tile.addEventListener('click', (function(application, entry) {
       return function(){ 
@@ -125,8 +166,20 @@ const Homescreen = (function() {
     // }
     if ((iconList.children.length+1)%5 === 0) {
       tile.classList.add('end-of-section');
+      createGroup();
     }
     iconList.appendChild(tile);
+    if (curIcons === 1) {
+      console.log('------- DODANO!');
+      var scrollOffset = tile.getBoundingClientRect();
+      currentGroup.dataset.scrollOffset = scrollOffset.top;
+      currentGroup.addEventListener('click', function() {
+        console.log('------- KLIKED!');
+          page.scrollTop = this.dataset.scrollOffset;
+          page.classList.remove('hide');
+      });
+    }
+    
   }
   
   var makeBlink = function(){

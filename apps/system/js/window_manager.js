@@ -112,6 +112,8 @@ var WindowManager = (function() {
     if (!app)
       return false;
 
+    return origin != homescreen; // fullscreen based model
+
     var manifest = app.manifest;
     if ('entry_points' in manifest && manifest.entry_points &&
         manifest.type == 'certified') {

@@ -11,6 +11,11 @@ var Rocketbar = {
     this.input.addEventListener('focus', this.handleFocus.bind(this));
     this.input.addEventListener('keyup', this.handleKeyUp.bind(this));
     this.results.addEventListener('click', this.handleClick.bind(this));
+    window.addEventListener('utilitytrayshow', this.handleUtilityTrayShow.bind(this));
+  },
+
+  handleUtilityTrayShow: function rocketbar_handleUtilityTrayShow(evt) {
+    this.input.focus();
   },
   
   /**

@@ -740,7 +740,7 @@ body {
 /* Touch */
 .touch-panel {
   position:absolute;
-  z-index: 2147483647;
+  z-index: 4093;
   background-color: rgba(255,0,0,0.2);
 }
 

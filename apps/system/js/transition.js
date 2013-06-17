@@ -6,18 +6,34 @@ var TransitionManager = (function() {
     console.log('TransitionManager: ' + str + '\n');
   }
 
-  var current = { dataset: {}, setVisible: function() {} };
+  var current = { dataset: {}, getScreenshot: function() { return {}; }, setVisible: function() {} };
 
   window.addEventListener('historychange', function onHistoryChange(e) {
     current.dataset.current = false;
     current.dataset.previous = true;
-    //current.setVisible(false);
+
+    var previous = current;
+    var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
+    request.onsuccess = function(e) {
+      if (e.target.result) {
+        previous.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+      }
+
+      previous.setVisible(false);
+    };
+
+    request.onerror = function(e) {
+      previous.setVisible(false);
+    }
 
     current = e.detail.current.iframe;
 
     current.dataset.current = true;
     current.dataset.previous = false;
-    //current.setVisible(true);
+    current.addEventListener('transitionend', function(e) {
+      current.style.backgroundImage = '';
+      current.setVisible(true);
+    });
   });
 })();
 

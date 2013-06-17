@@ -58,6 +58,7 @@ var Rocketbar = {
     var manifestURL = evt.target.getAttribute('data-manifest-url');
     if (Applications.installedApps[manifestURL])
       Applications.installedApps[manifestURL].launch();
+    UtilityTray.hide();
   },
   
   /**
@@ -84,4 +85,26 @@ var Rocketbar = {
 window.addEventListener('load', function rocketbar_onLoad() {
   window.removeEventListener('load', rocketbar_onLoad);
   Rocketbar.init();
+});
+
+window.addEventListener('historychange', function rocketbar_onHistoryChange(e) {
+  var history = e.detail.current;
+
+  history.title;
+  history.ontitlechange = function(title) {
+  };
+
+  history.location;
+  history.onlocationchange = function(location) {
+  };
+
+  history.loading;
+  history.onstatuschange = function(loading) {
+  };
+
+  history.canGoBack;
+  history.oncangoback = function(canGoBack) {
+  }
+
+  history.type;
 });

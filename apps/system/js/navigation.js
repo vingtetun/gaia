@@ -197,6 +197,7 @@ function History(origin, type) {
   this.title = '';
   this.location = origin;
   this.loading = true;
+  this.canGoBack = false;
   this.type = type;
 
   this.iframe = null;

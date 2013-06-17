@@ -108,6 +108,10 @@
     <link rel="stylesheet" type="text/css" href="style/statusbar/statusbar.css">
     <script defer src="js/statusbar.js"></script>
 
+    <!-- Rocketbar-->
+    <link rel="stylesheet" type="text/css" href="style/rocketbar/rocketbar.css">
+    <script defer src="js/rocketbar.js"></script>
+
     <!-- FTU launcher -->
     <script defer src="js/ftu_launcher.js"></script>
 
@@ -325,6 +329,14 @@
       </div>
 
       <div id="utility-tray" data-z-index-level="utility-tray">
+        <! -- Rocketbar -->
+        <form id="rocketbar" data-z-index-level="rocketbar">
+          <input id="rocketbar-input" type="text" placeholder="Search for anything...">
+          </input>
+        </form>
+
+        <ul id="rocketbar-results" data-z-index-level="rocketbar">
+        </ul>
         <div id="utility-tray-grippy">
         </div>
       </div>

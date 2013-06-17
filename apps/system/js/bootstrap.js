@@ -4,30 +4,21 @@
 'use strict';
 
 window.addEventListener('load', function startup() {
-  function safelyLaunchFTU() {
-    WindowManager.retrieveHomescreen(FtuLauncher.retrieve.bind(FtuLauncher));
-  }
-
   if (Applications.ready) {
-    safelyLaunchFTU();
+    WindowManager.start();
   } else {
     window.addEventListener('applicationready', function appListReady(event) {
       window.removeEventListener('applicationready', appListReady);
-      safelyLaunchFTU();
+      WindowManager.start();
     });
   }
 
-  window.addEventListener('ftudone', function doneWithFTU() {
-    window.removeEventListener('ftudone', doneWithFTU);
-
-    var lock = window.navigator.mozSettings.createLock();
-    lock.set({
-      'gaia.system.checkForUpdates': true
-    });
+  window.addEventListener('homescreen-ready', function homescreenReady(event) {
+    window.removeEventListener(event.type, homescreenReady);
+    InitLogoHandler.animate();
   });
 
   SourceView.init();
-  Shortcuts.init();
   ScreenManager.turnScreenOn();
 
   // We need to be sure to get the focus in order to wake up the screen
@@ -48,21 +39,6 @@ window.addEventListener('load', function startup() {
     window.removeEventListener('devicemotion', dumbListener2);
   }, 2000);
 });
-
-/* === Shortcuts === */
-/* For hardware key handling that doesn't belong to anywhere */
-var Shortcuts = {
-  init: function rm_init() {
-    window.addEventListener('keyup', this);
-  },
-
-  handleEvent: function rm_handleEvent(evt) {
-    if (!ScreenManager.screenEnabled || evt.keyCode !== evt.DOM_VK_F6)
-      return;
-
-    document.location.reload();
-  }
-};
 
 /* === Localization === */
 /* set the 'lang' and 'dir' attributes to <html> when the page is translated */

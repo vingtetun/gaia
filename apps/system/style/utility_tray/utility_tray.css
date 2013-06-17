@@ -4,7 +4,6 @@
 
 #screen.utility-tray > #utility-tray {
   visibility: visible;
-  z-index: 2147483647;
 }
 
 #utility-tray {

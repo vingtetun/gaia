@@ -51,6 +51,22 @@ Icon.prototype = {
    */
   app: null,
 
+  /**
+   * It returns an unique identifier among all icons installed on the homescreen
+   */
+  getUID: function icon_getUID() {
+    var descriptor = this.descriptor;
+
+    return (descriptor.manifestURL || descriptor.bookmarkURL) +
+           (descriptor.entry_point ? descriptor.entry_point : '');
+  },
+
+  isOfflineReady: function icon_isOfflineReady() {
+    return !(this.descriptor.isHosted &&
+      !this.descriptor.hasOfflineCache ||
+      this.descriptor.isBookmark);
+  },
+
   /*
    * Renders the icon into the page
    *
@@ -70,6 +86,7 @@ Icon.prototype = {
      */
 
     var container = this.container = document.createElement('li');
+    this.container.dataset.offlineReady = this.isOfflineReady();
     container.className = 'icon';
     if (this.descriptor.hidden) {
       delete this.descriptor.hidden;
@@ -119,12 +136,8 @@ Icon.prototype = {
 
     container.appendChild(icon);
 
-    if (descriptor.removable) {
-      // Menu button to delete the app
-      var options = document.createElement('span');
-      options.className = 'options';
-      options.dataset.isIcon = true;
-      container.appendChild(options);
+    if (descriptor.removable === true) {
+      this.appendOptions();
     }
 
     target.appendChild(container);
@@ -135,6 +148,28 @@ Icon.prototype = {
       container.style.visibility = 'visible';
       icon.classList.add('loading');
     }
+  },
+
+  appendOptions: function icon_appendOptions() {
+    var options = this.container.querySelector('.options');
+    if (options) {
+      return;
+    }
+
+    // Menu button to delete the app
+    options = document.createElement('span');
+    options.className = 'options';
+    options.dataset.isIcon = true;
+    this.container.appendChild(options);
+  },
+
+  removeOptions: function icon_removeOptions() {
+    var options = this.container.querySelector('.options');
+    if (!options) {
+      return;
+    }
+
+    this.container.removeChild(options);
   },
 
   applyOverflowTextMask: function icon_applyOverflowTextMask() {
@@ -150,43 +185,29 @@ Icon.prototype = {
     var descriptor = this.descriptor;
     var icon = descriptor.icon;
     if (!icon) {
-      this.loadImageData();
-      return;
-    }
-
-    // If we already have locally cached data, load the image right away.
-    if (icon.indexOf('data:') == 0) {
-      this.loadImageData();
-      return;
-    }
-
-    var self = this;
-    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', icon, true);
-    xhr.responseType = 'blob';
-    try {
-      xhr.send(null);
-    } catch (e) {
-      console.error('Got an exception when trying to load icon "' + icon +
-          '", falling back to default icon. Exception is:', e);
       this.loadCachedIcon();
       return;
     }
 
-    xhr.onreadystatechange = function saveIcon_readyStateChange(evt) {
-      if (xhr.readyState != xhr.DONE)
-        return;
+    // Display the default/oldRendered icon before trying to get the icon.
+    // Sometimes when the network is quite bad the XHR can take time, and we
+    // have an empty space
+    this.loadCachedIcon();
 
-      if (xhr.status != 0 && xhr.status != 200) {
-        self.loadCachedIcon();
-        return;
+    IconRetriever.get({
+      icon: this,
+      success: function(blob) {
+        this.loadImageData(blob);
+      },
+      error: function() {
+        if (this.icon && !this.downloading &&
+            this.icon.classList.contains('loading')) {
+          this.icon.classList.remove('loading');
+          this.img.src = null;
+        }
+        this.loadCachedIcon();
       }
-      self.loadImageData(xhr.response);
-    };
-
-    xhr.onerror = function saveIcon_onerror() {
-      self.loadCachedIcon();
-    };
+    });
   },
 
   loadCachedIcon: function icon_loadCachedImage() {
@@ -194,19 +215,14 @@ Icon.prototype = {
     if (oldRenderedIcon && oldRenderedIcon instanceof Blob) {
       this.renderBlob(oldRenderedIcon);
     } else {
-      this.loadImageData();
+      this.loadDefaultIcon();
     }
   },
 
   loadImageData: function icon_loadImageData(blob) {
     var self = this;
     var img = new Image();
-    if (blob) {
-      var url = window.URL.createObjectURL(blob);
-      img.src = url;
-    } else {
-      img.src = this.descriptor.icon;
-    }
+    img.src = window.URL.createObjectURL(blob);
 
     if (this.icon && !this.downloading) {
       this.icon.classList.remove('loading');
@@ -214,21 +230,41 @@ Icon.prototype = {
 
     img.onload = function icon_loadSuccess() {
       img.onload = img.onerror = null;
-      if (blob)
-        window.URL.revokeObjectURL(img.src);
+      window.URL.revokeObjectURL(img.src);
       self.renderImage(img);
     };
 
     img.onerror = function icon_loadError() {
-      if (blob)
-        window.URL.revokeObjectURL(img.src);
-      img.src = getDefaultIcon(self.app);
-      img.onload = function icon_errorIconLoadSucess() {
-        img.onload = null;
-        self.renderImage(img);
-      };
-      img.onerror = null;
+      console.error('error while loading the icon', img.src, '. Falling back ' +
+          'to default icon.');
+      window.URL.revokeObjectURL(img.src);
+      self.loadDefaultIcon(img);
     };
+  },
+
+  loadDefaultIcon: function icon_loadDefaultIcon(img) {
+    var image = img || new Image();
+    var self = this;
+
+    if (self.img && self.img.src) {
+      // If there is one already loaded, do not continue...
+      image.onload = image.onerror = null;
+      return;
+    }
+
+    var blob = GridManager.getBlobByDefault(self.app);
+    if (blob === null) {
+      // At this point theoretically the flow shouldn't go because the icons
+      // by default have to be loaded, but just in case to avoid race conditions
+      image.src = getDefaultIcon(self.app);
+      image.onload = function icon_defaultIconLoadSucess() {
+        image.onload = image.onerror = null;
+        self.renderImage(image);
+      };
+    } else {
+      self.renderBlob(blob);
+      image.onload = image.onerror = null;
+    }
   },
 
   renderImageForBookMark: function icon_renderImageForBookmark(img) {
@@ -290,24 +326,32 @@ Icon.prototype = {
     canvas.toBlob(this.renderBlob.bind(this));
   },
 
+  // The url that is passed as a parameter to the callback must be revoked
+  loadRenderedIcon: function icon_loadRenderedIcon(callback) {
+    var img = this.img;
+    img.src = window.URL.createObjectURL(this.descriptor.renderedIcon);
+    if (callback) {
+      img.onload = img.onerror = function done() {
+        callback(this.src);
+        img.onload = img.onerror = null;
+      };
+    }
+  },
+
   renderBlob: function icon_renderBlob(blob) {
     this.descriptor.renderedIcon = blob;
     GridManager.markDirtyState();
     this.displayRenderedIcon();
   },
 
-  displayRenderedIcon: function icon_displayRenderedIcon(img, skipRevoke) {
-    img = img || this.img;
-    var url = window.URL.createObjectURL(this.descriptor.renderedIcon);
-    img.src = url;
+  displayRenderedIcon: function icon_displayRenderedIcon() {
     var self = this;
-    img.onload = img.onerror = function cleanup() {
-      img.style.visibility = 'visible';
-      if (!skipRevoke)
-        window.URL.revokeObjectURL(url);
+    this.loadRenderedIcon(function cleanup(url) {
+      self.img.style.visibility = 'visible';
+      window.URL.revokeObjectURL(url);
       if (self.needsShow)
         self.show();
-    };
+    });
   },
 
   show: function icon_show() {
@@ -341,6 +385,10 @@ Icon.prototype = {
     this.updateAppStatus(app);
     var oldDescriptor = this.descriptor;
     this.descriptor = descriptor;
+    descriptor.removable === true ? this.appendOptions() : this.removeOptions();
+
+    // Update offline availability
+    this.container.dataset.offlineReady = this.isOfflineReady();
 
     if (descriptor.updateTime == oldDescriptor.updateTime &&
         descriptor.icon == oldDescriptor.icon) {
@@ -422,8 +470,7 @@ Icon.prototype = {
     // For some reason, cloning and moving a node re-triggers the blob
     // URI to be validated. So we assign a new blob URI to the image
     // and don't revoke it until we're finished with the animation.
-    var skipRevoke = true;
-    this.displayRenderedIcon(this.img, skipRevoke);
+    this.loadRenderedIcon();
 
     var icon = this.icon.cloneNode();
     var img = icon.querySelector('img');
@@ -491,6 +538,41 @@ Icon.prototype = {
 
   getLeft: function icon_getLeft() {
     return this.container.getBoundingClientRect().left;
+  },
+
+  getWidth: function icon_getWidth() {
+    return this.container.getBoundingClientRect().width;
+  }
+};
+
+function TemplateIcon(isBookmark) {
+  var descriptor = {
+    name: 'templateIcon',
+    hidden: true,
+    renderedIcon: null
+  };
+
+  var app = {};
+  if (isBookmark) {
+    app.iconable = true;
+  }
+
+  Icon.call(this, descriptor, app);
+}
+
+TemplateIcon.prototype = {
+  __proto__: Icon.prototype,
+  loadDefaultIcon: function ticon_loadDefaultIcon() {
+    var image = new Image();
+    var self = this;
+    image.src = getDefaultIcon(self.app);
+    image.onload = function icon_defaultIconLoadSucess() {
+      image.onload = null;
+      self.renderImage(image);
+    };
+  },
+  renderBlob: function ticon_renderBlob(blob) {
+    this.descriptor.renderedIcon = blob;
   }
 };
 
@@ -511,6 +593,10 @@ function Page(container, icons) {
 }
 
 Page.prototype = {
+
+  // After launching an app we disable the page during <this time> in order to
+  // prevent multiple open-app animations
+  DISABLE_TAP_EVENT_DELAY: 600,
 
   /*
    * Renders a page for a list of apps
@@ -553,10 +639,10 @@ Page.prototype = {
   ready: true,
 
   setReady: function pg_setReady(value) {
+    this.ready = value;
     if (value) {
       this.container.dispatchEvent(new CustomEvent('onpageready'));
     }
-    this.ready = value;
   },
 
   /*
@@ -591,14 +677,21 @@ Page.prototype = {
   animate: function pg_animate(children, draggableNode, targetNode) {
     var draggableIndex = children.indexOf(draggableNode);
     var targetIndex = children.indexOf(targetNode);
+
+    if (draggableIndex === -1 || targetIndex === -1) {
+      // Index is outside the bounds of the array, it doesn't make sense
+      setTimeout(this.setReady.bind(this, true));
+      return;
+    }
+
     var upward = draggableIndex < targetIndex;
     this.draggableNode = draggableNode;
     this.beforeNode = upward ? targetNode.nextSibling : targetNode;
     this.placeIcon(draggableNode, draggableIndex, targetIndex);
 
     var self = this;
-    targetNode.addEventListener('transitionend', function onTransitionEnd() {
-      targetNode.removeEventListener('transitionend', onTransitionEnd);
+    targetNode.addEventListener('transitionend', function onTransitionEnd(e) {
+      e.target.removeEventListener('transitionend', onTransitionEnd);
       children.splice(draggableIndex, 1);
       children.splice(targetIndex, 0, draggableNode);
       setTimeout(self.setReady.bind(self, true));
@@ -613,7 +706,7 @@ Page.prototype = {
     }
   },
 
-  doDragLeave: function pg_doReArrange(reflow) {
+  doDragLeave: function pg_doReArrange(callback, reflow) {
     this.iconsWhileDragging.forEach(function reset(node) {
       node.style.MozTransform = node.style.MozTransition = '';
       delete node.dataset.posX;
@@ -622,26 +715,38 @@ Page.prototype = {
 
     this.iconsWhileDragging = [];
 
-    if (reflow)
+    if (reflow && this.olist.contains(this.draggableNode))
       this.olist.insertBefore(this.draggableNode, this.beforeNode);
+
+    callback();
   },
 
-  onDragLeave: function pg_onDragLeave(reflow) {
-    if (this.iconsWhileDragging.length === 0)
+  onDragLeave: function pg_onDragLeave(callback, reflow) {
+    if (this.iconsWhileDragging.length === 0) {
+      setTimeout(callback);
       return;
+    }
 
     if (!this.ready) {
-      var self = this;
-
-      self.container.addEventListener('onpageready', function onPageReady() {
-        self.doDragLeave(reflow);
-        self.container.removeEventListener('onpageready', onPageReady);
+      var self = this, ensureCallbackID = null;
+      self.container.addEventListener('onpageready', function onPageReady(e) {
+        e.target.container.removeEventListener('onpageready', onPageReady);
+        if (ensureCallbackID !== null) {
+          window.clearTimeout(ensureCallbackID);
+          self.doDragLeave(callback, reflow);
+        }
       });
+
+      // We ensure that there is not a transitionend lost on dragging
+      var ensureCallbackID = window.setTimeout(function() {
+        ensureCallbackID = null;
+        self.doDragLeave(callback, reflow);
+      }, 300); // Dragging transition time
 
       return;
     }
 
-    this.doDragLeave(reflow);
+    this.doDragLeave(callback, reflow);
   },
 
   placeIcon: function pg_placeIcon(node, from, to, transition) {
@@ -672,13 +777,15 @@ Page.prototype = {
         if (icon.app)
           Homescreen.showAppDialog(icon.app);
       }
-    } else if ('isIcon' in elem.dataset) {
+    } else if ('isIcon' in elem.dataset &&
+               !this.olist.getAttribute('disabled')) {
       var icon = GridManager.getIcon(elem.dataset);
       if (!icon.app)
         return;
 
       if (icon.descriptor.entry_point) {
         icon.app.launch(icon.descriptor.entry_point);
+        this.disableTap();
         return;
       }
 
@@ -687,7 +794,21 @@ Page.prototype = {
         return;
       }
       icon.app.launch();
+      this.disableTap();
     }
+  },
+
+  /*
+   * Disables the tap event for the page
+   *
+   * @param{Integer} milliseconds
+   */
+  disableTap: function pg_disableTap(icon, time) {
+    var olist = this.olist;
+    olist.setAttribute('disabled', true);
+    setTimeout(function disableTapTimeout() {
+      olist.removeAttribute('disabled');
+    }, time || this.DISABLE_TAP_EVENT_DELAY);
   },
 
   /*
@@ -864,8 +985,21 @@ dockProto.getLeft = function dk_getLeft() {
   return this.olist.getBoundingClientRect().left;
 };
 
+dockProto.getTransform = function dk_getTransform() {
+  return this.movableContainer.style.MozTransform;
+};
+
+/**
+ * Returns the right position of the last icon in the dock
+ */
 dockProto.getRight = function dk_getRight() {
-  return this.getLeft() + this.getWidth();
+  var children = this.olist.children;
+  var lastChild = children[children.length - 1];
+  if (!lastChild) {
+    return 0;
+  }
+
+  return lastChild.getBoundingClientRect().right;
 };
 
 dockProto.getWidth = function dk_getWidth() {

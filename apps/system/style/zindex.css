@@ -75,14 +75,16 @@
   z-index: 4096;
 }
 
-#screen > [data-z-index-level="utility-tray"] {
+#screen > [data-z-index-level="utility-tray"],
+#screen > [data-z-index-level="notifications-tray"] {
   z-index: 4095;
 }
 
 /* Demote level 5 elements to homescreen level if there is an active
  * full screen app frame */
-#screen.fullscreen-app:not(.locked):not(.attention) > [data-z-index-level="statusbar"],
-#screen.fullscreen-app:not(.locked):not(.attention) > [data-z-index-level="utility-tray"] {
+#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="statusbar"],
+#screen:not(.locked):not(.attention):not(.notifications-tray) > [data-z-index-level="notifications-tray"],
+#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="utility-tray"] {
   z-index: 0;
 }
 
@@ -92,7 +94,8 @@
 #screen.attention:not(.active-statusbar) > [data-z-index-level="statusbar"] {
   z-index: 16386;
 }
-#screen.attention:not(.active-statusbar) > [data-z-index-level="utility-tray"] {
+#screen.attention:not(.active-statusbar) > [data-z-index-level="utility-tray"],
+#screen.attention:not(.active-statusbar) > [data-z-index-level="notifications-tray"] {
   z-index: 16385;
 }
 
@@ -142,22 +145,6 @@
    * Keyboard should be kept upon #windows
    * and beneath #windows > .appWindow
    */
-}
-
-/* Styles during FTU. In this case lockscreen & homescreen should be behind FTU.
- * Once FTU is done, we will remove this styles in order to get the structure
- * of z-index as usual. */
-#screen.ftu > [data-z-index-level="statusbar"]{
-  z-index: 1;
-}
-
-#screen.ftu > [data-z-index-level="lockscreen"]{
-  z-index: 1;
-}
-
-#screen.ftu > [data-z-index-level="app"] > .appWindow.homescreen,
-#screen.ftu > [data-z-index-level="app"] > .appWindow.homescreen.active {
-  z-index: 0;
 }
 
 /* The below z-index numbers are used to meet the following conditions:

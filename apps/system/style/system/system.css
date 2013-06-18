@@ -213,6 +213,32 @@ body {
   max-height: 100%;
 }
 
+
+#windows > iframe {
+  position: fixed;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center center;
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+#windows > iframe[data-current="true"] {
+  transform: translateX(0);
+}
+
+#windows > iframe[data-current="true"] ~ iframe {
+  transform: translateX(100%);
+}
+
 #windows > .appWindow {
   position: fixed;
   border: 0;
@@ -316,8 +342,8 @@ body {
 
 /* Opacity increases start up time then we don't use it anymore for opening */
 @keyframes openApp-portrait-primary {
-  0%   { transform: scale(0.1); }
-  100% { transform: scale(1.0); }
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0); }
 }
 
 @keyframes openApp-portrait-secondary {
@@ -336,7 +362,7 @@ body {
 }
 
 #windows > .appWindow.homescreen.zoom-in > iframe {
-  transform: scale(1);
+  transform: translateX(0);
   animation: zoom-in 0.3s forwards ease;
 }
 
@@ -350,8 +376,8 @@ body {
 }
 
 @keyframes zoom-in {
-  0%   { transform: scale(1); }
-  100% { transform: scale(1.8); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 @keyframes openAppFromCardView-portrait-primary {
@@ -417,16 +443,14 @@ body {
 
 /* Invoking app moves out */
 @keyframes invokingApp {
-  0%   { transform: scale(1.0); opacity: 1 }
-  50%  { transform: scale(0.8) translateX(0); opacity: 0.3 }
-  100% { transform: scale(0.6) translateX(105%); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 /* Invoked app moves in */
 @keyframes invokedApp {
-  0%   { transform: scale(0.6) translateX(-133%); opacity: 0.3 }
-  50%  { transform: scale(0.6) translateX(-105%); opacity: 1 }
-  100% { transform: scale(1.0) translateX(0) }
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0) }
 }
 
 #windows > .appWindow.closing {
@@ -495,7 +519,7 @@ body {
 }
 
 #windows > .appWindow.homescreen.zoom-out > iframe {
-  transform: scale(1.8);
+  transform: translateX(100%);
   animation: zoom-out 0.3s forwards ease;
 }
 
@@ -509,8 +533,8 @@ body {
 }
 
 @keyframes zoom-out {
-  0%   { transform: scale(1.8); }
-  100% { transform: scale(1); }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
 }
 
 #screen.cards-view > #windows > .appWindow.closing[data-orientation='portrait-primary'] {
@@ -560,8 +584,8 @@ body {
 }
 
 @keyframes closeApp-portrait-primary {
-  0%   { transform: scale(1.0); opacity: 1; }
-  100% { transform: scale(0.1); opacity: 0; }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes closeApp-portrait-secondary {
@@ -704,5 +728,40 @@ body {
 
 #screen iframe.communication-frame {
   visibility: hidden;
+}
+
+/* Touch */
+.touch-panel {
+  position:absolute;
+  z-index: 4093;
+  background-color: rgba(255,0,0,0.2);
+}
+
+#top-panel {
+  left: 0;
+  top: 0;
+  height: 20px;
+  width: 100%;
+}
+
+#right-panel {
+  height: calc(100% - 40px);
+  width: 20px;
+  right: 0;
+  top: 20px;
+}
+
+#bottom-panel {
+  left: 0;
+  bottom: 0;
+  height: 20px;
+  width: 100%;
+}
+
+#left-panel {
+  height: calc(100% - 40px);
+  width: 20px;
+  left: 0;
+  top: 20px;
 }
 

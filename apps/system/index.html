@@ -88,6 +88,11 @@
     <link rel="stylesheet" type="text/css" href="style/utility_tray/utility_tray.css">
     <script defer src="js/utility_tray.js"></script>
 
+    
+    <!-- Notification Tray -->
+    <link rel="stylesheet" type="text/css" href="style/notifications_tray/notifications_tray.css">
+    <script defer src="js/notifications_tray.js"></script>
+
     <!-- Attention Screen -->
     <link rel="stylesheet" type="text/css" href="style/attention_screen.css">
     <script defer src="js/attention_screen.js"></script>
@@ -102,6 +107,10 @@
     <!-- Statusbar -->
     <link rel="stylesheet" type="text/css" href="style/statusbar/statusbar.css">
     <script defer src="js/statusbar.js"></script>
+
+    <!-- Rocketbar-->
+    <link rel="stylesheet" type="text/css" href="style/rocketbar/rocketbar.css">
+    <script defer src="js/rocketbar.js"></script>
 
     <!-- FTU launcher -->
     <script defer src="js/ftu_launcher.js"></script>
@@ -225,7 +234,8 @@
     <!-- homescreen from being displayed must come before this script. -->
     <link rel="stylesheet" type="text/css" href="style/window.css">
     <script defer src="js/window.js"></script>
-    <script defer src="js/window_manager.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/transition.js"></script>
 
     <!-- Entry Sheet -->
     <link rel="stylesheet" type="text/css" href="style/entry_sheet/entry_sheet.css">
@@ -304,10 +314,30 @@
   </head>
 
   <body role="application">
+    <!-- Touch Panels -->
+    <div id="top-panel" class="touch-panel"></div>
+    <div id="right-panel" class="touch-panel"></div>
+    <div id="bottom-panel" class="touch-panel"></div>
+    <div id="left-panel" class="touch-panel"></div>
+
     <div id="screen" class="locked">
       <div id="os-logo" data-z-index-level="initlogo">
         <div id="carrier-logo"></div>
       </div>
+
+      <div id="utility-tray" data-z-index-level="utility-tray">
+        <! -- Rocketbar -->
+        <form id="rocketbar" data-z-index-level="rocketbar">
+          <input id="rocketbar-input" type="text" placeholder="Search for anything...">
+          </input>
+        </form>
+
+        <ul id="rocketbar-results" data-z-index-level="rocketbar">
+        </ul>
+        <div id="utility-tray-grippy">
+        </div>
+      </div>
+
 
       <div id="statusbar" data-z-index-level="statusbar">
         <!-- Carrier & date label -->
@@ -345,63 +375,6 @@
         <!-- Activity -->
         <canvas id="statusbar-system-downloads" hidden></canvas>
         <canvas id="statusbar-network-activity" hidden></canvas>
-      </div>
-
-      <div id="utility-tray" data-z-index-level="utility-tray">
-        <!-- notifications -->
-        <div id="notification-bar">
-          <span data-l10n-id="notifications">Notifications</span>
-          <button id="notification-clear" data-l10n-id="clear-all">Clear all</button>
-        </div>
-
-        <div id="notifications-container">
-          <!-- Update Manager -->
-          <div id="update-manager-container" class="fake-notification">
-            <div class="icon">
-            </div>
-            <div class="activity">
-            </div>
-            <div class="message">
-            </div>
-          </div>
-          <!-- Storage watcher notification -->
-          <div id="storage-watcher-container" class="fake-notification">
-            <div class="icon">
-            </div>
-            <div class="message">
-            </div>
-            <div class="available-space">
-            </div>
-          </div>
-          <!-- App Install Manager -->
-          <div id="install-manager-notification-container">
-          </div>
-          <!-- bluetooth transfer -->
-          <div id="bluetooth-transfer-status-list">
-          </div>
-
-          <div id="desktop-notifications-container">
-          </div>
-        </div>
-
-        <!-- credit module -->
-        <div id="cost-control-widget"></div>
-
-        <!-- quick settings -->
-        <div id="quick-settings">
-          <a href="#" id="quick-settings-wifi" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-data" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-bluetooth" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-airplane-mode" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-full-app" data-enabled="false"></a>
-        </div>
-
-        <div id="utility-tray-grippy">
-        </div>
       </div>
 
       <div id="windows" data-z-index-level="app">
@@ -945,6 +918,43 @@
         </div>
       </div>
 
+      <div id="notifications-tray" data-z-index-level="notifications-tray">
+        <!-- notifications -->
+        <div id="notification-bar">
+          <span data-l10n-id="notifications">Notifications</span>
+          <button id="notification-clear" data-l10n-id="clear-all">Clear all</button>
+        </div>
+
+        <div id="notifications-container">
+          <!-- Update Manager -->
+          <div id="update-manager-container" class="fake-notification">
+            <div class="icon">
+            </div>
+            <div class="activity">
+            </div>
+            <div class="message">
+            </div>
+          </div>
+          <!-- Storage watcher notification -->
+          <div id="storage-watcher-container" class="fake-notification">
+            <div class="icon">
+            </div>
+            <div class="message">
+            </div>
+            <div class="available-space">
+            </div>
+          </div>
+          <!-- App Install Manager -->
+          <div id="install-manager-notification-container">
+          </div>
+          <!-- bluetooth transfer -->
+          <div id="bluetooth-transfer-status-list">
+          </div>
+
+          <div id="desktop-notifications-container">
+          </div>
+        </div>
+      </div>
     </div> <!-- end of #screen -->
   </body>
 </html>

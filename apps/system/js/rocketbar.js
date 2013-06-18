@@ -9,7 +9,9 @@ var Rocketbar = {
     this.input = document.getElementById('rocketbar-input');
     this.results = document.getElementById('rocketbar-results');
     this.input.addEventListener('focus', this.handleFocus.bind(this));
-    this.input.addEventListener('blur', this.handleBlur.bind(this));
+    this.input.addEventListener('blur', function() {
+      setTimeout(this.handleBlur.bind(this));
+    }.bind(this));
     this.input.addEventListener('keyup', this.handleKeyUp.bind(this));
     this.bar.addEventListener('submit', this.handleSubmit.bind(this));
     this.results.addEventListener('click', this.handleClick.bind(this));
@@ -101,8 +103,8 @@ var Rocketbar = {
    * @param Event evt The submit event
    */
   handleSubmit: function rocketbar_handleSubmit(evt) {
-    console.log('handling submit');
     evt.preventDefault();
+    UtilityTray.hide();
     var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: this.input.value }});
     this.input.dispatchEvent(e);
   },

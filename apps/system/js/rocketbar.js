@@ -11,6 +11,7 @@ var Rocketbar = {
     this.input.addEventListener('focus', this.handleFocus.bind(this));
     this.input.addEventListener('blur', this.handleBlur.bind(this));
     this.input.addEventListener('keyup', this.handleKeyUp.bind(this));
+    this.input.addEventListener('submit', this.handleSubmit.bind(this));
     this.results.addEventListener('click', this.handleClick.bind(this));
     window.addEventListener('utilitytrayshow',
       this.handleUtilityTrayShow.bind(this));
@@ -19,9 +20,11 @@ var Rocketbar = {
   },
 
   handleUtilityTrayShow: function rocketbar_handleUtilityTrayShow(evt) {
+    this.results.innerHTML = '';
     this.input.focus();
   },
   
+  currentWindow: null,
   currentTitle: null,
   currentLocation: null,
   
@@ -31,7 +34,12 @@ var Rocketbar = {
    * @param Event evt The focus event.
    */
   handleFocus: function rocketbar_handleFocus(evt) {
-    this.input.value = this.currentLocation;
+    // Don't show app:// URLs of packaged apps
+    if (this.currentLocation.indexOf('app://') == -1) {
+      this.input.value = this.currentLocation;
+    } else {
+      this.input.value = '';
+    }
     this.input.select();
   },
   
@@ -88,6 +96,17 @@ var Rocketbar = {
   },
   
   /**
+   * Handle submitting the rocketbar.
+   *
+   * @param Event evt The submit event
+   */
+  handleSubmit: function rocketbar_handleSubmit(evt) {
+    evt.preventDefault();
+    var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: this.input.value }});
+    this.input.dispatchEvent(e);
+  },
+  
+  /**
    * Show rocketbar results for a list of app manifest URLs.
    *
    * @param Array results An array of app manifest URLs
@@ -114,6 +133,7 @@ var Rocketbar = {
    */
   handleWindowChange: function rocketbar_handleWindowChange(evt) {
     var history = evt.detail.current;
+    this.currentWindow = history;
     this.currentLocation = history.location;
     this.currentTitle = history.title;
     if (this.currentTitle) {
@@ -174,4 +194,7 @@ window.addEventListener('load', function rocketbar_onLoad() {
   }
 
   history.type; //certified, privileged, hosted, remote
+  
+  var evt = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: your_url }});
+  this.input.dispatchEvent(evt);
 });*/

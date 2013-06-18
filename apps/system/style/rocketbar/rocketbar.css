@@ -5,14 +5,15 @@
 }
 
 #rocketbar-input {
-  background: url("search.png") no-repeat scroll 1.9rem 1.3rem #202020;
   border: none;
+  background-color: rgb(34, 34, 34);
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   margin: 0;
-  padding: 1.5rem 1.5rem 1.5rem 6rem;
+  padding: 1.5rem;
   width: 100%;
   color: #fff;
+  font-size: 1.6rem;
 }
 
 #rocketbar-results {

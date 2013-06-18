@@ -157,6 +157,32 @@ var WindowManager = (function() {
     history.attach(iframe);
   }
 
+  window.addEventListener('mozbrowseropenwindow', function onWindowOpen(e) {
+    var origin = e.detail.url;
+
+    // If the link will target a different domain let's open it a a normal remote link
+    var manifestURL = '';
+    if (e.target.hasAttribute('mozapp')) {
+      manifestURL = e.target.getAttribute('mozapp');
+
+      var urlHelper = document.createElement('a');
+      urlHelper.href = origin;
+
+      var urlHelper2 = document.createElement('a');
+      urlHelper2.href = manifestURL;
+
+      if (urlHelper.host != urlHelper2.host || urlHelper.protocol != urlHelper2.protocol) {
+        manifestURL = '';
+      }
+    }
+
+    if (manifestURL) {
+      openApp(manifestURL, origin);
+    } else {
+      openOrigin(origin);
+    }
+  });
+
   window.addEventListener('mozChromeEvent', function onChromeEvent(e) {
     if (e.detail.type != 'webapps-launch')
       return;

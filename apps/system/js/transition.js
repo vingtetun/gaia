@@ -31,8 +31,11 @@ var TransitionManager = (function() {
     current.dataset.current = true;
     current.dataset.previous = false;
     current.addEventListener('transitionend', function(e) {
-      current.style.backgroundImage = '';
       current.setVisible(true);
+      current.addNextPaintListener(function onNextPaint() {
+        current.removeNextPaintListener(onNextPaint);
+        current.style.backgroundImage = '';
+      });
     });
   });
 })();

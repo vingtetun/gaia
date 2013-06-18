@@ -10,27 +10,55 @@ const Homescreen = (function() {
   var groupList = document.getElementById('group-list');
   var HVGA = document.documentElement.clientWidth < 480;
   var mainColor = {r:255, g:255, b:255};
-  var iconsInGroup = 2+~~(Math.random()*3);
-  var curIcons = 0;
+  var currentPossition;
   var currentGroup;
-  var groupNames = [
-    'Utils',
-    'Apps',
-    'Favorites',
-    'Games',
-    'System apps',
-    'All your',
-    'Base Are',
-    'Belong to us'
-  ];
+  var groups = [
+    {
+      name: '',
+      content: [
+        { name: 'Phone' },
+        { name: 'Messages' },
+        { name: 'Contacts' },
+        { name: 'Facebook' },
+        { name: 'Twitter' },
+        { name: 'Music' },
+        { name: 'Camera' },
+        { name: 'Gallery' },
+        { name: 'Video' },
+        { name: 'FM Radio' },
+        { name: 'Email' }
+      ]
+    },
+    {
+      name: 'Games',
+      content: [
+        { name: 'Bad Piggies' },
+        { name: 'Letterpress' },
+        { name: 'Tetris' },
+        { name: 'Solitaire' }
+      ]
+    },
+    { 
+      name: 'Tools',
+      content : [
+        { name: 'Marketplace' },
+        { name: 'Settings' },
+        { name: 'Cost Control' },
+        { name: 'Clock' },
+        { name: 'Compass' },
+        { name: 'Calculator' },
+        { name: 'Calendar' }
+      ]
+    }
+  ]
   var gd = new GestureDetector(grid);
   gd.startDetecting();
   
   grid.addEventListener('transform', function(e) {
     var scale = e.detail.relative.scale;
-    if (scale < 1) {
+    if (scale < 1 && !page.classList.contains('hide')) {
       page.classList.add('hide');
-    } else if (scale > 1 ) {
+    } else if (scale > 1 && page.classList.contains('hide')) {
       page.classList.remove('hide');
     }
   });
@@ -38,10 +66,7 @@ const Homescreen = (function() {
   var tileSize = 142;
   var tileClass = 'app-tile';
   var longTilesOffset = 0;
-  //   ['<div class="app-tile">',
-  //     '<label>APP NAME</label>',
-  //     '</div>'];
-      
+
   var updateCss = function updateCss() {
     var file = 'style/homescreen.css';
     var style = document.querySelector('link[href*="' + file + '"]');
@@ -50,102 +75,103 @@ const Homescreen = (function() {
     }
   }
 
-  var createGroup = function() {
-    iconsInGroup = 2+~~(Math.random()*3);
-    currentGroup = document.createElement('li');
-    currentGroup.innerHTML = groupNames.shift();
-    groupList.appendChild(currentGroup);
-    curIcons = 0;
+  var scrollToGroup = function(e) {
+    var scrollTo = e.target.dataset.scrollTo || e.target.parentNode.dataset.scrollTo;
+    page.scrollTop = scrollTo;
+    page.classList.remove('hide');
   }
   
-  createGroup();
+  var createGroup = function(name) {
+    currentGroup = document.createElement('li');
+    groupList.appendChild(currentGroup);
+    currentPossition = -1;
+    
+    currentGroup.addEventListener('tap', scrollToGroup);
+    
+    var group = document.createElement('li');
+    group.innerHTML = '<img src="style/images/line.png" /><div>' + name.toUpperCase() + '</div>';
+    group.classList.add('title');
+    groupList.insertBefore(group, currentGroup);
+    
+    var title = document.createElement('li');
+    title.innerHTML = '<img src="style/images/line.png" /><div>' + name.toUpperCase() + '</div>';
+    title.classList.add('title');
+    iconList.appendChild(title);
+    
+    currentGroup.dataset.scrollTo = title.getBoundingClientRect().top;
+    
+    if (name === '') {
+      currentGroup.dataset.scrollTo = 0;
+      title.style.display = 'none';
+      group.style.display = 'none';
+    }
+  }
   
   var els = ['menu', 'menutext'];
   for (var i=0; i < els.length; i++) {
     window.navigator.mozSettings.addObserver('gaia.ui.'+els[i], updateCss);
   };
       
+  var addManifestToApp = function (app) {
+    var name = app.manifest.name;
+    groups.forEach(function(group) {
+      group.content.forEach(function(appInGroup) {
+        if (appInGroup.name === name) {
+          appInGroup.app = app;
+        } else if (app.manifest["entry_points"]) {
+          for (var entry in app.manifest["entry_points"]) {
+            if (appInGroup.name === app.manifest.entry_points[entry].name) {
+              appInGroup.app = app;
+              appInGroup.entry = entry;
+            }
+          }
+        }
+      });
+    });
+  }
+  
   var req = mgmt.getAll();
   req.onsuccess = function(e) {
     var apps = req.result;
-    //getPaintingColor(function(color) {
-      //mainColor = color;
-      for (var i=0, l=apps.length; i<l; i++) {
-        renderIcon(apps[i]);
-      }
-    //});
-    
-    //setInterval(makeBlink, 3000);
-  }
-  
-  function getIconURI(manifest) {
-    var icons = manifest.icons;
-    if (!icons) {
-      return null;
+    for (var i=0, l=apps.length; i<l; i++) {
+      addManifestToApp(apps[i]);
     }
-
-    var sizes = Object.keys(icons).map(function parse(str) {
-      return parseInt(str, 10);
+    
+    groups.forEach(function(group) {
+      createGroup(group.name);
+      group.content.forEach(function(application) {
+        var entry = application.entry || null;
+        renderIcon(application, entry);
+      });
     });
-
-    sizes.sort(function(x, y) { return y - x; });
-
-    var index = sizes[(HVGA) ? sizes.length - 1 : 0];
-    var iconPath = icons[index];
-
-    return iconPath;
   }
-  
-  var renderIcon = function(app, entryPoint) {
-    if (HIDDEN_APPS.indexOf(app.manifestURL) != -1 || HIDDEN_APPS.indexOf(entryPoint) != -1)
-      return;
-    
-    if (app.manifest["entry_points"] && !entryPoint) {
-      for (var entry in app.manifest["entry_points"]) {
-        renderIcon(app, entry);
-      }
-      return;
+
+  var renderIcon = function(application, entryPoint) {
+    if (application.app) {
+      var app  = application.app;
+    } else {
+      var app = { manifest: { name: application.name }};
     }
-    
     var name, icon;
-    if (entryPoint) {
+    if (entryPoint !== null) {
       name = app.manifest.entry_points[entryPoint].name;
-      icon = getIconURI(app.manifest.entry_points[entryPoint]);
     } else {
       name = app.manifest.name;
-      icon = getIconURI(app.manifest);
     }
-      
-    // var tile = document.createElement('div');
-    //     var label = document.createElement('label');
+    
+    icon = window.location.protocol + '//' + 
+      window.location.host + '/style/icons/' + application.name.replace(' ', '') + '.png';
+
     var tile = document.createElement('li');
     var iconImage = new Image();
     var iconGroupImage = new Image();
-    //var label = document.createElement('label');
-    //tile.classList.add(tileClass);
-    //label.textContent = name;
     
-    if (icon) {
-      icon = app.manifestURL.replace('/manifest.webapp', '') + icon;
-    } else {
-      icon = window.location.protocol + '//' +
-              window.location.host + '/style/images/default.png';
-    }
     iconImage.src = iconGroupImage.src = icon;
-    //tile.style.backgroundImage = 'url(' + icon +')';
-    //tile.classList.add('tr'+~~(Math.random()*3));
+    currentGroup.appendChild(iconGroupImage);
     
-    //tile.style.listStyleImage = "url(" + icon + ")";
     tile.appendChild(iconImage);
     tile.innerHTML += name;
-        
-    if (curIcons < iconsInGroup) {
-      curIcons++;
-      currentGroup.appendChild(iconGroupImage);
-    }
-  
-    //tile.appendChild(label);
-    tile.addEventListener('click', (function(application, entry) {
+    tile.addEventListener('tap', (function(application, entry) {
       return function(){ 
         page.addEventListener('transitionend', function runAppTrans() {
           application.launch(entry ? entry : null);
@@ -157,41 +183,8 @@ const Homescreen = (function() {
         page.classList.add('show');
       }
     })(app, entryPoint));
-    
-    // if ((page.childNodes.length+longTilesOffset)%2===1) {
-    //   if (~~(Math.random()*3) === 0) {
-    //     longTilesOffset++;
-    //     tile.classList.add('long-tile');
-    //   }
-    // }
-    if ((iconList.children.length+1)%5 === 0) {
-      tile.classList.add('end-of-section');
-      createGroup();
-    }
+
     iconList.appendChild(tile);
-    if (curIcons === 1) {
-      console.log('------- DODANO!');
-      var scrollOffset = tile.getBoundingClientRect();
-      currentGroup.dataset.scrollOffset = scrollOffset.top;
-      currentGroup.addEventListener('click', function() {
-        console.log('------- KLIKED!');
-          page.scrollTop = this.dataset.scrollOffset;
-          page.classList.remove('hide');
-      });
-    }
-    
   }
-  
-  var makeBlink = function(){
-    var randomChild = page.children[~~(Math.random()*page.children.length)];
-    if (randomChild) {
-      randomChild.addEventListener("animationend", function listener(){
-        randomChild.classList.remove('animate');
-        randomChild.removeEventListener("animationend", listener);
-      });
-      randomChild.classList.add('animate');
-    }
-  }
-  
 })();
 

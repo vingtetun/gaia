@@ -160,6 +160,9 @@ var WindowManager = (function() {
 
     if (manifestURL) {
       iframe.setAttribute('mozapp', manifestURL);
+      if (manifestURL == homescreenManifestURL) {
+        iframe.setAttribute('mozapptype', 'homescreen');
+      }
     } else {
       iframe.setAttribute('mozasyncpanzoom', 'true');
     }
@@ -194,18 +197,21 @@ var WindowManager = (function() {
     } else {
       openOrigin(origin);
     }
+    e.preventDefault();
   });
 
   window.addEventListener('mozChromeEvent', function onChromeEvent(e) {
     if (e.detail.type != 'webapps-launch')
       return;
     openApp(e.detail.manifestURL);
+    e.preventDefault();
   });
 
   window.addEventListener('mozChromeEvent', function onChromeEvent(e) {
     if (e.detail.type != 'open-app' || !e.detail.isActivity)
       return;
     openApp(e.detail.manifestURL, e.detail.url);
+    e.preventDefault();
   });
 
   window.addEventListener('mozChromeEvent', function(e) {
@@ -214,12 +220,14 @@ var WindowManager = (function() {
 
     // Remove the top most frame every time we get an 'activity-done' event.
     WindowManager.goBack();
+    e.preventDefault();
   });
 
   window.addEventListener('home', function onHomeButton(e) {
     if (navigate[current].iframe.getAttribute('mozapp') == homescreenManifestURL)
       return;
     openApp(homescreenManifestURL);
+    e.preventDefault();
   });
 
   return obj;
@@ -330,7 +338,7 @@ History.prototype = {
     if (!this.iframe)
       return;
 
-    this.iframe.go(str);
+    this.iframe.src = str;
   },
 
   goBack: function history_goBack() {

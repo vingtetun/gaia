@@ -322,9 +322,9 @@ History.prototype = {
         // XXX This is a bit rude with error but that's ok for now
         if (this.iframe.dataset.current) {
           WindowManager.goBack();
-        } else {
-          WindowManager.evictEntry(this);
         }
+        WindowManager.evictEntry(this);
+        this.iframe.parentNode.removeChild(this.iframe);
         this.close();
         break;
     }

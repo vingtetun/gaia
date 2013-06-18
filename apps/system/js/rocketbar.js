@@ -54,8 +54,10 @@ var Rocketbar = {
   handleBlur: function rocketbar_handleBlur(evt) {
     if (this.currentTitle) {
       this.input.value = this.currentTitle;
-    } else {
+    } else if (this.currentLocation.indexOf('app://') == -1) {
       this.input.value = this.currentLocation;
+    } else {
+      this.input.value = '';
     }
   },
   
@@ -78,8 +80,12 @@ var Rocketbar = {
     var installedApps = Applications.installedApps;
     var manifestURLs = Object.keys(installedApps);
     manifestURLs.forEach(function(manifestURL) {
+      if (this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
+        console.log('MANIFEST ' + manifestURL);
+      }
       var appName = installedApps[manifestURL].manifest.name.toLowerCase();
-      if (appName.indexOf(query) != -1) {
+      if (appName.indexOf(query) != -1 &&
+          this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
         results.push(manifestURL);
       }
     }, this);
@@ -231,7 +237,9 @@ var Rocketbar = {
       return true;
     }
     return false;
-  }
+  },
+  
+  HIDDEN_APPS: ["app://keyboard.gaiamobile.org/manifest.webapp","app://wallpaper.gaiamobile.org/manifest.webapp","app://bluetooth.gaiamobile.org/manifest.webapp","app://pdfjs.gaiamobile.org/manifest.webapp","app://homescreen.gaiamobile.org/manifest.webapp","app://system.gaiamobile.org/manifest.webapp","app://image-uploader.gaiamobile.org/manifest.webapp","http://keyboard.gaiamobile.org:8080/manifest.webapp","http://wallpaper.gaiamobile.org:8080/manifest.webapp","http://bluetooth.gaiamobile.org:8080/manifest.webapp","http://pdfjs.gaiamobile.org:8080/manifest.webapp","http://homescreen.gaiamobile.org:8080/manifest.webapp","http://system.gaiamobile.org:8080/manifest.webapp","http://image-uploader.gaiamobile.org/manifest.webapp"]
 }
 
 window.addEventListener('load', function rocketbar_onLoad() {

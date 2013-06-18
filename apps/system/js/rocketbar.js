@@ -105,7 +105,22 @@ var Rocketbar = {
   handleSubmit: function rocketbar_handleSubmit(evt) {
     evt.preventDefault();
     UtilityTray.hide();
-    var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: this.input.value }});
+    
+    var input = this.input.value;
+
+    // No protocol, could be a search term
+    if (this.isNotURL(input)) {
+      input = 'http://google.com' + '/search?q=' + input;
+    }
+    
+    var httpPattern = /^(?:[a-z\u00a1-\uffff0-9-+]+)(?::|:\/\/)/i;
+    var hasScheme = !!(httpPattern.exec(input) || [])[0];
+    // No scheme, prepend basic protocol and return
+    if (!hasScheme) {
+      input = 'http://' + input;
+    }
+    
+    var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: input }});
     this.input.dispatchEvent(e);
   },
   
@@ -169,8 +184,44 @@ var Rocketbar = {
     this.currentTitle = '';
     this.currentLocation = location;
     this.input.value = location;
+  },
+  
+  isNotURL: function rocketbar_isNotURL(input) {
+    // NOTE: NotFound is equal to the upper bound of Uint32 (2^32-1)
+    var dLoc = input.indexOf('.') >>> 0;
+    var cLoc = input.indexOf(':') >>> 0;
+    var sLoc = input.indexOf(' ') >>> 0;
+    var mLoc = input.indexOf('?') >>> 0;
+    var qLoc = Math.min(input.indexOf('"') >>> 0, input.indexOf('\'') >>> 0);
+
+    // Space at 0 index treated as NotFound
+    if (sLoc === 0) {
+      sLoc = -1 >>> 0;
+    }
+
+    // Question Mark at 0 index is a keyword search
+    if (mLoc == 0) {
+      return true;
+    }
+
+    // Space before Dot, Or Quote before Dot
+    // Space before Colon, Or Quote before Colon
+    // Space before QuestionMark, Or Quote before QuestionMark
+    if ((sLoc < dLoc || qLoc < dLoc) &&
+        (sLoc < cLoc || qLoc < cLoc) &&
+        (sLoc < mLoc || qLoc < mLoc)) {
+      return true;
+    }
+
+    // NotFound will always be greater then the length
+    // If there is no Colon, no Dot and no QuestionMark
+    // there is no way this is a URL
+    if (cLoc > input.length && dLoc > input.length && mLoc > input.length) {
+      return true;
+    }
+    return false;
   }
-};
+}
 
 window.addEventListener('load', function rocketbar_onLoad() {
   window.removeEventListener('load', rocketbar_onLoad);

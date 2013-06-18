@@ -1,169 +1,188 @@
 
 'use strict';
 
-var Homescreen = (function() {
-  var mode = 'normal';
-  var origin = document.location.protocol + '//homescreen.' +
-    document.location.host.replace(/(^[\w\d]+.)?([\w\d]+.[a-z]+)/, '$2');
-  var _ = navigator.mozL10n.get;
-  setLocale();
-  navigator.mozL10n.ready(function localize() {
-    setLocale();
-    GridManager.localize();
-  });
-
-  var initialized = false, landingPage;
-  onConnectionChange(navigator.onLine);
-
-  function initialize(lPage) {
-    if (initialized) {
-      return;
+const Homescreen = (function() {
+  var mgmt = navigator.mozApps.mgmt;
+  var grid = document.getElementById('icongrid');
+  var page = document.getElementById('landing-page');
+  var groupsPage = document.getElementById('groups-page');
+  var iconList = document.getElementById('icon-list');
+  var groupList = document.getElementById('group-list');
+  var HVGA = document.documentElement.clientWidth < 480;
+  var mainColor = {r:255, g:255, b:255};
+  var currentPossition;
+  var currentGroup;
+  var groups = [
+    {
+      name: '',
+      content: [
+        { name: 'Phone' },
+        { name: 'Messages' },
+        { name: 'Contacts' },
+        { name: 'Facebook' },
+        { name: 'Twitter' },
+        { name: 'Music' },
+        { name: 'Camera' },
+        { name: 'Gallery' },
+        { name: 'Video' },
+        { name: 'FM Radio' },
+        { name: 'Email' }
+      ]
+    },
+    {
+      name: 'Games',
+      content: [
+        { name: 'Bad Piggies' },
+        { name: 'Letterpress' },
+        { name: 'Tetris' },
+        { name: 'Solitaire' }
+      ]
+    },
+    { 
+      name: 'Tools',
+      content : [
+        { name: 'Marketplace' },
+        { name: 'Settings' },
+        { name: 'Cost Control' },
+        { name: 'Clock' },
+        { name: 'Compass' },
+        { name: 'Calculator' },
+        { name: 'Calendar' }
+      ]
     }
+  ]
+  var gd = new GestureDetector(grid);
+  gd.startDetecting();
+  
+  grid.addEventListener('transform', function(e) {
+    var scale = e.detail.relative.scale;
+    if (scale < 1 && !page.classList.contains('hide')) {
+      page.classList.add('hide');
+    } else if (scale > 1 && page.classList.contains('hide')) {
+      page.classList.remove('hide');
+    }
+  });
+  
+  var tileSize = 142;
+  var tileClass = 'app-tile';
+  var longTilesOffset = 0;
 
-    PaginationBar.init('.paginationScroller');
+  var updateCss = function updateCss() {
+    var file = 'style/homescreen.css';
+    var style = document.querySelector('link[href*="' + file + '"]');
+    if (style) {
+      style.href = '/' + file + '?reload=' + new Date().getTime();
+    }
+  }
 
-    initialized = true;
-    landingPage = lPage;
-
-    var swipeSection = Configurator.getSection('swipe');
-    var options = {
-      gridSelector: '.apps',
-      dockSelector: '.dockWrapper',
-      tapThreshold: Configurator.getSection('tap_threshold'),
-      // It defines the threshold to consider a gesture like a swipe. Number
-      // in the range 0.0 to 1.0, both included, representing the screen width
-      swipeThreshold: swipeSection.threshold,
-      swipeFriction: swipeSection.friction,
-      swipeTransitionDuration: swipeSection.transition_duration
-    };
-
-    GridManager.init(options, function gm_init() {
-      window.addEventListener('hashchange', function() {
-        if (document.location.hash != '#root')
-          return;
-
-        // this happens when the user presses the 'home' button
-        if (Homescreen.isInEditMode()) {
-          exitFromEditMode();
-        } else {
-          GridManager.goToPage(landingPage);
+  var scrollToGroup = function(e) {
+    var scrollTo = e.target.dataset.scrollTo || e.target.parentNode.dataset.scrollTo;
+    page.scrollTop = scrollTo;
+    page.classList.remove('hide');
+  }
+  
+  var createGroup = function(name) {
+    currentGroup = document.createElement('li');
+    groupList.appendChild(currentGroup);
+    currentPossition = -1;
+    
+    currentGroup.addEventListener('tap', scrollToGroup);
+    
+    var group = document.createElement('li');
+    group.innerHTML = '<img src="style/images/line.png" /><div>' + name.toUpperCase() + '</div>';
+    group.classList.add('title');
+    groupList.insertBefore(group, currentGroup);
+    
+    var title = document.createElement('li');
+    title.innerHTML = '<img src="style/images/line.png" /><div>' + name.toUpperCase() + '</div>';
+    title.classList.add('title');
+    iconList.appendChild(title);
+    
+    currentGroup.dataset.scrollTo = title.getBoundingClientRect().top;
+    
+    if (name === '') {
+      currentGroup.dataset.scrollTo = 0;
+      title.style.display = 'none';
+      group.style.display = 'none';
+    }
+  }
+  
+  var els = ['menu', 'menutext'];
+  for (var i=0; i < els.length; i++) {
+    window.navigator.mozSettings.addObserver('gaia.ui.'+els[i], updateCss);
+  };
+      
+  var addManifestToApp = function (app) {
+    var name = app.manifest.name;
+    groups.forEach(function(group) {
+      group.content.forEach(function(appInGroup) {
+        if (appInGroup.name === name) {
+          appInGroup.app = app;
+        } else if (app.manifest["entry_points"]) {
+          for (var entry in app.manifest["entry_points"]) {
+            if (appInGroup.name === app.manifest.entry_points[entry].name) {
+              appInGroup.app = app;
+              appInGroup.entry = entry;
+            }
+          }
         }
-        GridManager.ensurePanning();
       });
-
-      PaginationBar.show();
-      if (document.location.hash === '#root') {
-        // Switch to the first page only if the user has not already
-        // start to pan while home is loading
-        GridManager.goToPage(landingPage);
-      }
-      DragDropManager.init();
-      Wallpaper.init();
+    });
+  }
+  
+  var req = mgmt.getAll();
+  req.onsuccess = function(e) {
+    var apps = req.result;
+    for (var i=0, l=apps.length; i<l; i++) {
+      addManifestToApp(apps[i]);
+    }
+    
+    groups.forEach(function(group) {
+      createGroup(group.name);
+      group.content.forEach(function(application) {
+        var entry = application.entry || null;
+        renderIcon(application, entry);
+      });
     });
   }
 
-  function exitFromEditMode() {
-    Homescreen.setMode('normal');
-    ConfirmDialog.hide();
-    GridManager.exitFromEditMode();
-  }
-
-  document.addEventListener('mozvisibilitychange', function mozVisChange() {
-    if (document.mozHidden && Homescreen.isInEditMode()) {
-      exitFromEditMode();
+  var renderIcon = function(application, entryPoint) {
+    if (application.app) {
+      var app  = application.app;
+    } else {
+      var app = { manifest: { name: application.name }};
     }
-
-    if (document.mozHidden == false) {
-      setTimeout(function forceRepaint() {
-        var helper = document.getElementById('repaint-helper');
-        helper.classList.toggle('displayed');
-      });
+    var name, icon;
+    if (entryPoint !== null) {
+      name = app.manifest.entry_points[entryPoint].name;
+    } else {
+      name = app.manifest.name;
     }
-  });
+    
+    icon = window.location.protocol + '//' + 
+      window.location.host + '/style/icons/' + application.name.replace(' ', '') + '.png';
 
-  window.addEventListener('message', function hs_onMessage(event) {
-    if (event.origin === origin) {
-      var message = event.data;
-      switch (message.type) {
-        case Message.Type.ADD_BOOKMARK:
-          var app = new Bookmark(message.data);
-          GridManager.install(app);
-          break;
+    var tile = document.createElement('li');
+    var iconImage = new Image();
+    var iconGroupImage = new Image();
+    
+    iconImage.src = iconGroupImage.src = icon;
+    currentGroup.appendChild(iconGroupImage);
+    
+    tile.appendChild(iconImage);
+    tile.innerHTML += name;
+    tile.addEventListener('tap', (function(application, entry) {
+      return function(){ 
+        application.launch(entry ? entry : null);
+        page.removeEventListener('transitionend', runAppTrans);
+        setTimeout(function() {
+          page.classList.remove('show');
+        }, 500);
+        page.classList.add('show');
       }
-    }
-  });
+    })(app, entryPoint));
 
-  function setLocale() {
-    // set the 'lang' and 'dir' attributes to <html> when the page is translated
-    document.documentElement.lang = navigator.mozL10n.language.code;
-    document.documentElement.dir = navigator.mozL10n.language.direction;
+    iconList.appendChild(tile);
   }
-
-  function onConnectionChange(isOnline) {
-    var mode = isOnline ? 'online' : 'offline';
-    document.body.dataset.online = mode;
-  }
-
-  window.addEventListener('online', function onOnline(evt) {
-    onConnectionChange(true);
-  });
-
-  window.addEventListener('offline', function onOnline(evt) {
-    onConnectionChange(false);
-  });
-
-  return {
-    /*
-     * Displays the contextual menu given an app.
-     *
-     * @param {Application} app
-     *                      The application object.
-     */
-    showAppDialog: function h_showAppDialog(app) {
-      var title, body;
-      var cancel = {
-        title: _('cancel'),
-        callback: ConfirmDialog.hide
-      };
-
-      var confirm = {
-        callback: function onAccept() {
-          ConfirmDialog.hide();
-          if (app.isBookmark) {
-            app.uninstall();
-          } else {
-            navigator.mozApps.mgmt.uninstall(app);
-          }
-        },
-        applyClass: 'danger'
-      };
-
-      // Show a different prompt if the user is trying to remove
-      // a bookmark shortcut instead of an app.
-      var manifest = app.manifest || app.updateManifest;
-      if (app.isBookmark) {
-        title = _('remove-title-2', { name: manifest.name });
-        body = _('remove-body', { name: manifest.name });
-        confirm.title = _('remove');
-      } else {
-        // Make sure to get the localized name
-        manifest = new ManifestHelper(manifest);
-        title = _('delete-title', { name: manifest.name });
-        body = _('delete-body', { name: manifest.name });
-        confirm.title = _('delete');
-      }
-
-      ConfirmDialog.show(title, body, cancel, confirm);
-    },
-
-    isInEditMode: function() {
-      return mode === 'edit';
-    },
-
-    init: initialize,
-
-    setMode: function(newMode) {
-      mode = document.body.dataset.mode = newMode;
-    }
-  };
 })();
+

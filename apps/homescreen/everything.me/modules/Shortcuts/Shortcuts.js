@@ -24,8 +24,8 @@ Evme.Shortcuts = new function Evme_Shortcuts() {
     this.load = function load(data) {
         loadedResponse = Evme.Utils.cloneObject(data);
         
-        var _shortcuts = (data.shortcuts || []).splice(0),
-            icons = data.icons || {};
+        var _shortcuts = data.shortcuts.splice(0),
+            icons = data.icons;
             
         for (var id in icons) {
             Evme.IconManager.add(id, icons[id], Evme.Utils.ICONS_FORMATS.small);
@@ -100,16 +100,6 @@ Evme.Shortcuts = new function Evme_Shortcuts() {
             list.push(shortcuts[i].getQuery());
         }
         return list;
-    };
-    
-    this.getShortcutByKey = function getShortcutByKey(key) {
-        for (var i=0, shortcut; shortcut = shortcuts[i++];) {
-            if (shortcut.getQuery() === key || shortcut.getExperience() == key) {
-              return shortcut;
-            }
-        }
-        
-        return null;
     };
     
     this.orderByElements = function orderByElements() {
@@ -307,10 +297,9 @@ Evme.Shortcut = function Evme_Shortcut() {
     
     this.setImage = function setImage(shortcutIcons) {
         if (elThumb && shortcutIcons && shortcutIcons.length > 0) {
-            var elIconGroup = Evme.IconGroup.get(shortcutIcons, self.getName(), function onReady(elCanvas) {
-              elThumb.innerHTML = '';
-              elThumb.appendChild(elCanvas);
-            });
+            var elIconGroup = Evme.IconGroup.get(shortcutIcons, self.getName());
+            elThumb.innerHTML = '';
+            elThumb.appendChild(elIconGroup);
         }
     };
     

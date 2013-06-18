@@ -5,8 +5,151 @@ html, body {
   margin: 0;
   border: none;
   font-size: 10px;
+  font-family:'MozTT', sans-serif;
   overflow: hidden;
+  background-color: #000;
 }
+
+#landing-page {
+  background-color: #353535;
+  width: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  opacity: 1;
+  transition: opacity 1s ease;
+  position: absolute;
+  z-index: 10000;
+}
+
+#groups-page {
+  background-color: #353535;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  opacity: 1;
+  position: absolute;
+  z-index: 9000;
+  top: 0;
+  left: 0;
+}
+
+#landing-page.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#group-list li,
+#icon-list li {
+  color: #FFFFFF;
+  list-style-type: none;
+  width: 90%;
+  margin-left: 25px;
+  margin-bottom: 5px;
+  font-size: 25px;
+  line-height: 5px;
+  height: 50px;
+}
+
+#group-list li {
+  height: auto;
+}
+
+#group-list li.title,
+#icon-list li.title {
+  font-size: 15px;
+}
+
+#icon-list li.title {
+  margin-top:15px;
+}
+
+#group-list li.title img,
+#icon-list li.title img {
+  width: -moz-calc(100% - 25px);
+}
+
+#group-list li.title div,
+#icon-list li.title div {
+  margin-top: 15px;
+}
+
+img.searchbar {
+  width: -moz-calc(100% - 50px);
+  margin: 25px 0px 20px 25px;
+}
+
+#group-list li:not(.title) img,
+#icon-list li:not(.title) img {
+  margin: 0 3px 3px 0;
+  width: 50px;
+  height: 50px;
+  vertical-align: middle;
+}
+
+#group-list li:not(.title) img {
+  width: 25px;
+  height: 25px;
+}
+
+#group-list,
+#icon-list {
+  margin:0 0 25px 0;
+  padding:0;
+  width: 100%;
+  transition: transform 1s ease;
+}
+
+.app-tile {
+  width: 142px;
+  height: 142px;
+  background-color: menu;
+  margin: 5px;
+  float: left;
+  overflow:hidden;
+  background-size: 100px 100px;
+  background-position: center 10px;
+  background-repeat: no-repeat;
+  transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg); 
+  opacity: 1;
+}
+
+.app-tile.long-tile {
+  width: 294px;
+}
+
+.app-tile label{
+  color: menutext;
+  font-size: 20px;
+  font-family: "Tahoma";
+  line-height: 250px;
+}
+
+#landing-page.show .app-tile {
+ transform: translate3d(0,0,0) rotateY(-90deg) rotateZ(0deg) rotateX(0deg);   
+ opacity: 0;
+ transition: 800ms 0ms;
+}
+
+#landing-page.show .app-tile.tr1 {
+  transform: translate3d(0,0,0) rotateY(0deg) rotateZ(90deg) rotateX(0deg);  
+}
+
+#landing-page.show .app-tile.tr2 {
+  transform: translate3d(0,0,0) rotateZ(0deg) rotateY(0deg) rotateX(90deg);  
+}
+
+#landing-page .app-tile.animate {
+  -moz-animation: dance 0.8s linear 0s 2;
+}
+
+@-moz-keyframes dance {
+    0% { transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg);  opacity: 1;}
+    50% { transform: translate3d(0,0,0) rotateY(10deg) rotateZ(-10deg);  opacity: 0.3; }
+    100% { transform: translate3d(0,0,0) rotateY(0deg) rotateZ(0deg);  opacity: 1;}
+}
+
 
 * {
   -moz-user-select: -moz-none;
@@ -95,12 +238,3 @@ li:active {
   opacity: 0.1;
 }
 
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > img,
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > span {
-  filter: url('app_offline_filter.svg#grayscale');
-  opacity: 0.3;
-}
-
-body[data-online = 'offline'] li[data-offline-ready = 'false'] > div > span {
-  opacity: 0.5;
-}

@@ -95,7 +95,7 @@ Evme.ShortcutsCustomize = new function Evme_ShortcutsCustomize() {
                         {'id': ID, 'role': 'dialog', 'data-type': 'confirm'},
                         '<section>' +
                             '<h1 ' + Evme.Utils.l10nAttr(NAME, 'loading') + '></h1>' +
-                            '<p class="noreset">' +
+                            '<p class="building-block">' +
                                 '<progress></progress>' +
                             '</p>' +
                         '</section>' +

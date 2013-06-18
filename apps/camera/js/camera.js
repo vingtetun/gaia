@@ -253,7 +253,9 @@ var Camera = {
   init: function() {
     var self = this;
     this.setCaptureMode(this.CAMERA);
+    PerformanceTestingHelper.dispatch('initialising-camera-preview');
     this.loadCameraPreview(this._camera, function() {
+      PerformanceTestingHelper.dispatch('camera-preview-loaded');
       var files = [
         'style/filmstrip.css',
         'style/VideoPlayer.css',
@@ -360,6 +362,7 @@ var Camera = {
 
     this.previewEnabled();
     DCFApi.init();
+    PerformanceTestingHelper.dispatch('startup-path-done');
   },
 
   screenTimeout: function camera_screenTimeout() {
@@ -918,14 +921,14 @@ var Camera = {
     this._savedBlob = null;
     this.showConfirmation(false);
     this.cancelPickButton.removeAttribute('disabled');
-    this.restartPreview();
+    this.resumePreview();
   },
 
   selectPressed: function camera_selectPressed() {
     var blob = this._savedBlob;
     this._savedBlob = null;
     this.showConfirmation(false);
-    this.restartPreview();
+    this.resumePreview();
     this._addPictureToStorage(blob, function(name, absolutePath) {
       this._resizeBlobIfNeeded(blob, function(resized_blob) {
         this._pendingPick.postResult({

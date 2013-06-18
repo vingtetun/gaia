@@ -1,44 +1,43 @@
 'use strict';
 
 const Wallpaper = (function() {
+  var overlay = document.getElementById('icongrid');
 
   function onHomescreenContextmenu() {
-    var a = new MozActivity({
-      name: 'pick',
-      data: {
-        type: 'image/jpeg',
-        width: 320,
-        height: 480
-      }
-    });
-
-    a.onsuccess = function onWallpaperSuccess() {
-      if (!a.result.blob)
-        return;
-
-      var reader = new FileReader();
-      reader.readAsDataURL(a.result.blob);
-      reader.onload = function() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = 320;
+    canvas.height = 420;
+    
+    ctx.fillColor = "#000000";
+    ctx.fillRect(0, 0, 320, 420);
+        // 
+        // var a = new MozActivity({
+        //   name: 'pick',
+        //   data: {
+        //     type: 'image/jpeg',
+        //     width: 320,
+        //     height: 480
+        //   }
+        // });
+        // a.onsuccess = function onWallpaperSuccess() {
+        //   if (!a.result.blob)
+        //     return;
+        // 
+        //   var reader = new FileReader();
+        //   reader.readAsDataURL(a.result.blob);
+        //   reader.onload = function() {
         navigator.mozSettings.createLock().set({
-          'wallpaper.image': reader.result
+          'wallpaper.image': canvas.toDataURL("image/png")
         });
-        reader.onload = reader.onerror = null;
-      };
-      reader.onerror = function(e) {
-        console.error('Error reading the blob returned by the activity', e);
-        reader.onload = reader.onerror = null;
-      };
-    };
+      //};
+    //};
 
-    a.onerror = function onWallpaperError() {
-      console.warn('pick failed!');
-    };
   }
 
   return {
     init: function init() {
-      var overlay = document.getElementById('icongrid');
-      overlay.addEventListener('contextmenu', onHomescreenContextmenu);
+      onHomescreenContextmenu();
     }
   };
 })();

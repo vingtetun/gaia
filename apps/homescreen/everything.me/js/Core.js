@@ -16,8 +16,10 @@ window.Evme = new function Evme_Core() {
         TIMEOUT_BEFORE_INIT_SESSION = data.timeoutBeforeSessionInit;
 
         Evme.Brain.init({
-            "numberOfAppsToLoad": data.numberOfAppsToLoad+(Evme.Utils.devicePixelRatio>1? data.apps.appsPerRow: 0),
+            "numberOfAppsToLoad": data.numberOfAppsToLoad,
             "minimumLettersForSearch": data.minimumLettersForSearch,
+            "timeBeforeAllowingDialogsRemoval": data.timeBeforeAllowingDialogsRemoval,
+            "tips": data.tips,
             "searchSources": data.searchSources,
             "pageViewSources": data.pageViewSources,
             "displayInstalledApps": data.apps.displayInstalledApps
@@ -71,10 +73,6 @@ window.Evme = new function Evme_Core() {
     };
 
     function initObjects(data) {
-        Evme.Features.init({
-            "featureStateByConnection": data.featureStateByConnection
-        });
-        
         Evme.ConnectionMessage.init({
         });
         
@@ -121,8 +119,6 @@ window.Evme = new function Evme_Core() {
             }
         });
 
-        Evme.IconGroup.init({});
-
         Evme.BackgroundImage.init({
             "el": Evme.$("#search-overlay"),
             "elementsToFade": [Evme.$("#evmeApps"), Evme.$("#header"), Evme.$("#search-header")],
@@ -148,10 +144,6 @@ window.Evme = new function Evme_Core() {
             "pageRenderStartTs": head_ts,
             "SEARCH_SOURCES": data.searchSources,
             "PAGEVIEW_SOURCES": data.pageViewSources
-        });
-    
-        Evme.Tasker.init({
-          "triggerInterval": data.taskerTriggerInterval
         });
 
         Evme.EventHandler.trigger(NAME, "init", {"deviceId": Evme.DoATAPI.getDeviceId()});

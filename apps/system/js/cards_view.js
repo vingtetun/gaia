@@ -120,7 +120,7 @@ var CardsView = (function() {
         sortable.push({origin: origin, app: runningApps[origin]});
 
       sortable.sort(function(a, b) {
-        return b.app.launchTime - a.app.launchTime;
+        return a.app.launchTime - b.app.launchTime;
       });
       runningApps = {};
 
@@ -433,7 +433,7 @@ var CardsView = (function() {
   }
 
   //scrolling cards (Positon 0 is x-coord and position 1 is y-coord)
-  var initialTouchPosition = [0, 0];
+  var initialTouchPosition = [3, 0];
   // If the pointer down event starts outside of a card, then there's
   // no ambiguity between tap/pan, so we don't need a transition
   // threshold.

@@ -217,6 +217,8 @@ var WindowManager = (function() {
   });
 
   window.addEventListener('home', function onHomeButton(e) {
+    if (navigate[current].iframe.getAttribute('mozapp') == homescreenManifestURL)
+      return;
     openApp(homescreenManifestURL);
   });
 
@@ -268,7 +270,7 @@ History.prototype = {
   handleEvent: function history_handleEvent(evt) {
     switch (evt.type.replace('mozbrowser', '')) {
       case 'titlechange':
-        this.title = evt.detail;
+        this.title = evt.detail || '';
 
         if (this.ontitlechange) {
           this.ontitlechange(this.title);

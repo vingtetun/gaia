@@ -6,36 +6,56 @@ var TransitionManager = (function() {
     console.log('TransitionManager: ' + str + '\n');
   }
 
-  var current = { dataset: {}, getScreenshot: function() { return {}; }, setVisible: function() {} };
+  var current = {
+    dataset: {},
+    getScreenshot: function() {
+      var request = {};
+      setTimeout(function() { request.onerror(); }, 500);
+      return request;
+    },
+    setVisible: function() {}
+  };
 
   window.addEventListener('historychange', function onHistoryChange(e) {
-    setTimeout(function() { 
       var previous = current;
+      current = e.detail.current.iframe;
+
+      setTimeout(function() {
+        delete previous.dataset.current;
+        current.dataset.current = true;
+
+        current.addEventListener('transitionend', function(e) {
+          previous.setVisible(false);
+
+          var div = document.getElementById('screenshot');
+          if (!div) {
+            div = document.createElement('div');
+            div.id = 'screenshot';
+            document.body.appendChild(div);
+          }
+          div.style.backgroundImage = current.style.backgroundImage;
+          div.style.display = 'block';
+
+          current.addNextPaintListener(function onNextPaint() {
+            current.removeNextPaintListener(onNextPaint);
+            setTimeout(function() { 
+              current.style.backgroundImage = '';
+              document.getElementById('screenshot').style.display = 'none';
+            });
+          });
+          current.setVisible(true);
+        });
+      });
+
       var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
       request.onsuccess = function(e) {
         if (e.target.result) {
           previous.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
         }
-
-        previous.setVisible(false);
       };
 
       request.onerror = function(e) {
-        previous.setVisible(false);
       }
-
-      delete previous.dataset.current;
-      current = e.detail.current.iframe;
-      current.dataset.current = true;
-
-      current.addEventListener('transitionend', function(e) {
-        current.setVisible(true);
-        current.addNextPaintListener(function onNextPaint() {
-          current.removeNextPaintListener(onNextPaint);
-          current.style.backgroundImage = '';
-        });
-      });
-    });
   });
 })();
 

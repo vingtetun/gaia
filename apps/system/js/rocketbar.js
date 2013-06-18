@@ -5,6 +5,7 @@ var Rocketbar = {
    * Initialise rocketbar.
    */
   init: function rocketbar_init() {
+    this.progress = document.getElementById('progress');
     this.bar = document.getElementById('rocketbar');
     this.input = document.getElementById('rocketbar-input');
     this.results = document.getElementById('rocketbar-results');
@@ -159,8 +160,10 @@ var Rocketbar = {
     } else {
       this.input.value = this.currentLocation;
     }
+    this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
     history.onlocationchange = this.setLocation.bind(this);
+    history.onstatuschange = this.setLoading.bind(this);
   },
   
   /**
@@ -184,6 +187,14 @@ var Rocketbar = {
     this.currentTitle = '';
     this.currentLocation = location;
     this.input.value = location;
+  },
+  
+  setLoading: function rocketbar_setLoading(status) {
+    if (status) {
+      this.progress.classList.add('loading');
+    } else {
+      this.progress.classList.remove('loading');
+    }
   },
   
   isNotURL: function rocketbar_isNotURL(input) {

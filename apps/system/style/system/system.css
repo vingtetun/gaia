@@ -227,7 +227,7 @@ body {
   background-color: white;
   background-repeat: no-repeat;
   background-position: center center;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.5s ease;
 }
 
@@ -235,16 +235,9 @@ body {
   transform: translateX(0);
 }
 
-#windows > iframe[data-previous="true"] {
-  transform: translateX(-100%);
-  z-index: 99999999 !important;
-}
-
-#windows > iframe[data-evicted="true"] {
+#windows > iframe[data-current="true"] ~ iframe {
   transform: translateX(100%);
-  z-index: 99999999 !important;
 }
-
 
 #windows > .appWindow {
   position: fixed;

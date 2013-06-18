@@ -75,29 +75,31 @@ var WindowManager = (function() {
       }
     },
     goBack: function() {
-      var iframe = current.iframe;
-      iframe.dataset.evicted = true;
-      iframe.addEventListener('transitionend', function(e) {
-        iframe.parentNode.removeChild(iframe);
-      });
+      current--;
+      dispatchHistoryEvent(navigate[current]);
+    },
 
-      current.close();
-      current = previous.pop();
-      dispatchHistoryEvent(current);
+    goNext: function() {
+      current++;
+      dispatchHistoryEvent(navigate[current]);
     },
 
     getPrevious: function() {
-      return previous[previous.length - 1];
+      return navigate[current - 1];
+    },
+
+    getNext: function() {
+      return navigate[current + 1];
     },
 
     getCurrent: function() {
-      return current;
+      return navigate[current];
     },
 
     evictEntry: function(history) {
-      for (var i in previous) {
-        if (previous[i].iframe == this.iframe) {
-          previous = previous.slice(i, i + 1);
+      for (var i in navigate) {
+        if (navigate[i].iframe == this.iframe) {
+          navigate = navigate.slice(i, i + 1);
           break;
         }
       }
@@ -106,33 +108,44 @@ var WindowManager = (function() {
 
   /* XXX */
   var homescreenManifestURL = null;
-  var previous = [];
-  var current = null;
+  var navigate = [];
+  var current = 0;
 
   function openApp(manifestURL, origin) {
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
       return;
 
-    if (current) {
-      current.free();
-      previous.push(current);
+    if (navigate[current]) {
+      navigate[current].free();
+      for (var i = navigate.length - 1; i > current; i--) {
+        var next = navigate.pop();
+        next.iframe.parentNode.removeChild(next.iframe);
+        next.close();
+      }
     }
+    current++;
 
-    current = new History(origin || app.origin + app.manifest.launch_path,
-                          app.manifest.type || 'hosted');
-    createIframe(current, app.manifestURL);
-    dispatchHistoryEvent(current);
+    navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
+                                    app.manifest.type || 'hosted');
+    createIframe(navigate[current], app.manifestURL);
+    dispatchHistoryEvent(navigate[current]);
   }
 
   function openOrigin(origin) {
-    if (current) {
-      current.free();
-      previous.push(current);
+    if (navigate[current]) {
+      navigate[current].free();
+      for (var i = navigate.length - 1; i > current; i--) {
+        var next = navigate.pop();
+        next.iframe.parentNode.removeChild(next.iframe);
+        next.close();
+      }
     }
-    current = new History(origin, 'remote');
-    createIframe(current);
-    dispatchHistoryEvent(current);
+    current++;
+
+    navigate[current] = new History(origin, 'remote');
+    createIframe(navigate[current]);
+    dispatchHistoryEvent(navigate[current]);
   }
 
   function openHomescreen() {
@@ -310,7 +323,6 @@ History.prototype = {
   close: function history_close() {
     this.detach(this.iframe);
   },
-
 
   go: function history_go(str) {
     if (!this.iframe)

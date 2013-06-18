@@ -3,19 +3,13 @@
 
 var ConfirmDialog = (function() {
 
-  var dialog, titleElem, messageElem, cancelButton, confirmButton;
+  var dialog = document.getElementById('confirm-dialog');
 
-  function initialize() {
-    dialog = document.getElementById('confirm-dialog');
+  var titleElem = document.getElementById('confirm-dialog-title');
+  var messageElem = document.getElementById('confirm-dialog-message');
 
-    titleElem = document.getElementById('confirm-dialog-title');
-    messageElem = document.getElementById('confirm-dialog-message');
-
-    cancelButton = document.getElementById('confirm-dialog-cancel-button');
-    confirmButton = document.getElementById('confirm-dialog-confirm-button');
-  }
-
-  initialize();
+  var cancelButton = document.getElementById('confirm-dialog-cancel-button');
+  var confirmButton = document.getElementById('confirm-dialog-confirm-button');
 
   return {
     hide: function dialog_hide() {
@@ -47,9 +41,7 @@ var ConfirmDialog = (function() {
       }
 
       dialog.classList.add('visible');
-    },
-
-    init: initialize
+    }
   };
 
 }());

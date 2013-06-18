@@ -28,7 +28,7 @@
     z-index: 800;
 }
 
-#evmeContainer #shortcuts-customize-loading p {
+#evmeContainer #shortcuts-customize-loading p.building-block {
     text-align: center;
     overflow: hidden;
 }

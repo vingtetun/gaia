@@ -74,14 +74,14 @@ var WindowManager = (function() {
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
     },
-    goBack: function() {
+    goBack: function(partial) {
       current--;
-      dispatchHistoryEvent(navigate[current]);
+      dispatchHistoryEvent(navigate[current], false, partial);
     },
 
-    goNext: function() {
+    goNext: function(partial) {
       current++;
-      dispatchHistoryEvent(navigate[current]);
+      dispatchHistoryEvent(navigate[current], true, partial);
     },
 
     getPrevious: function() {
@@ -129,7 +129,7 @@ var WindowManager = (function() {
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
     createIframe(navigate[current], app.manifestURL);
-    dispatchHistoryEvent(navigate[current]);
+    dispatchHistoryEvent(navigate[current], true);
   }
 
   function openOrigin(origin) {
@@ -145,7 +145,7 @@ var WindowManager = (function() {
 
     navigate[current] = new History(origin, 'remote');
     createIframe(navigate[current]);
-    dispatchHistoryEvent(navigate[current]);
+    dispatchHistoryEvent(navigate[current], true);
   }
 
   function openHomescreen() {
@@ -233,14 +233,21 @@ var WindowManager = (function() {
   return obj;
 })();
 
-function dispatchHistoryEvent(history) {
-  var evt = new CustomEvent('historychange', { bubbles: true, detail: { current: history }});
+function dispatchHistoryEvent(history, forward, partial) {
+  var evt = new CustomEvent('historychange', {
+    bubbles: true,
+    detail: {
+      current: history,
+      forward: forward,
+      partial: !!partial
+    }
+  });
   window.dispatchEvent(evt);
 }
 
 // History object are live They listen for iframes event until this one is
 // close for any reasons. Then the state of the iframe is considered frozen
-// and the related history entry can remove the event listener. 
+// and the related history entry can remove the event listener.
 // A frozen history entry that is unfrozen will re-attach itself to the new iframe.
 function History(origin, type) {
   this.title = '';

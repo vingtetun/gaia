@@ -110,16 +110,20 @@ var PanelSwitcher = {
   },
 
   lastX: 0,
-  pageX: 0,
+  lastDate: null,
+  lastProgress: 0,
   frame: null,
+  _frameMovingStyles: null,
+  _currentMovingStyles: null,
   handleEvent: function navigation_handleEvent(e) {
     var forward = (e.target == this.next);
-    var diffX = this.pageX - this.startX;
+    var diffX = this.lastX - this.startX;
     var progress = Math.abs(diffX / window.innerWidth);
 
     switch(e.type) {
       case 'touchstart':
-        this.pageX = this.startX = e.touches[0].pageX;
+        this.lastX = this.startX = e.touches[0].pageX;
+        this.lastDate = Date.now();
 
         var frame = (forward ? WindowManager.getNext().iframe :
                                WindowManager.getPrevious().iframe);
@@ -133,6 +137,9 @@ var PanelSwitcher = {
         this._setStyles.apply(null, this._initialStyles(this.frame, forward));
         this._setStyles.apply(null, this._initialStyles(this.current, forward));
 
+        this._frameMovingStyles = this._generateMovingStyles(this.frame, forward);
+        this._currentMovingStyles = this._generateMovingStyles(this.current, forward);
+
         this.frame.style.MozTransition = 'transform, opacity';
         this.current.style.MozTransition = 'transform, opacity';
         break;
@@ -140,21 +147,32 @@ var PanelSwitcher = {
         if (!this.frame)
           return;
 
-        this.pageX = e.touches[0].pageX;
-        this._setStyles.apply(null, this._movingStyles(this.frame, progress, forward));
-        this._setStyles.apply(null, this._movingStyles(this.current, progress, forward));
+        this.lastX = e.touches[0].pageX;
+        this.lastProgress = progress;
+        this.lastDate = Date.now();
+
+        this._setStyles.apply(null, this._frameMovingStyles(progress));
+        this._setStyles.apply(null, this._currentMovingStyles(progress));
         break;
       case 'touchend':
         if (!this.frame)
           return;
 
-        if (progress >= 0.32) {
+        var deltaT = Date.now() - this.lastDate;
+        var deltaP = Math.abs(progress - this.lastProgress);
+        var inertia = (deltaP / deltaT) * 100;
+
+        var snapBack = true;
+        if ((progress + inertia) >= 0.32) {
           forward ? WindowManager.goNext(true) : WindowManager.goBack(true);
+          snapBack = false;
         }
 
-        var durationLeft = 0.5 - progress * 0.5;
+        var progressToAnimate = snapBack ? progress : (1 - progress);
+        var durationLeft = Math.min((progressToAnimate / deltaP) * deltaT, progressToAnimate * 500);
+
         this.frame.style.MozTransition = this.current.style.MozTransition =
-          'transform ' + durationLeft + 's linear, opacity ' + durationLeft + 's linear';
+          'transform ' + durationLeft + 'ms linear, opacity ' + durationLeft + 'ms linear';
 
         this._clearStyles(this.frame);
         this._clearStyles(this.current);
@@ -177,32 +195,34 @@ var PanelSwitcher = {
     return [frame, null, null, null, zIndex, shadow];
   },
 
-  _movingStyles: function t_movingStyles(frame, progress, forward) {
-    var translate = 0, scale = 1, opacity = 1;
-    var remainingFactor = forward ? ((progress - 0.5) / 0.5) :
-                                    ((0.5 - progress) / 0.5);
-    var progressFactor = forward ? (100 - progress * 100) :
-                                   (progress * 100);
+  _generateMovingStyles: function t_movingStyles(frame, forward) {
+    return function(progress) {
+      var translate = 0, scale = 1, opacity = 1;
+      var remainingFactor = forward ? ((progress - 0.5) / 0.5) :
+                                      ((0.5 - progress) / 0.5);
+      var progressFactor = forward ? (100 - progress * 100) :
+                                     (progress * 100);
 
-    // back-to-front and front-to-back keyframes
-    if ((frame == this.current && forward && progress >= 0.5) ||
-        (frame !== this.current && !forward && progress <= 0.5)) {
+      // back-to-front and front-to-back keyframes
+      if ((frame == this.current && forward && progress >= 0.5) ||
+          (frame !== this.current && !forward && progress <= 0.5)) {
 
-      translate = (-20 * remainingFactor) + '%';
-      opacity = 1 - 0.7 * remainingFactor;
-      scale = 1 - 0.1 * remainingFactor;
+        translate = (-20 * remainingFactor) + '%';
+        opacity = 1 - 0.7 * remainingFactor;
+        scale = 1 - 0.1 * remainingFactor;
+
+        return [frame, translate, scale, opacity];
+      }
+
+      // left-to-right and right-to-left keyframes
+      if ((frame == this.current && !forward) ||
+          (frame !== this.current && forward)) {
+
+        translate = 'calc(' + progressFactor + '% - 8px)';
+      }
 
       return [frame, translate, scale, opacity];
     }
-
-    // left-to-right and right-to-left keyframes
-    if ((frame == this.current && !forward) ||
-        (frame !== this.current && forward)) {
-
-      translate = 'calc(' + progressFactor + '% - 8px)';
-    }
-
-    return [frame, translate, scale, opacity];
   },
 
   _setStyles: function t_setStyles(frame, translate, scale, opacity, zIndex, shadow) {

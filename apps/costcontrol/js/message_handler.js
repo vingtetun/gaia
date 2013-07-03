@@ -22,7 +22,7 @@
   // inside an iframe (no standalone mode), all the messages should be attended
   // so we can conclude **there is nothing to do**.
   if (inStandAloneMode() && window.history.length > 1) {
-    debug('Nothing to do in message handler, returning to app...');
+    debug('Nothing to do, closing...');
     window.history.back();
   }
 
@@ -33,9 +33,12 @@
   // Close if in standalone mode
   var closing;
   function closeIfProceeds() {
-    debug('Checking for closing...');
+    debug('Trying to close...');
     if (inStandAloneMode()) {
-      closing = Common.closeApplication();
+      closing = setTimeout(function _close() {
+        window.close();
+        debug('Closing message handler');
+      }, 1000);
     }
   }
 
@@ -192,9 +195,6 @@
 
       // No need for notification
       } else {
-        if (typeof callback === 'function') {
-          setTimeout(callback);
-        }
         return;
       }
       debug('Notification type:', type);
@@ -323,17 +323,9 @@
       navigator.mozSetMessageHandler('sms-received', function _onSMS(sms) {
         clearTimeout(closing);
         ConfigManager.requestAll(function _onInfo(configuration, settings) {
-
-          var isBalanceResponse = configuration.balance &&
-                                  configuration.balance.senders
-                                    .indexOf(sms.sender) > -1;
-
-          var isTopupResponse = configuration.topup &&
-                                configuration.topup.senders
-                                  .indexOf(sms.sender) > -1;
-
           // Non expected SMS
-          if (!isBalanceResponse && !isTopupResponse) {
+          if (configuration.balance.senders.indexOf(sms.sender) === -1 &&
+              configuration.topup.senders.indexOf(sms.sender) === -1) {
             closeIfProceeds();
             return;
           }
@@ -368,7 +360,6 @@
           }
 
           if (!isBalance && !isConfirmation && !isError) {
-            closeIfProceeds();
             return;
           }
 

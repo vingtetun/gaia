@@ -87,8 +87,8 @@ navigator.mozL10n.ready(function SettingsBattery() {
   Battery.init(updateInfo);
   Battery.update();
 
-  document.addEventListener('visibilitychange', function visibilityChange() {
-    if (!document.hidden) {
+  document.addEventListener('mozvisibilitychange', function visibilityChange() {
+    if (!document.mozHidden) {
       Battery.attachListeners();
       Battery.update();
     } else {

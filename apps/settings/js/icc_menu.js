@@ -13,12 +13,15 @@
       'icc.data': null
     });
     reqIccData.onsuccess = function icc_getIccData() {
-      DUMP('ICC Cache cleared');
+      debug('ICC Cache cleared');
     };
 
     // Open ICC section
-    DUMP('ICC command to execute: ', iccCommand);
-    Settings.currentPanel = '#icc';
+    debug('ICC command to execute: ', iccCommand);
+    var page = document.location.protocol + '//' +
+      document.location.host + '/index.html#icc';
+    debug('page: ', page);
+    window.location.replace(page);
 
     setTimeout(function() {
       var event = new CustomEvent('stkasynccommand', {
@@ -29,7 +32,7 @@
   }
 
   setTimeout(function updateStkMenu() {
-    DUMP('Showing STK main menu');
+    debug('Showing STK main menu');
     // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=844727
     // We should use Settings.settingsCache first
     var settings = Settings.mozSettings;
@@ -41,14 +44,14 @@
       var menu = json && JSON.parse(json);
       if (!menu || !menu.items ||
         (menu.items.length == 1 && menu.items[0] === null)) {
-        DUMP('No STK available - exit');
+        debug('No STK available - exit');
         document.getElementById('icc-mainheader').hidden = true;
         document.getElementById('icc-mainentry').hidden = true;
         return;
       }
 
       // update and show the entry in settings
-      DUMP('STK Main App Menu title: ' + menu.title);
+      debug('STK Main App Menu title: ' + menu.title);
       document.getElementById('menuItem-icc').textContent = menu.title;
       document.getElementById('icc-mainheader').hidden = false;
       document.getElementById('icc-mainentry').hidden = false;
@@ -58,7 +61,7 @@
     reqIccData.onsuccess = function icc_getIccData() {
       var cmd = reqIccData.result['icc.data'];
       if (cmd) {
-        DUMP('ICC async command (launcher)');
+        debug('ICC async command (launcher)');
         executeICCCmd(JSON.parse(cmd));
       }
     };
@@ -66,7 +69,7 @@
     settings.addObserver('icc.data', function(event) {
       var value = event.settingValue;
       if (value) {
-        DUMP('ICC async command while settings running: ', value);
+        debug('ICC async command while settings running: ', value);
         executeICCCmd(JSON.parse(value));
       }
     });

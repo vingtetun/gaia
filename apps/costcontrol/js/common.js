@@ -164,7 +164,7 @@ function formatTimeHTML(timestampA, timestampB) {
 
   // No interval
   if (typeof timestampB === 'undefined') {
-    fragment.appendChild(timeElement(Formatting.formatTime(timestampA)));
+    fragment.appendChild(timeElement(formatTime(timestampA)));
     return fragment;
   }
 
@@ -180,10 +180,10 @@ function formatTimeHTML(timestampA, timestampB) {
 
   // Interval
   fragment.appendChild(
-    timeElement(Formatting.formatTime(timestampA, _('short-date-format')))
+    timeElement(formatTime(timestampA, _('short-date-format')))
   );
   fragment.appendChild(document.createTextNode(' – '));
-  fragment.appendChild(timeElement(Formatting.formatTime(timestampB)));
+  fragment.appendChild(timeElement(formatTime(timestampB)));
   return fragment;
 }
 
@@ -297,17 +297,10 @@ var Common = {
   },
 
   closeApplication: function() {
-    return setTimeout(function _close() {
-      debug('Closing.');
-      window.close();
-    });
+    window.close();
   },
 
   modalAlert: function(message) {
     alert(message);
-  },
-
-  get localize() {
-    return navigator.mozL10n.localize;
   }
 };

@@ -29,7 +29,7 @@ var TelephonyTab = (function() {
       window.addEventListener('localized', localize);
 
       // Configure updates
-      document.addEventListener('visibilitychange', updateWhenVisible, true);
+      document.addEventListener('mozvisibilitychange', updateWhenVisible, true);
       ConfigManager.observe('lastTelephonyActivity', updateCounters, true);
       ConfigManager.observe('lastTelephonyReset', updateUI, true);
       ConfigManager.observe('nextReset', updateNextReset, true);
@@ -50,7 +50,7 @@ var TelephonyTab = (function() {
       return;
     }
 
-    document.removeEventListener('visibilitychange', updateWhenVisible);
+    document.removeEventListener('mozvisibilitychange', updateWhenVisible);
     ConfigManager.removeObserver('lastTelephonyActivity', updateCounters);
     ConfigManager.removeObserver('lastTelephonyReset', updateUI);
     ConfigManager.removeObserver('nextReset', updateNextReset);
@@ -59,7 +59,7 @@ var TelephonyTab = (function() {
   }
 
   function updateWhenVisible() {
-    if (!document.hidden && initialized) {
+    if (!document.mozHidden && initialized) {
       updateUI();
     }
   }

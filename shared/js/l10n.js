@@ -14,8 +14,6 @@
   var gLanguage = '';
   var gMacros = {};
   var gReadyState = 'loading';
-  // DOM element properties that may be localized with a key:value pair.
-  var gNestedProps = ['style', 'dataset'];
 
 
   /**
@@ -247,18 +245,10 @@
 
       // find attribute descriptions, if any
       for (var key in data) {
-        var id, prop, nestedProp, index = key.lastIndexOf('.');
+        var id, prop, index = key.lastIndexOf('.');
         if (index > 0) { // an attribute has been specified
           id = key.substring(0, index);
           prop = key.substr(index + 1);
-          index = id.lastIndexOf('.');
-          if (index > 0) { // a nested property may have been specified
-            nestedProp = id.substr(index + 1);
-            if (gNestedProps.indexOf(nestedProp) > -1) {
-              id = id.substr(0, index);
-              prop = nestedProp + '.' + prop;
-            }
-          }
         } else { // no attribute: assuming text content by default
           id = key;
           prop = gTextProp;
@@ -281,7 +271,6 @@
     callback = callback || function _callback() {};
 
     clear();
-    gReadyState = 'loading';
     gLanguage = lang;
 
     // check all <link type="application/l10n" href="..." /> nodes
@@ -915,13 +904,7 @@
     }
 
     for (var k in data) {
-      var idx = k.lastIndexOf('.');
-      var nestedProp = k.substr(0, idx);
-      if (gNestedProps.indexOf(nestedProp) > -1) {
-        element[nestedProp][k.substr(idx + 1)] = data[k];
-      } else {
-        element[k] = data[k];
-      }
+      element[k] = data[k];
     }
   }
 
@@ -938,34 +921,6 @@
 
     // translate element itself if necessary
     translateElement(element);
-  }
-
-  // localize an element as soon as mozL10n is ready
-  function localizeElement(element, id, args) {
-    if (!element)
-      return;
-
-    if (id) {
-      element.setAttribute('data-l10n-id', id);
-    } else {
-      // clear element content and data-l10n attributes
-      element.removeAttribute('data-l10n-id');
-      element.removeAttribute('data-l10n-args');
-      element[gTextProp] = '';
-      return;
-    }
-
-    if (args) {
-      element.setAttribute('data-l10n-args', JSON.stringify(args));
-    } else {
-      element.removeAttribute('data-l10n-args');
-    }
-
-    // if l10n resources are ready, translate now;
-    // if not, the element will be translated along with the document anyway.
-    if (gReadyState === 'complete') {
-      translateElement(element);
-    }
   }
 
 
@@ -1037,9 +992,6 @@
 
     // translate an element or document fragment
     translate: translateFragment,
-
-    // localize an element (= set its data-l10n-* attributes and translate it)
-    localize: localizeElement,
 
     // get (a clone of) the dictionary for the current locale
     get dictionary() { return JSON.parse(JSON.stringify(gL10nData)); },

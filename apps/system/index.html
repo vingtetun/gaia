@@ -8,7 +8,6 @@
     <script src="shared/js/l10n.js"></script>
     <script src="shared/js/l10n_date.js"></script>
     <script src="shared/js/idletimer.js"></script>
-    <script src="shared/js/dump.js"></script>
     <script defer src="shared/js/gesture_detector.js"></script>
     <script defer src="shared/js/settings_listener.js"></script>
     <script defer src="shared/js/custom_dialog.js"></script>
@@ -16,8 +15,10 @@
     <script defer src="shared/js/async_storage.js"></script>
     <script defer src="shared/js/mobile_operator.js"></script>
     <script defer src="shared/js/manifest_helper.js"></script>
-    <script defer src="shared/js/icc_helper.js"></script>
     <script defer src="shared/js/mime_mapper.js"></script>
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
 
     <!-- Wrapper -->
     <link rel="stylesheet" type="text/css" href="style/wrapper/wrapper.css">
@@ -30,7 +31,6 @@
 
     <!-- Include shared building blocks -->
     <link rel="stylesheet" type="text/css" href="shared/style/confirm.css"/>
-    <link rel="stylesheet" type="text/css" href="shared/style/input_areas.css">
     <link rel="stylesheet" type="text/css" href="shared/style/headers.css"/>
     <link rel="stylesheet" type="text/css" href="shared/style/switches.css"/>
 
@@ -40,8 +40,6 @@
     <link rel="resource" type="application/json" href="shared/resources/apn.json"/>
     <link rel="resource" type="image/png" href="shared/resources/branding/initlogo.png"/>
     -->
-
-    <link rel="resource" type="image/png" href="shared/resources/branding/Browser.png"/>
 
     <!-- applications.js must not be deferred
          in order to catch webapps-registry-ready mozChromeEvent -->
@@ -61,6 +59,7 @@
     <script defer src="js/hardware_buttons.js"></script>
     <script defer src="js/system_banner.js"></script>
     <script defer src="js/system_dialog.js"></script>
+    <script defer src="js/icc_cache.js"></script>
 
     <!-- Grid View -->
     <link rel="stylesheet" type="text/css" href="style/gridview/gridview.css">
@@ -89,6 +88,11 @@
     <link rel="stylesheet" type="text/css" href="style/utility_tray/utility_tray.css">
     <script defer src="js/utility_tray.js"></script>
 
+    
+    <!-- Notification Tray -->
+    <link rel="stylesheet" type="text/css" href="style/notifications_tray/notifications_tray.css">
+    <script defer src="js/notifications_tray.js"></script>
+
     <!-- Attention Screen -->
     <link rel="stylesheet" type="text/css" href="style/attention_screen.css">
     <script defer src="js/attention_screen.js"></script>
@@ -104,15 +108,9 @@
     <link rel="stylesheet" type="text/css" href="style/statusbar/statusbar.css">
     <script defer src="js/statusbar.js"></script>
 
-    <!-- Software button -->
-    <link rel="stylesheet" type="text/css" href="style/software_button_manager/software_button_manager.css">
-    <script defer src="js/software_button_manager.js"></script>
-
-    <!-- ICC/STK -->
-    <link rel="stylesheet" type="text/css" href="style/icc.css">
-    <script defer src="js/icc_events.js"></script>
-    <script defer src="js/icc_worker.js"></script>
-    <script defer src="js/icc.js"></script>
+    <!-- Rocketbar-->
+    <link rel="stylesheet" type="text/css" href="style/rocketbar/rocketbar.css">
+    <script defer src="js/rocketbar.js"></script>
 
     <!-- FTU launcher -->
     <script defer src="js/ftu_launcher.js"></script>
@@ -235,9 +233,12 @@
     <!-- Any module that wants to intercept the Home button and prevent the -->
     <!-- homescreen from being displayed must come before this script. -->
     <link rel="stylesheet" type="text/css" href="style/window.css">
-    <script defer src="js/orientation_observer.js"></script>
     <script defer src="js/window.js"></script>
-    <script defer src="js/window_manager.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/transition.js"></script>
+
+    <!-- Boot sound  -->
+    <script defer src="js/boot_sound.js"></script>
 
     <!-- Entry Sheet -->
     <link rel="stylesheet" type="text/css" href="style/entry_sheet/entry_sheet.css">
@@ -316,9 +317,28 @@
   </head>
 
   <body role="application">
+    <!-- Touch Panels -->
+    <div id="top-panel" class="touch-panel"></div>
+    <div id="right-panel" class="touch-panel"></div>
+    <div id="bottom-panel" class="touch-panel"></div>
+    <div id="left-panel" class="touch-panel"></div>
+
     <div id="screen" class="locked">
       <div id="os-logo" data-z-index-level="initlogo">
         <div id="carrier-logo"></div>
+      </div>
+
+      <div id="utility-tray" data-z-index-level="utility-tray">
+        <!-- Rocketbar -->
+        <form id="rocketbar" data-z-index-level="rocketbar">
+          <input id="rocketbar-input" type="text" x-inputmode="verbatim" placeholder="Search for anything...">
+          </input>
+        </form>
+
+        <ul id="rocketbar-results" data-z-index-level="rocketbar">
+        </ul>
+        <div id="utility-tray-grippy">
+        </div>
       </div>
 
       <div id="statusbar" data-z-index-level="statusbar">
@@ -358,62 +378,8 @@
         <canvas id="statusbar-system-downloads" hidden></canvas>
         <canvas id="statusbar-network-activity" hidden></canvas>
       </div>
-
-      <div id="utility-tray" data-z-index-level="utility-tray">
-        <!-- notifications -->
-        <div id="notification-bar">
-          <span data-l10n-id="notifications">Notifications</span>
-          <button id="notification-clear" data-l10n-id="clear-all">Clear all</button>
-        </div>
-
-        <div id="notifications-container">
-          <!-- Update Manager -->
-          <div id="update-manager-container" class="fake-notification">
-            <div class="icon">
-            </div>
-            <div class="activity">
-            </div>
-            <div class="message">
-            </div>
-          </div>
-          <!-- Storage watcher notification -->
-          <div id="storage-watcher-container" class="fake-notification">
-            <div class="icon">
-            </div>
-            <div class="message">
-            </div>
-            <div class="available-space">
-            </div>
-          </div>
-          <!-- App Install Manager -->
-          <div id="install-manager-notification-container">
-          </div>
-          <!-- bluetooth transfer -->
-          <div id="bluetooth-transfer-status-list">
-          </div>
-
-          <div id="desktop-notifications-container">
-          </div>
-        </div>
-
-        <!-- credit module -->
-        <div id="cost-control-widget"></div>
-
-        <!-- quick settings -->
-        <div id="quick-settings">
-          <a href="#" id="quick-settings-wifi" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-data" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-bluetooth" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-airplane-mode" data-enabled="false"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-full-app" data-enabled="false"></a>
-        </div>
-
-        <div id="utility-tray-grippy">
-        </div>
+      
+      <div id="progress" data-z-index-level="progress">
       </div>
 
       <div id="windows" data-z-index-level="app">
@@ -840,19 +806,21 @@
             </div>
             <div id="notifications-lockscreen-container">
             </div>
+            <div id="lockscreen-gallery">
+              <div id="lockscreen-area-camera"></div>
+              <div id="lockscreen-area-unlock"></div>
+              <div class="container">
+                <div class="gallery-item"></div>
+                <div class="gallery-item" style="background-image: url('resources/images/gallery/sf.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('resources/images/gallery/cats.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('resources/images/gallery/doors.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('resources/images/gallery/iran.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('resources/images/gallery/montreal.jpg');"></div>
+              </div>
+            </div>
             <div id="lockscreen-area"></div>
             <div id="lockscreen-icon-container">
               <div id="lockscreen-area-handle"></div>
-              <div id="lockscreen-area-camera" class="lockscreen-icon-area lockscreen-icon-left">
-                <div class="lockscreen-icon">
-                  <div id="lockscreen-accessibility-camera" role="button" class="lockscreen-icon-a11y-button" data-l10n-id="camera-a11y-button" aria-label="Camera"></div>
-                </div>
-              </div>
-              <div id="lockscreen-area-unlock" class="lockscreen-icon-area lockscreen-icon-right">
-                <div class="lockscreen-icon">
-                    <div id="lockscreen-accessibility-unlock" role="button" class="lockscreen-icon-a11y-button" data-l10n-id="unlock-a11y-button" aria-label="Unlock"></div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -909,58 +877,6 @@
         </ul>
       </div>
 
-      <!-- icc / stk -->
-      <div id="icc-view" data-z-index-level="icc-view">
-        <form role="dialog" data-type="confirm" id="icc-alert">
-          <section>
-            <h1 data-l10n-id="icc-message">STK Message</h1>
-            <p id="icc-alert-msg"></p>
-          </section>
-          <menu>
-            <button type="button" data-l10n-id="ok" id="icc-alert-btn" class="recommend full">Ok</button>
-          </menu>
-        </form>
-        <form role="dialog" data-type="confirm" id="icc-confirm">
-          <section>
-            <h1 data-l10n-id="icc-message">STK Message</h1>
-            <p id="icc-confirm-msg"></p>
-          </section>
-          <menu>
-              <button type="button" data-l10n-id="close" id="icc-confirm-btn_close">Close</button>
-              <button type="button" data-l10n-id="back" id="icc-confirm-btn_back">Back</button>
-              <button type="button" data-l10n-id="ok" id="icc-confirm-btn" class="recommend">Ok</button>
-          </menu>
-        </form>
-        <form role="dialog" data-type="confirm" id="icc-asyncconfirm">
-          <section>
-            <h1 data-l10n-id="icc-message">STK Message</h1>
-            <p id="icc-asyncconfirm-msg"></p>
-          </section>
-          <menu>
-            <button type="button" data-l10n-id="no" id="icc-asyncconfirm-btn-no">No</button>
-            <button type="button" data-l10n-id="yes" id="icc-asyncconfirm-btn-yes" class="recommend">Yes</button>
-          </menu>
-        </form>
-        <form role="dialog" data-type="confirm" id="icc-input">
-          <section>
-            <h1 data-l10n-id="icc-inputtitle">STK Query</h1>
-            <p id="icc-input-msg"></p>
-            <input id="icc-input-box" required="" type="text">
-          </section>
-          <menu>
-              <button type="button" data-l10n-id="help" id="icc-input-btn_help">Help</button>
-              <button type="button" data-l10n-id="back" id="icc-input-btn_back">Back</button>
-              <span class="yesnodisabled">
-                <button type="button" data-l10n-id="ok" id="icc-input-btn" class="recommend">Ok</button>
-              </span>
-              <span class="yesnoenabled">
-                <button type="button" data-l10n-id="no" id="icc-input-btn_no">No</button>
-                <button type="button" data-l10n-id="yes" id="icc-input-btn_yes" class="recommend">Yes</button>
-              </span>
-          </menu>
-        </form>
-      </div>
-
       <div id="sleep-menu" data-z-index-level="sleep-menu">
         <div id="sleep-menu-container">
           <h3 data-l10n-id="deviceMenu">Device menu</h3>
@@ -1009,12 +925,43 @@
         </div>
       </div>
 
-      <div id="software-buttons" data-z-index-level="software-buttons">
-        <button id="software-home-button"></button>
+      <div id="notifications-tray" data-z-index-level="notifications-tray">
+        <!-- notifications -->
+        <div id="notification-bar">
+          <span data-l10n-id="notifications">Notifications</span>
+          <button id="notification-clear" data-l10n-id="clear-all">Clear all</button>
+        </div>
+
+        <div id="notifications-container">
+          <!-- Update Manager -->
+          <div id="update-manager-container" class="fake-notification">
+            <div class="icon">
+            </div>
+            <div class="activity">
+            </div>
+            <div class="message">
+            </div>
+          </div>
+          <!-- Storage watcher notification -->
+          <div id="storage-watcher-container" class="fake-notification">
+            <div class="icon">
+            </div>
+            <div class="message">
+            </div>
+            <div class="available-space">
+            </div>
+          </div>
+          <!-- App Install Manager -->
+          <div id="install-manager-notification-container">
+          </div>
+          <!-- bluetooth transfer -->
+          <div id="bluetooth-transfer-status-list">
+          </div>
+
+          <div id="desktop-notifications-container">
+          </div>
+        </div>
       </div>
-
-      <button id="fullscreen-software-home-button" data-z-index-level="fullscreen-software-home-button"></button>
-
     </div> <!-- end of #screen -->
   </body>
 </html>

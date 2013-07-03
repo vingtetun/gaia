@@ -277,12 +277,6 @@ Calendar.LoadConfig = (function() {
         ]
       },
 
-      'Views.FirstTimeUse': {
-        js: [
-          'views/first_time_use'
-        ]
-      },
-
       'Templates.Week': {
         js: [
           'template',
@@ -330,20 +324,11 @@ Calendar.LoadConfig = (function() {
       },
 
       'Provider.Local': {
-        group: [
-          'Provider.Abstract',
-          'EventMutations'
-        ],
+        group: ['Provider.Abstract'],
 
         js: [
           'ext/uuid',
-          'provider/local'
-        ]
-      },
-
-      'EventMutations': {
-        js: [
-          'ext/uuid',
+          'provider/local',
           'event_mutations'
         ]
       },
@@ -355,10 +340,7 @@ Calendar.LoadConfig = (function() {
       },
 
       'Provider.CaldavPullEvents': {
-        js: [
-          'ext/uuid',
-          'provider/caldav_pull_events'
-        ]
+        js: ['provider/caldav_pull_events']
       },
 
       'Provider.Caldav': {

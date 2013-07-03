@@ -107,6 +107,22 @@ var WindowManager = (function() {
     return displayedApp || null;
   }
 
+  function requireFullscreen(origin) {
+    var app = runningApps[origin];
+    if (!app)
+      return false;
+
+    return origin != homescreen; // fullscreen based model
+
+    var manifest = app.manifest;
+    if ('entry_points' in manifest && manifest.entry_points &&
+        manifest.type == 'certified') {
+       manifest = manifest.entry_points[origin.split('/')[3]];
+    }
+
+    return 'fullscreen' in manifest ? manifest.fullscreen : false;
+  }
+
   // Make the specified app the displayed app.
   // Public function.  Pass null to make the homescreen visible
   function launch(origin) {
@@ -141,14 +157,50 @@ var WindowManager = (function() {
       return null;
   }
 
-  // XXX: appWindow.resize needs to call setInlineActivityFramseSize().
-  // We should maintain a link in appWindow to activity frame
-  // so that appWindow can resize activity by itself.
-  window.addEventListener('appresize', function appResized(evt) {
-    if (evt.detail.changeActivityFrame) {
-      setInlineActivityFrameSize();
+  // Set the size of the app's iframe to match the size of the screen.
+  // We have to call this on resize events (which happen when the
+  // phone orientation is changed). And also when an app is launched
+  // and each time an app is brought to the front, since the
+  // orientation could have changed since it was last displayed
+
+  // @param {origin} the origin of the app we set the size for
+  // @param {changeActivityFrame}  to denote if needed to change inline
+  //        activity size
+  // @param {keyboardHeight} the height of the keyboard
+  // @param {keyboardHeightChange} to denote that this size change is due to
+  //        keyboard, no need to adjust the height for wrapper
+  function setAppSize(origin, changeActivityFrame, keyboardHeight,
+                      keyboardHeightChange) {
+    var app = runningApps[origin];
+    if (!app)
+      return;
+
+    var frame = app.frame;
+    var manifest = app.manifest;
+
+    if (typeof keyboardHeight == 'undefined')
+      keyboardHeight = 0;
+
+    var cssWidth = window.innerWidth + 'px';
+    var cssHeight = window.innerHeight - StatusBar.height - keyboardHeight;
+    if (!keyboardHeightChange && 'wrapper' in frame.dataset) {
+      cssHeight -= 10;
     }
-  });
+    cssHeight += 'px';
+
+    if (!screenElement.classList.contains('attention') &&
+        requireFullscreen(origin)) {
+      cssHeight = window.innerHeight - keyboardHeight + 'px';
+    }
+
+    frame.style.width = cssWidth;
+    frame.style.height = cssHeight;
+
+    // We will call setInlineActivityFrameSize()
+    // if changeActivityFrame is not explicitly set to false.
+    if (changeActivityFrame !== false)
+      setInlineActivityFrameSize();
+  }
 
   // Copy the dimension of the currently displayed app
   function setInlineActivityFrameSize() {
@@ -166,8 +218,7 @@ var WindowManager = (function() {
       frame.style.top = '0px';
     } else {
       if ('wrapper' in appFrame.dataset) {
-        frame.style.height = window.innerHeight -
-          StatusBar.height - SoftwareButtonManager.height + 'px';
+        frame.style.height = window.innerHeight - StatusBar.height + 'px';
       } else {
         frame.style.height = appFrame.style.height;
       }
@@ -214,15 +265,14 @@ var WindowManager = (function() {
     classNames.forEach(function removeClass(className) {
       classList.remove(className);
     });
+
+    frame.style.top = '';
+    frame.style.left = '';
   }
 
   window.addEventListener('ftuskip', function skipFTU() {
     InitLogoHandler.animate();
     setDisplayedApp(homescreen);
-  });
-
-  window.addEventListener('appresize', function appResize() {
-    setInlineActivityFrameSize();
   });
 
   // Open and close app animations
@@ -310,12 +360,9 @@ var WindowManager = (function() {
     // Set displayedApp to the new value
     displayedApp = iframe.dataset.frameOrigin;
 
-    var app = runningApps[displayedApp];
-
-    app.addClearRotateTransition();
     // Set orientation for the new app
     setOrientationForApp(displayedApp);
-
+    frame.dataset.orientation = '';
   }
 
   // Execute when the application is actually loaded
@@ -362,12 +409,9 @@ var WindowManager = (function() {
   // Executes when app closing transition finishes.
   function windowClosed(frame) {
     var iframe = frame.firstChild;
-    var origin = iframe.dataset.frameOrigin;
 
     frame.classList.remove('active');
     windows.classList.remove('active');
-
-    runningApps[origin].addClearRotateTransition();
 
     // set the closed frame visibility to false
 
@@ -375,6 +419,8 @@ var WindowManager = (function() {
     // we don't need to check trusted ui state here anymore.
     // We do this because we don't want the trustedUI opener
     // is killed in background due to OOM.
+
+    var origin = iframe.dataset.frameOrigin;
     if ('setVisible' in iframe && !TrustedUIManager.hasTrustedUI(origin)) {
       // When we setVisible(false) the app frame, it throws out its
       // layer tree, which results in it not being renderable by the
@@ -413,9 +459,7 @@ var WindowManager = (function() {
     dispatchEvent(new CustomEvent('appclose'));
   }
 
-  windows.addEventListener('mozbrowserloadend', function loadend(evt) {
-    var iframe = evt.target;
-    delete iframe.dataset.unloaded;
+  windows.addEventListener('mozbrowserfirstpaint', function firstpaint(evt) {
     var backgroundColor = evt.detail.backgroundColor;
     /* When rotating the screen, the child may take some time to reflow.
      * If the child takes longer than layers.orientation.sync.timeout
@@ -425,8 +469,13 @@ var WindowManager = (function() {
 
     /* Only allow opaque colors */
     if (backgroundColor.indexOf('rgb(') != -1) {
-      iframe.style.backgroundColor = backgroundColor;
+      evt.target.style.backgroundColor = backgroundColor;
     }
+  });
+
+  windows.addEventListener('mozbrowserloadend', function loadend(evt) {
+    var iframe = evt.target;
+    delete iframe.dataset.unloaded;
   });
 
   windows.addEventListener('mozbrowservisibilitychange',
@@ -460,7 +509,7 @@ var WindowManager = (function() {
     preCallback = preCallback || noop;
 
     // set the size of the opening app
-    app.resize();
+    setAppSize(origin);
 
     if (origin === homescreen) {
       // Call the openCallback only once. We have to use tmp var as
@@ -479,10 +528,12 @@ var WindowManager = (function() {
       return;
     }
 
-    if (app.isFullScreen())
+
+    if (requireFullscreen(origin))
       screenElement.classList.add('fullscreen-app');
 
-    app.setRotateTransition(app.manifest.orientation);
+    setAppRotateTransition(origin, app.manifest.orientation ||
+                                   'portrait-primary');
 
     transitionOpenCallback = function startOpeningTransition() {
       // We have been canceled by another transition.
@@ -558,6 +609,9 @@ var WindowManager = (function() {
 
     var homescreenFrame;
 
+    // Preserve current orientation for close animation
+    var orientation = screen.mozOrientation;
+
     if (!onSwitchWindow) {
       // Animate the window close.  Ensure the homescreen is in the
       // foreground since it will be shown during the animation.
@@ -571,9 +625,9 @@ var WindowManager = (function() {
 
       // Set the size of both homescreen app and the closing app
       // since the orientation had changed.
-      runningApps[homescreen].resize();
+      setAppSize(homescreen);
 
-      app.setRotateTransition();
+      setAppRotateTransition(origin, orientation);
     }
 
     // Send a synthentic 'appwillclose' event.
@@ -614,6 +668,34 @@ var WindowManager = (function() {
     return screenElement.classList.contains('switch-app');
   }
 
+  // Do css rotate based on the original orientation of frame
+  // for close and open animation.
+  function setAppRotateTransition(origin, orientation) {
+    var frame = runningApps[origin].frame;
+    var statusBarHeight = StatusBar.height;
+    var width;
+    var height;
+
+    if (!screenElement.classList.contains('attention') &&
+        requireFullscreen(origin)) {
+      statusBarHeight = 0;
+    }
+    // Rotate the frame if needed
+    frame.dataset.orientation = orientation;
+    if (orientation == 'landscape-primary' ||
+        orientation == 'landscape-secondary') {
+      width = window.innerHeight;
+      height = window.innerWidth - statusBarHeight;
+      frame.style.left = ((height - width) / 2) + 'px';
+      frame.style.top = ((width - height) / 2) + 'px';
+    } else {
+      width = window.innerWidth;
+      height = window.innerHeight - statusBarHeight;
+    }
+    frame.style.width = width + 'px';
+    frame.style.height = height + 'px';
+  }
+
   // Perform a "switching" animation for the closing frame and the opening frame
   function switchWindow(origin, callback) {
     // This will trigger different transition to both openWindow()
@@ -643,13 +725,13 @@ var WindowManager = (function() {
                   app.manifest.name, app.manifest, app.manifestURL,
                   /* expectingSystemMessage */ false);
       runningApps[homescreen].iframe.dataset.start = Date.now();
-      runningApps[homescreen].resize();
+      setAppSize(homescreen);
       if (displayedApp != homescreen &&
         'setVisible' in runningApps[homescreen].iframe)
         runningApps[homescreen].iframe.setVisible(false);
     } else if (reset) {
       runningApps[homescreen].iframe.src = homescreenURL;
-      runningApps[homescreen].resize();
+      setAppSize(homescreen);
     }
 
     return runningApps[homescreen].frame;
@@ -806,7 +888,7 @@ var WindowManager = (function() {
         // relaunch homescreen
         openWindow(homescreen, callback);
       } else {
-        if (runningApps[newApp].isFullScreen()) {
+        if (requireFullscreen(newApp)) {
           screenElement.classList.add('fullscreen-app');
         }
 
@@ -900,7 +982,7 @@ var WindowManager = (function() {
         // apps for transition.
         if (app.frame.dataset.orientation == 'landscape-primary' ||
             app.frame.dataset.orientation == 'landscape-secondary') {
-          app.resize();
+          setAppSize(origin);
         }
       }
     } else {  // If no orientation was requested, then let it rotate
@@ -1029,7 +1111,7 @@ var WindowManager = (function() {
     });
     runningApps[origin] = app;
 
-    if (app.isFullScreen()) {
+    if (requireFullscreen(origin)) {
       frame.classList.add('fullscreen-app');
     }
 
@@ -1169,7 +1251,7 @@ var WindowManager = (function() {
     } else {
       // stop all activity frames
       // Remore the inlineActivityFrame reference
-      inlineActivityFrames.forEach(function(frame) {
+      inlineActivityFrames.foreach(function(frame) {
         removeInlineFrame(frame);
       });
       inlineActivityFrames = [];
@@ -1181,7 +1263,6 @@ var WindowManager = (function() {
       setOrientationForApp(displayedApp);
       if (app && app.iframe) {
         app.iframe.focus();
-        app.setVisible(true);
         if ('wrapper' in app.frame.dataset) {
           wrapperFooter.classList.add('visible');
         }
@@ -1344,7 +1425,7 @@ var WindowManager = (function() {
           // set the size of the iframe
           // so Cards View will get a correct screenshot of the frame
           if (!e.detail.isActivity) {
-            app.resize(false);
+            setAppSize(origin, false);
             if ('setVisible' in app.iframe)
               app.iframe.setVisible(false);
           }
@@ -1440,17 +1521,19 @@ var WindowManager = (function() {
         resetDeviceLockedTimer();
         break;
       case 'lock':
+        // XXX: We couldn't avoid to stop inline activities
+        // when screen is turned off and lockscreen is enabled
+        // to avoid two cameras iframes are competing resources
+        // if the user opens a app to call camera activity and
+        // at the same time open camera app from lockscreen.
+        if (inlineActivityFrames.length) {
+          stopInlineActivity(true);
+        }
+
         // If the audio is active, the app should not set non-visible
         // otherwise it will be muted.
         if (!normalAudioChannelActive) {
-          if (inlineActivityFrames.length) {
-            // XXX: With this, some inline activities may close
-            // themselves when visibility is true. but some may not.
-            // See bug 853759 and bug 846850.
-            setVisibilityForInlineActivity(false);
-          } else {
-            runningApps[displayedApp].setVisible(false);
-          }
+          runningApps[displayedApp].setVisible(false);
         }
         resetDeviceLockedTimer();
         break;
@@ -1876,8 +1959,7 @@ var WindowManager = (function() {
   // When the status bar is active it doubles in height so we need a resize
   var appResizeEvents = ['resize', 'status-active', 'status-inactive',
                          'keyboardchange', 'keyboardhide',
-                         'attentionscreenhide', 'mozfullscreenchange',
-                         'software-button-enabled', 'software-button-disabled'];
+                         'attentionscreenhide', 'mozfullscreenchange'];
   appResizeEvents.forEach(function eventIterator(event) {
     window.addEventListener(event, function on(evt) {
       var keyboardHeight = KeyboardManager.getHeight();
@@ -1885,8 +1967,11 @@ var WindowManager = (function() {
         // Cancel fullscreen if keyboard pops
         if (document.mozFullScreen)
           document.mozCancelFullScreen();
+
+        setAppSize(displayedApp, true, keyboardHeight, true);
+      } else if (displayedApp) {
+        setAppSize(displayedApp, true, keyboardHeight, false);
       }
-      runningApps[displayedApp].resize();
     });
   });
 

@@ -7,6 +7,9 @@
       Usage
     </title>
 
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
     <!-- Building blocks Temporal -->
     <link rel="stylesheet" type="text/css" href="style/bb/input-areas/style.css">
 
@@ -22,7 +25,6 @@
     <link rel="stylesheet" type="text/css" href="style/app.css">
     <link rel="stylesheet" type="text/css" href="style/views/datausage.css">
     <link rel="stylesheet" type="text/css" href="style/views/topup.css">
-    <link rel="stylesheet" type="text/css" href="style/views/timestamp-highlights.css">
     <link rel="stylesheet" type="text/css" href="style/views/balance.css">
     <link rel="stylesheet" type="text/css" href="style/views/telephony.css">
 
@@ -123,8 +125,8 @@ the overlays) and we should distinguish between TABS and OVERLAY VIEWS -->
               </div>
               <p id="balance-tab-credit">
               </p>
-              <p id="balance-tab-time">
-              </p>
+              <time id="balance-tab-time">
+              </time>
             </div>
           </div>
 
@@ -140,8 +142,7 @@ the overlays) and we should distinguish between TABS and OVERLAY VIEWS -->
               </button>
             </li>
           </ul>
-          <script type="text/javascript" defer src="js/views/TopUpLayoutView.js"></script>
-          <script type="text/javascript" defer src="js/views/BalanceView.js"></script>
+          <script type="text/javascript" defer src="js/views/TopUpLayoutController.js"></script>
           <script type="text/javascript" defer src="js/views/balance.js"></script>
         </section>
         -->
@@ -240,7 +241,7 @@ the overlays) and we should distinguish between TABS and OVERLAY VIEWS -->
           <section id="graphic-area" class="graph">
             <canvas id="background-layer"></canvas>
             <canvas id="wifi-layer" aria-hidden="true"></canvas>
-            <canvas id="mobile-layer" aria-hidden="true"></canvas>
+            <canvas id="mobile-layer"></canvas>
             <canvas id="axis-layer"></canvas>
             <canvas id="today-layer"></canvas>
             <canvas id="warning-layer"></canvas>
@@ -249,9 +250,9 @@ the overlays) and we should distinguish between TABS and OVERLAY VIEWS -->
           </section>
 
           <ul class="toggle-data" data-type="list">
-            <li id="mobileItem" aria-disabled="true">
+            <li id="mobileItem">
               <label>
-                <input type="checkbox" id="mobileCheck">
+                <input type="checkbox" checked="checked" id="mobileCheck">
                 <span>
                 </span>
               </label>

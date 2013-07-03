@@ -330,8 +330,8 @@ contacts.Search = (function() {
   var search = function performSearch(searchDoneCb) {
     prevTextToSearch = currentTextToSearch;
 
-    currentTextToSearch = Normalizer.toAscii(searchBox.value.trim());
-    currentTextToSearch = Normalizer.escapeRegExp(currentTextToSearch);
+    currentTextToSearch = utils.text.normalize(searchBox.value.trim());
+    currentTextToSearch = utils.text.escapeRegExp(currentTextToSearch);
     var thisSearchText = new String(currentTextToSearch);
 
     if (thisSearchText.length === 0) {

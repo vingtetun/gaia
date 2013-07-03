@@ -10,14 +10,29 @@ var ContextMenu = {
 
   handleEvent: function cm_handleEvent(evt) {
     var detail = evt.detail;
-    if (detail.contextmenu.items.length == 0)
+
+    var items = [];
+    detail.systemTargets.forEach(function(item) {
+      if (item.nodeName == 'A') {
+        items.push({
+          label: 'Open In New Sheet',
+          value: item.data
+        });
+      }
+    });
+
+    if (!items.length)
       return;
 
+    var iframe = evt.target;
     var onsuccess = function(action) {
-      detail.contextMenuItemSelected(action);
+      var evt = new CustomEvent('mozbrowseropenwindow', {
+        bubbles: true, detail: { url: action }
+      });
+      iframe.dispatchEvent(evt);
     };
 
-    ListMenu.request(detail.contextmenu.items, '', onsuccess);
+    ListMenu.request(items, '', onsuccess);
     evt.preventDefault();
   }
 };

@@ -1141,21 +1141,17 @@ function prettyFileSize(sizeInBytes) {
 /**
  * Display a human-readable relative timestamp.
  */
-function prettyDate(time, useCompactFormat) {
+function prettyDate(time) {
   var f = new mozL10n.DateTimeFormat();
-  return f.fromNow(time, useCompactFormat);
+  return f.fromNow(time);
 }
 
 (function() {
-  var formatter = new mozL10n.DateTimeFormat();
   var updatePrettyDate = function updatePrettyDate() {
     var labels = document.querySelectorAll('[data-time]');
     var i = labels.length;
     while (i--) {
-      labels[i].textContent = formatter.fromNow(
-        labels[i].dataset.time,
-        // the presence of the attribute is our indicator; not its value
-        'compactFormat' in labels[i].dataset);
+      labels[i].textContent = prettyDate(labels[i].dataset.time);
     }
   };
   var timer = setInterval(updatePrettyDate, 60 * 1000);

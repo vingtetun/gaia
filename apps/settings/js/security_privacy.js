@@ -30,9 +30,6 @@ var Security = {
     if (!mobileConnection)
       return;
 
-    if (!IccHelper.enabled)
-      return;
-
     var simSecurityDesc = document.getElementById('simCardLock-desc');
     simSecurityDesc.style.fontStyle = 'italic';
 
@@ -53,7 +50,7 @@ var Security = {
 
     simSecurityDesc.style.fontStyle = 'normal';
     // with SIM card, query its status
-    var req = IccHelper.getCardLock('pin');
+    var req = mobileConnection.getCardLock('pin');
     req.onsuccess = function spl_checkSuccess() {
       var enabled = req.result.enabled;
       simSecurityDesc.textContent = (enabled) ?

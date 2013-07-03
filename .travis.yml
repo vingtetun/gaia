@@ -5,6 +5,5 @@ script: bash ./tools/ci/unit/travis.sh
 branches:
   except:
     - v1-train
-    - v1.1.0hd
     - v1.0.0
     - v1.0.1

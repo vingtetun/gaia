@@ -116,10 +116,6 @@ if (!window.FacebookConnector) {
             });
           }).bind(this); // successCb
 
-          photoCbs.timeout = function noop() {
-            // Do nothing...
-          };
-
           self.downloadContactPicture(friend, acc_tk, photoCbs);
         } // if friend
         else {

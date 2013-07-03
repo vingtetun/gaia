@@ -75,8 +75,8 @@ navigator.mozL10n.ready(function SettingsAppStorage() {
   AppStorage.init(updateInfo);
   AppStorage.update();
 
-  document.addEventListener('visibilitychange', function visibilityChange() {
-    if (!document.hidden) {
+  document.addEventListener('mozvisibilitychange', function visibilityChange() {
+    if (!document.mozHidden) {
       AppStorage.attachListeners();
       AppStorage.update();
     } else {

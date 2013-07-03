@@ -234,27 +234,31 @@ navigator.mozL10n.ready(function bluetoothSettings() {
       connectOpt: document.getElementById('connect-option'),
       disconnectOpt: document.getElementById('disconnect-option'),
       unpairOpt: document.getElementById('unpair-option'),
-      confirmDlg: document.getElementById('unpair-device'),
-      confirmOpt: document.getElementById('confirm-option'),
 
-      showActions: function showActions() {
+      show: function showMenu(device) {
         var self = this;
-        if (connectedAddress && this.device.address === connectedAddress) {
-          this.connectOpt.style.display = 'none';
-          this.disconnectOpt.style.display = 'block';
-          this.disconnectOpt.onclick = function() {
-            setDeviceDisconnect(this.device);
-          };
+        // we only support audio-card device to connect atm
+        if (device.icon === 'audio-card') {
+          if (connectedAddress && device.address === connectedAddress) {
+            this.connectOpt.style.display = 'none';
+            this.disconnectOpt.style.display = 'block';
+            this.disconnectOpt.onclick = function() {
+              setDeviceDisconnect(device);
+            };
+          } else {
+            this.connectOpt.style.display = 'block';
+            this.disconnectOpt.style.display = 'none';
+            this.connectOpt.onclick = function() {
+              stopDiscovery();
+              setDeviceConnect(device);
+            };
+          }
         } else {
-          this.connectOpt.style.display = 'block';
+          this.connectOpt.style.display = 'none';
           this.disconnectOpt.style.display = 'none';
-          this.connectOpt.onclick = function() {
-            setDeviceConnect(self.device);
-            stopDiscovery();
-          };
         }
         this.unpairOpt.onclick = function() {
-          setDeviceUnpair(self.device);
+          setDeviceUnpair(device);
         };
         this.menu.onsubmit = function closeMenu() {
           return self.close();
@@ -262,27 +266,8 @@ navigator.mozL10n.ready(function bluetoothSettings() {
         this.menu.hidden = false;
       },
 
-      showConfirm: function showConfirm() {
-        var self = this;
-        this.confirmDlg.onclick = function() {
-          return self.close();
-        };
-        this.confirmOpt.onclick = function() {
-          setDeviceUnpair(self.device);
-        };
-        this.confirmDlg.hidden = false;
-      },
-
-      show: function showMenu(device) {
-        this.device = device;
-        // we only support audio-card device to connect atm
-        this[this.device.icon === 'audio-card' ?
-          'showActions' : 'showConfirm']();
-      },
-
       close: function closeMenu() {
         this.menu.hidden = true;
-        this.confirmDlg.hidden = true;
         return false;
       }
     };
@@ -321,7 +306,7 @@ navigator.mozL10n.ready(function bluetoothSettings() {
         enableMsg.hidden = true;
         openList.show(true);
         searchingItem.hidden = false;
-        document.addEventListener('visibilitychange',
+        document.addEventListener('mozvisibilitychange',
             stopDiscoveryWhenLeaveApp);
       } else {
         openList.show(false);
@@ -335,7 +320,7 @@ navigator.mozL10n.ready(function bluetoothSettings() {
         // clear discoverTimeout
         clearTimeout(discoverTimeout);
         discoverTimeout = null;
-        document.removeEventListener('visibilitychange',
+        document.removeEventListener('mozvisibilitychange',
             stopDiscoveryWhenLeaveApp);
       }
     }
@@ -344,9 +329,21 @@ navigator.mozL10n.ready(function bluetoothSettings() {
     // when DefaultAdapter is ready.
     function initial() {
       // Bind message handler for incoming pairing requests
-      navigator.mozSetMessageHandler('bluetooth-pairing-request',
-        function bt_gotPairingRequestMessage(message) {
-          onRequestPairing(message);
+      navigator.mozSetMessageHandler('bluetooth-requestconfirmation',
+        function bt_gotConfirmationMessage(message) {
+          onRequestPairing(message, 'confirmation');
+        }
+      );
+
+      navigator.mozSetMessageHandler('bluetooth-requestpincode',
+        function bt_gotPincodeMessage(message) {
+          onRequestPairing(message, 'pincode');
+        }
+      );
+
+      navigator.mozSetMessageHandler('bluetooth-requestpasskey',
+        function bt_gotPasskeyMessage(message) {
+          onRequestPairing(message, 'passkey');
         }
       );
 
@@ -495,20 +492,9 @@ navigator.mozL10n.ready(function bluetoothSettings() {
     // callback function when an avaliable device found
     function onDeviceFound(evt) {
       var device = evt.device;
-      // Ignore duplicate and paired device. Update the name if needed.
-      var existingDevice = openList.index[device.address] ||
-        pairList.index[device.address];
-      if (existingDevice) {
-        var existingItem = existingDevice[1];
-        if (device.name && existingItem) {
-          var deviceName = existingItem.querySelector('a');
-          if (deviceName) {
-            deviceName.dataset.l10nId = '';
-            deviceName.textContent = device.name;
-          }
-        }
+      // ignore duplicate and paired device
+      if (openList.index[device.address] || pairList.index[device.address])
         return;
-      }
 
       var aItem = newListItem(device, 'device-status-tap-connect');
 
@@ -687,7 +673,7 @@ navigator.mozL10n.ready(function bluetoothSettings() {
       small.dataset.l10nId = (connected) ? 'device-status-connected' : '';
     }
 
-    function onRequestPairing(evt) {
+    function onRequestPairing(evt, method) {
       var showPairView = function bt_showPairView() {
         var device = {
           address: evt.address,
@@ -700,7 +686,6 @@ navigator.mozL10n.ready(function bluetoothSettings() {
           pairingMode = 'passive';
         }
         var passkey = evt.passkey || null;
-        var method = evt.method;
         var protocol = window.location.protocol;
         var host = window.location.host;
         childWindow = window.open(protocol + '//' + host + '/onpair.html',
@@ -740,7 +725,7 @@ navigator.mozL10n.ready(function bluetoothSettings() {
 
     function stopDiscoveryWhenLeaveApp() {
       //only stop discovery when Settings app is hidden
-      if (!document.hidden)
+      if (!document.mozHidden)
         return;
       stopDiscovery();
     }

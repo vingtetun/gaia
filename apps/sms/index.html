@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="pragma" content="no-cache">
     <title>Messages</title>
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
     <!-- Stable Building blocks -->
     <link rel="stylesheet" type="text/css" href="shared/style/headers.css">
     <link rel="stylesheet" type="text/css" href="shared/style/edit_mode.css">
@@ -31,6 +33,7 @@
     <!--
     <script defer src="shared/js/l10n_date.js"></script>
     <script defer src="shared/js/async_storage.js"></script>
+    <script defer src="shared/js/custom_dialog.js"></script>
     <script defer src="shared/js/notification_helper.js"></script>
     <script defer src="shared/js/gesture_detector.js"></script>
     -->
@@ -101,15 +104,15 @@
           <h1 id="messages-header-text" aria-hidden="true"></h1>
         </header>
         <div id="messages-subheader" class="subheader">
+          <menu type="toolbar">
+            <a id="messages-contact-pick-button">
+              <span class="icon icon-user"></span>
+            </a>
+          </menu>
           <section id="messages-to-field">
             <section data-l10n-id="to" id="to-label">
               To:
             </section>
-            <menu type="toolbar">
-              <a id="messages-contact-pick-button">
-                <span class="icon icon-user"></span>
-              </a>
-            </menu>
             <section id="messages-recipients-list" class="singleline">
             </section>
           </section>
@@ -129,11 +132,6 @@
                     role="notification"
                     class="hide">
               <p></p>
-            </section>
-            <section id="messages-resize-notice"
-                    role="notification"
-                    class="hide">
-              <p data-l10n-id="resize-image">Resizing the attached image</p>
             </section>
           </div>
         </div>
@@ -198,10 +196,10 @@
     <div id="messages-contact-tmpl" class="hide">
       <!--
       <a class="suggestion"
-        data-number="${number}" data-source="contacts" data-name="${name}" data-display="${type}${separator}${carrier}${number}">
+        data-number="${number}" data-source="contacts" data-name="${name}">
         <p class="name">${nameHTML}</p>
         <p>
-          ${type}${separator}${carrier}${numberHTML}
+          ${type} ${numberHTML}
         </p>
       </a>
       -->
@@ -258,7 +256,7 @@
         <p>
           <time>${formattedDate}</time>
           <span class="mms-icon">MMS</span>
-          <span class="body-text">${bodyHTML}</span>
+          <span class="body-text">${body}</span>
         </p>
       </a>
       -->
@@ -268,34 +266,28 @@
       <!--
       <span class="recipient" x-inputmode="verbatim"
         contenteditable="${editable}"
-        data-number="${number}" data-source="${source}" data-name="${name}" data-display="${display}">
+        data-number="${number}" data-source="${source}" data-name="${name}">
         ${name}
       </span>
       -->
     </div>
 
+    <!-- The image in this template ensures that the iFrame's 'load' event is
+    not triggered until after the attachment media is loaded. This, in turn,
+    prevents the Object URL from being revoked before the image has been drawn.
+    -->
     <div id="attachment-tmpl" class="hide">
       <!--
       <head>
-        <meta charset="utf-8">
         <base href="${baseURL}">
         <link rel="stylesheet" type="text/css" href="style/attachment.css">
       </head>
       <body class="attachment ${draftClass}">
-        <div style="${inlineStyle}" class="placeholder ${type}-placeholder">
-          <div class="${errorClass}"></div>
-        </div>
+        <div style="${inlineStyle}" class="placeholder ${type}-placeholder"></div>
         <div class="size-indicator">${size}</div>
+        <img src="${imgSrc}"
+          style="position: absolute;height: 0;width: 0;left: 0;top: 0;z-index:-1;">
       </body>
-      -->
-    </div>
-
-    <div id="height-rule-tmpl" class="hide">
-      <!--
-      #messages-recipients-list.multiline {
-        overflow-y: scroll;
-        height: ${height}px;
-      }
       -->
     </div>
   </body>

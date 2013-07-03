@@ -4,7 +4,6 @@
 'use strict';
 
 var ActivityHandler = {
-  isLocked: false,
   init: function() {
     window.navigator.mozSetMessageHandler('activity', this.global.bind(this));
 
@@ -35,12 +34,12 @@ var ActivityHandler = {
   _handlers: {
     'new': function newHandler(activity) {
 
-      // This lock is for avoiding several calls at the same time.
-      if (this.isLocked) {
+      // XXX This lock is about https://github.com/mozilla-b2g/gaia/issues/5405
+      if (MessageManager.activity.isLocked) {
         return;
       }
 
-      this.isLocked = true;
+      MessageManager.activity.isLocked = true;
 
       var number = activity.source.data.number;
       var body = activity.source.data.body;
@@ -79,9 +78,6 @@ var ActivityHandler = {
             name: names[idx],
             isDraft: true
           });
-          // TODO: We only allow sharing one item in a single action now.
-          //       Keeping the same sequence while adding the multiple items
-          //       should be considered in the future.
           Compose.append(attachment);
         });
       }
@@ -124,69 +120,6 @@ var ActivityHandler = {
     };
   },
 
-  // The unsent confirmation dialog provides 2 options: edit and discard
-  // discard: clear the message user typed
-  // edit: continue to edit the unsent message and ignore the activity
-  displayUnsentConfirmation: function ah_displayUnsentConfirmtion(activity) {
-    var _ = navigator.mozL10n.get;
-    var msgDiv = document.createElement('div');
-    msgDiv.innerHTML = '<h1>' + _('unsent-message-title') +
-                       '</h1><p>' + _('unsent-message-description') + '</p>';
-    var self = this;
-    var options = new OptionMenu({
-      type: 'confirm',
-      section: msgDiv,
-      items: [{
-        name: _('unsent-message-option-edit'),
-        method: function editOptionMethod() {
-          // it already in message app, we don't need to do anything but
-          // clearing activity variables in MessageManager.
-          MessageManager.activity = null;
-        }
-      },
-      {
-        name: _('unsent-message-option-discard'),
-        method: this.launchComposer.bind(this),
-        params: [activity]
-      }]
-    });
-    options.show();
-  },
-
-  // Launch the UI properly taking into account the hash
-  launchComposer: function ah_launchComposer(activity) {
-    if (location.hash === '#new') {
-      MessageManager.launchComposer(activity);
-    } else {
-      // Move to new message
-      MessageManager.activity = activity;
-      window.location.hash = '#new';
-    }
-  },
-
-  // Check if we want to go directly to the composer or if we
-  // want to keep the previously typed text
-  triggerNewMessage: function ah_triggerNewMessage(body, number, contact) {
-    /**
-     * case 1: hash === #new
-     *         check compose is empty or show dialog, and call onHashChange
-     * case 2: hash starts with #thread
-     *         check compose is empty or show dialog, and change hash to #new
-     * case 3: others, change hash to #new
-     */
-     var activity = {
-        body: body || null,
-        number: number || null,
-        contact: contact || null
-      };
-
-    if (Compose.isEmpty()) {
-      this.launchComposer(activity);
-    } else {
-      // ask user how should we do
-      ActivityHandler.displayUnsentConfirmation(activity);
-    }
-  },
   // Deliver the user to the correct view
   // based on the params provided in the
   // "message" object.
@@ -215,7 +148,7 @@ var ActivityHandler = {
     if (!message) {
       return;
     }
-    this.isLocked = false;
+
     var threadId = message.threadId ? message.threadId : null;
     var body = message.body ? Utils.escapeHTML(message.body) : '';
     var number = message.number ? message.number : '';
@@ -224,29 +157,36 @@ var ActivityHandler = {
 
     var showAction = function act_action() {
       // If we only have a body, just trigger a new message.
-      var locationHash = window.location.hash;
       if (!threadId) {
-        ActivityHandler.triggerNewMessage(body, number, contact);
+        MessageManager.activity.body = body || null;
+        MessageManager.activity.number = number || null;
+        MessageManager.activity.contact = contact || null;
+
+        // Move to new message
+        window.location.hash = '#new';
         return;
       }
+      var locationHash = window.location.hash;
 
       switch (locationHash) {
         case '#thread-list':
         case '#new':
           window.location.hash = threadHash;
+          MessageManager.activity.isLocked = false;
           break;
         default:
           if (locationHash.indexOf('#thread=') !== -1) {
             // Don't switch back to thread list if we're
             // already displaying the requested threadId.
-            if (locationHash !== threadHash) {
-              MessageManager.activity = {
-                threadId: threadId
-              };
+            if (locationHash === threadHash) {
+              MessageManager.activity.isLocked = false;
+            } else {
+              MessageManager.activity.threadId = threadId;
               window.location.hash = '#thread-list';
             }
           } else {
             window.location.hash = threadHash;
+            MessageManager.activity.isLocked = false;
           }
           break;
       }
@@ -257,14 +197,14 @@ var ActivityHandler = {
         showAction();
       });
     } else {
-      if (!document.hidden) {
+      if (!document.mozHidden) {
         // Case of calling from Notification
         showAction();
         return;
       }
-      document.addEventListener('visibilitychange',
+      document.addEventListener('mozvisibilitychange',
         function waitVisibility() {
-          document.removeEventListener('visibilitychange', waitVisibility);
+          document.removeEventListener('mozvisibilitychange', waitVisibility);
           showAction();
       });
     }
@@ -318,8 +258,6 @@ var ActivityHandler = {
         // We have to remove the SMS due to it does not have to be shown.
         MessageManager.deleteMessage(message.id, function() {
           app.launch();
-          Notification.ringtone();
-          Notification.vibrate();
           alert(number + '\n' + message.body);
           releaseWakeLock();
         });
@@ -333,7 +271,7 @@ var ActivityHandler = {
 
     function dispatchNotification(needManualRetrieve) {
       // The SMS app is already displayed
-      if (!document.hidden) {
+      if (!document.mozHidden) {
         if (threadId === Threads.currentId) {
           navigator.vibrate([200, 200, 200]);
           releaseWakeLock();
@@ -397,7 +335,7 @@ var ActivityHandler = {
           if (!contact) {
             console.error('We got a null contact for sender:', sender);
           } else if (contact.length && contact[0].name) {
-            sender = contact[0].name[0];
+            sender = Utils.escapeHTML(contact[0].name[0]);
           }
 
           if (message.type === 'sms') {

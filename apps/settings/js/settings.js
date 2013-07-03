@@ -29,10 +29,6 @@ var Settings = {
       hash = '#' + hash;
     }
 
-    if (hash == this._currentPanel) {
-      return;
-    }
-
     if (hash === '#wifi') {
       PerformanceTestingHelper.dispatch('start');
     }
@@ -473,7 +469,7 @@ var Settings = {
       for (i = 0; i < spanFields.length; i++) {
         var key = spanFields[i].dataset.name;
 
-        if (key && result[key] && result[key] != 'undefined') {
+        if (key && result[key] != undefined) {
           // check whether this setting comes from a select option
           // (it may be in a different panel, so query the whole document)
           rule = '[data-setting="' + key + '"] ' +
@@ -500,11 +496,6 @@ var Settings = {
             //  hide this field if it's undefined/empty.
             case 'deviceinfo.firmware_revision':
               spanFields[i].parentNode.hidden = true;
-              break;
-
-            case 'deviceinfo.mac':
-              var _ = navigator.mozL10n.get;
-              spanFields[i].textContent = _('macUnavailable');
               break;
           }
         }
@@ -742,8 +733,7 @@ var Settings = {
 
   updateLanguagePanel: function settings_updateLanguagePanel() {
     var panel = document.getElementById('languages');
-    // update the date and time samples in the 'languages' panel
-    if (panel.children.length) {
+    if (panel) { // update the date and time samples in the 'languages' panel
       var d = new Date();
       var f = new navigator.mozL10n.DateTimeFormat();
       var _ = navigator.mozL10n.get;
@@ -835,19 +825,17 @@ window.addEventListener('load', function loadSettings() {
   Settings.init();
   handleRadioAndCardState();
 
-  LazyLoader.load(['js/utils.js'], startupLocale);
   LazyLoader.load([
+      'js/utils.js',
       'js/airplane_mode.js',
       'js/battery.js',
       'shared/js/async_storage.js',
       'js/storage.js',
       'shared/js/mobile_operator.js',
       'shared/js/wifi_helper.js',
-      'shared/js/icc_helper.js',
       'js/connectivity.js',
       'js/security_privacy.js',
-      'js/icc_menu.js',
-      'shared/js/settings_listener.js'
+      'js/icc_menu.js'
   ]);
 
   function handleRadioAndCardState() {
@@ -931,34 +919,24 @@ window.addEventListener('keydown', function handleSpecialKeys(event) {
 });
 
 // startup & language switching
-function startupLocale() {
-  navigator.mozL10n.ready(function startupLocale() {
-    initLocale();
-    // XXX this might call `initLocale()` twice until bug 882592 is fixed
-    window.addEventListener('localized', initLocale);
-  });
-}
-
-function initLocale() {
-  var lang = navigator.mozL10n.language.code;
-
+window.addEventListener('localized', function updateLocalized() {
   // set the 'lang' and 'dir' attributes to <html> when the page is translated
-  document.documentElement.lang = lang;
+  document.documentElement.lang = navigator.mozL10n.language.code;
   document.documentElement.dir = navigator.mozL10n.language.direction;
 
   // display the current locale in the main panel
   Settings.getSupportedLanguages(function displayLang(languages) {
-    document.getElementById('language-desc').textContent = languages[lang];
+    document.getElementById('language-desc').textContent =
+        languages[navigator.mozL10n.language.code];
   });
-
   Settings.updateLanguagePanel();
 
   // update the enabled keyboards list with the language associated keyboard
   Settings.getSupportedKbLayouts(function updateEnabledKb(keyboards) {
-    var newKb = keyboards.layout[lang];
+    var newKb = keyboards.layout[navigator.mozL10n.language.code];
     var settingNewKeyboard = {};
     var settingNewKeyboardLayout = {};
-    settingNewKeyboard['keyboard.current'] = lang;
+    settingNewKeyboard['keyboard.current'] = navigator.mozL10n.language.code;
     settingNewKeyboardLayout['keyboard.layouts.' + newKb] = true;
 
     var settings = navigator.mozSettings;
@@ -983,7 +961,7 @@ function initLocale() {
 
     Settings.updateKeyboardPanel();
   }
-}
+});
 
 // Do initialization work that doesn't depend on the DOM, as early as
 // possible in startup.

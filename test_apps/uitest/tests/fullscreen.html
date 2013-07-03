@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>mozRequestFullScreen test</title>
-    <script defer src="../js/fullscreen.js"></script>
     <style>
     button {
       font-size: 40px;
@@ -13,6 +12,14 @@
       background-color: #ccf;
     }
     </style>
+    <script>
+      function fullscreen() {
+        document.getElementById('fullscreen-div').mozRequestFullScreen();
+      }
+      function fullscreenFrame() {
+        window.parent.document.getElementById('test-iframe').mozRequestFullScreen();
+      }
+    </script>
   </head>
   <body>
     <h1>mozRequestFullScreen test</h1>
@@ -23,9 +30,9 @@
     <div id="fullscreen-div">
       <p>Am I full screen?</p>
     </div>
-    <p><button id="fullscreen">Test</button></p>
+    <p><button onclick="fullscreen()">Test</button></p>
     <h2>Test on this iframe, an element within the mozbrowser</h2>
-    <p><button id="fullscreenFrame">Test</button></p>
+    <p><button onclick="fullscreenFrame()">Test</button></p>
 
   </body>
 </html>

@@ -6,6 +6,9 @@ var SETTINGS_CLOCKMODE = 'settings_clockoptions_mode';
 var ClockView = {
   _clockMode: null, /* is read from settings */
 
+  _analogGestureDetector: null,
+  _digitalGestureDetector: null,
+
   get digitalClock() {
     delete this.digitalClock;
     return this.digitalClock = document.getElementById('digital-clock');
@@ -45,7 +48,7 @@ var ClockView = {
   init: function cv_init() {
     this.container = document.getElementById('analog-clock-container');
 
-    document.addEventListener('visibilitychange', this);
+    document.addEventListener('mozvisibilitychange', this);
 
     this.updateDaydate();
     this.initClockface();
@@ -54,8 +57,11 @@ var ClockView = {
   initClockface: function cv_initClockface() {
     var self = this;
 
-    this.analogClock.addEventListener('touchstart', this);
-    this.digitalClock.addEventListener('touchstart', this);
+    this._analogGestureDetector = new GestureDetector(this.analogClock);
+    this.analogClock.addEventListener('tap', this);
+
+    this._digitalGestureDetector = new GestureDetector(this.digitalClock);
+    this.digitalClock.addEventListener('tap', this);
 
     asyncStorage.getItem(SETTINGS_CLOCKMODE, function(mode) {
       switch (mode) {
@@ -152,8 +158,8 @@ var ClockView = {
 
   handleEvent: function cv_handleEvent(evt) {
     switch (evt.type) {
-      case 'visibilitychange':
-        if (document.hidden) {
+      case 'mozvisibilitychange':
+        if (document.mozHidden) {
           if (this._updateDaydateTimeout) {
             window.clearTimeout(this._updateDaydateTimeout);
           }
@@ -164,7 +170,7 @@ var ClockView = {
             window.clearTimeout(this._updateAnalogClockTimeout);
           }
           return;
-        } else if (!document.hidden) {
+        } else if (!document.mozHidden) {
           // Refresh the view when app return to foreground.
           this.updateDaydate();
           if (this._clockMode === 'digital') {
@@ -175,7 +181,7 @@ var ClockView = {
         }
         break;
 
-      case 'touchstart':
+      case 'tap':
         var input = evt.target;
         if (!input)
           return;
@@ -206,6 +212,8 @@ var ClockView = {
     this.updateAnalogClock();
     this._clockMode = 'analog';
     this.analogClock.classList.add('visible');
+    this._analogGestureDetector.startDetecting();
+    this._digitalGestureDetector.stopDetecting();
   },
 
   showDigitalClock: function cv_showDigitalClock() {
@@ -220,6 +228,8 @@ var ClockView = {
     this._clockMode = 'digital';
     this.digitalClock.classList.add('visible');
     this.digitalClockBackground.classList.add('visible');
+    this._digitalGestureDetector.startDetecting();
+    this._analogGestureDetector.stopDetecting();
   },
 
   calAnalogClockType: function cv_calAnalogClockType(count) {
@@ -269,6 +279,79 @@ var ClockView = {
 
 };
 
+var BannerView = {
+
+  _remainHours: 0,
+  _remainMinutes: 0,
+
+  get bannerCountdown() {
+    delete this.bannerCountdown;
+    return this.bannerCountdown = document.getElementById('banner-countdown');
+  },
+
+  init: function BV_init() {
+    this.bannerCountdown.addEventListener('click', this);
+  },
+
+  handleEvent: function al_handleEvent(evt) {
+    this.hideBannerStatus();
+  },
+
+  calRemainTime: function BV_calRemainTime(targetTime) {
+    var now = new Date();
+    var remainTime = targetTime.getTime() - now.getTime();
+    this._remainHours = Math.floor(remainTime / (60 * 60 * 1000)); // per hour
+    this._remainMinutes = Math.floor((remainTime / (60 * 1000)) -
+                          (this._remainHours * 60)); // per minute
+  },
+
+  setStatus: function BV_setStatus(nextAlarmFireTime) {
+    this.calRemainTime(nextAlarmFireTime);
+
+    var innerHTML = '';
+    if (this._remainHours === 0) {
+      innerHTML = _('countdown-lessThanAnHour', {
+        minutes: _('nMinutes', { n: this._remainMinutes })
+      });
+    } else if (this._remainHours < 24) {
+      innerHTML = _('countdown-moreThanAnHour', {
+        hours: _('nHours', { n: this._remainHours }),
+        minutes: _('nRemainMinutes', { n: this._remainMinutes })
+      });
+    } else {
+      var remainDays = Math.floor(this._remainHours / 24);
+      var remainHours = this._remainHours - (remainDays * 24);
+      innerHTML = _('countdown-moreThanADay', {
+        days: _('nRemainDays', { n: remainDays }),
+        hours: _('nRemainHours', { n: remainHours })
+      });
+    }
+    this.bannerCountdown.innerHTML = '<p>' + innerHTML + '</p>';
+
+    this.showBannerStatus();
+    var self = this;
+    window.setTimeout(function cv_hideBannerTimeout() {
+      self.setBannerStatus(false);
+    }, 4000);
+  },
+
+  setBannerStatus: function BV_setBannerStatus(visible) {
+    if (visible) {
+      this.bannerCountdown.classList.add('visible');
+    } else {
+      this.bannerCountdown.classList.remove('visible');
+    }
+  },
+
+  showBannerStatus: function BV_showBannerStatus() {
+    this.setBannerStatus(true);
+  },
+
+  hideBannerStatus: function BV_hideBannerStatus() {
+    this.setBannerStatus(false);
+  }
+};
+
 var AlarmList = {
 
   alarmList: [],
@@ -298,29 +381,16 @@ var AlarmList = {
 
     if (link === this.newAlarmButton) {
       ClockView.hide();
-      this.alarmEditView();
+      AlarmEditView.load();
     } else if (link.classList.contains('input-enable')) {
       this.toggleAlarmEnableState(link.checked,
         this.getAlarmFromList(parseInt(link.dataset.id, 10)));
     } else if (link.classList.contains('alarm-item')) {
       ClockView.hide();
-      this.alarmEditView(this.getAlarmFromList(
+      AlarmEditView.load(this.getAlarmFromList(
         parseInt(link.dataset.id, 10)));
     }
-  },
 
-  alarmEditView: function(alarm) {
-    LazyLoader.load(
-      [
-        document.getElementById('alarm'),
-        'js/alarm_edit.js',
-        'shared/style/input_areas.css',
-        'shared/style/buttons.css',
-        'shared/style/edit_mode.css'
-      ],
-      function() {
-        AlarmEdit.load(alarm);
-    });
   },
 
   init: function al_init() {
@@ -442,3 +512,510 @@ var AlarmList = {
   }
 
 };
+
+var ActiveAlarmController = {
+/*
+ * We maintain an alarm's life cycle immediately when the alarm goes off.
+ * If user click the snooze button when the alarm goes off,
+ * we request a snooze alarm with snoozeAlarmId immediately.
+ *
+ * If multiple alarms goes off in a period of time(even if in the same time),
+ * we always stop the previous notification and handle it by its setting.
+ * Such as following case:
+ *   An once alarm should be turned off.
+ *   A repeat alarm should be requested its next alarm.
+ *   A snooze alarm should be turned off.
+ */
+
+  _onFireAlarm: {},
+  _onFireChildWindow: null,
+
+  init: function am_init() {
+    var self = this;
+    navigator.mozSetMessageHandler('alarm', function gotMessage(message) {
+      self.onAlarmFiredHandler(message);
+    });
+    AlarmManager.updateAlarmStatusBar();
+  },
+
+  onAlarmFiredHandler: function aac_onAlarmFiredHandler(message) {
+    // We have to ensure the CPU doesn't sleep during the process of
+    // handling alarm message, so that it can be handled on time.
+    var cpuWakeLock = navigator.requestWakeLock('cpu');
+
+    // Set a watchdog to avoid locking the CPU wake lock too long,
+    // because it'd exhaust the battery quickly which is very bad.
+    // This could probably happen if the app failed to launch or
+    // handle the alarm message due to any unexpected reasons.
+    var unlockCpuWakeLock = function unlockCpuWakeLock() {
+      if (cpuWakeLock) {
+        cpuWakeLock.unlock();
+        cpuWakeLock = null;
+      }
+    };
+    setTimeout(unlockCpuWakeLock, 30000);
+
+    // receive and parse the alarm id from the message
+    var id = message.data.id;
+    var type = message.data.type;
+    // clear the requested id of went off alarm to DB
+    var clearAlarmRequestId = function clearAlarmRequestId(alarm, callback) {
+      if (type === 'normal') {
+        alarm.normalAlarmId = '';
+      } else {
+        alarm.snoozeAlarmId = '';
+      }
+
+      AlarmManager.putAlarm(alarm, function aac_putAlarm(alarmFromDB) {
+        // Set the next repeat alarm when nornal alarm goes off.
+        if (type === 'normal' && alarmFromDB.repeat !== '0000000' && callback) {
+          alarmFromDB.enabled = false;
+          callback(alarmFromDB);
+        } else {
+          // Except repeat alarm, the active alarm should be turned off.
+          if (!alarmFromDB.normalAlarmId)
+            AlarmList.toggleAlarmEnableState(false, alarmFromDB);
+        }
+      });
+    };
+
+    // set the next repeat alarm
+    var setRepeatAlarm = function setRepeatAlarm(alarm) {
+      AlarmList.toggleAlarmEnableState(true, alarm);
+    };
+
+    // use the alarm id to query db
+    // find out which alarm is being fired.
+    var self = this;
+    AlarmManager.getAlarmById(id, function aac_gotAlarm(alarm) {
+      if (!alarm) {
+        unlockCpuWakeLock();
+        return;
+      }
+      // clear the requested id of went off alarm to DB
+      clearAlarmRequestId(alarm, setRepeatAlarm);
+
+      // If previous active alarm is showing,
+      // turn it off and stop its notification
+      if (self._onFireChildWindow !== null &&
+        typeof self._onFireChildWindow !== 'undefined' &&
+        !self._onFireChildWindow.closed) {
+          if (self._onFireChildWindow.RingView) {
+            self._onFireChildWindow.RingView.stopAlarmNotification();
+          }
+        }
+
+      // prepare to pop out attention screen, ring the ringtone, vibrate
+      self._onFireAlarm = alarm;
+      var protocol = window.location.protocol;
+      var host = window.location.host;
+      self._onFireChildWindow =
+        window.open(protocol + '//' + host + '/onring.html',
+                    'ring_screen', 'attention');
+      self._onFireChildWindow.onload = function childWindowLoaded() {
+        unlockCpuWakeLock();
+      };
+
+    });
+    AlarmManager.updateAlarmStatusBar();
+  },
+
+  snoozeHandler: function aac_snoozeHandler() {
+    var id = this._onFireAlarm.id;
+    AlarmManager.getAlarmById(id, function aac_gotAlarm(alarm) {
+      alarm.enabled = true;
+      AlarmManager.putAlarm(alarm, function aac_putAlarm(alarm) {
+        AlarmManager.set(alarm, true);  // set a snooze alarm
+      });
+    });
+  },
+
+  getOnFireAlarm: function aac_getOnFireAlarm() {
+    return this._onFireAlarm;
+  }
+
+};
+
+var AlarmEditView = {
+
+  alarm: {},
+  timePicker: {
+    hour: null,
+    minute: null,
+    hour24State: null,
+    is12hFormat: false
+  },
+  previewRingtonePlayer: null,
+
+  get element() {
+    delete this.element;
+    return this.element = document.getElementById('alarm');
+  },
+
+  get scrollList() {
+    delete this.scrollList;
+    return this.scrollList = document.getElementById('edit-alarm');
+  },
+
+  get labelInput() {
+    delete this.labelInput;
+    return this.labelInput =
+      document.querySelector('input[name="alarm.label"]');
+  },
+
+  get timeSelect() {
+    delete this.timeSelect;
+    return this.timeSelect = document.getElementById('time-select');
+  },
+
+  get timeMenu() {
+    delete this.timeMenu;
+    return this.timeMenu = document.getElementById('time-menu');
+  },
+
+  get alarmTitle() {
+    delete this.alarmTitle;
+    return this.alarmTitle = document.getElementById('alarm-title');
+  },
+
+  get repeatMenu() {
+    delete this.repeatMenu;
+    return this.repeatMenu = document.getElementById('repeat-menu');
+  },
+
+  get repeatSelect() {
+    delete this.repeatSelect;
+    return this.repeatSelect = document.getElementById('repeat-select');
+  },
+
+  get soundMenu() {
+    delete this.soundMenu;
+    return this.soundMenu = document.getElementById('sound-menu');
+  },
+
+  get soundSelect() {
+    delete this.soundSelect;
+    return this.soundSelect = document.getElementById('sound-select');
+  },
+
+  get vibrateMenu() {
+    delete this.vibrateMenu;
+    return this.vibrateMenu = document.getElementById('vibrate-menu');
+  },
+
+  get vibrateSelect() {
+    delete this.vibrateSelect;
+    return this.vibrateSelect = document.getElementById('vibrate-select');
+  },
+
+  get snoozeMenu() {
+    delete this.snoozeMenu;
+    return this.snoozeMenu = document.getElementById('snooze-menu');
+  },
+
+  get snoozeSelect() {
+    delete this.snoozeSelect;
+    return this.snoozeSelect = document.getElementById('snooze-select');
+  },
+
+  get deleteButton() {
+    delete this.deleteButton;
+    return this.deleteButton = document.getElementById('alarm-delete');
+  },
+
+  get backButton() {
+    delete this.backElement;
+    return this.backElement = document.getElementById('alarm-close');
+  },
+
+  get doneButton() {
+    delete this.doneButton;
+    return this.doneButton = document.getElementById('alarm-done');
+  },
+
+  init: function aev_init() {
+    this.backButton.addEventListener('click', this);
+    this.doneButton.addEventListener('click', this);
+    this.timeMenu.addEventListener('click', this);
+    this.timeSelect.addEventListener('blur', this);
+    this.repeatMenu.addEventListener('click', this);
+    this.repeatSelect.addEventListener('blur', this);
+    this.soundMenu.addEventListener('click', this);
+    this.soundSelect.addEventListener('change', this);
+    this.soundSelect.addEventListener('blur', this);
+    this.vibrateMenu.addEventListener('click', this);
+    this.vibrateSelect.addEventListener('blur', this);
+    this.snoozeMenu.addEventListener('click', this);
+    this.snoozeSelect.addEventListener('blur', this);
+    this.deleteButton.addEventListener('click', this);
+  },
+
+  handleEvent: function aev_handleEvent(evt) {
+    evt.preventDefault();
+    var input = evt.target;
+    if (!input)
+      return;
+
+    switch (input) {
+      case this.backButton:
+        ClockView.show();
+        break;
+      case this.doneButton:
+        ClockView.show();
+        if (!this.save()) {
+          evt.preventDefault();
+          return;
+        }
+        break;
+      case this.timeMenu:
+        this.focusMenu(this.timeSelect);
+        break;
+      case this.timeSelect:
+        this.refreshTimeMenu(this.getTimeSelect());
+        break;
+      case this.repeatMenu:
+        this.focusMenu(this.repeatSelect);
+        break;
+      case this.repeatSelect:
+        this.refreshRepeatMenu(this.getRepeatSelect());
+        break;
+      case this.soundMenu:
+        this.focusMenu(this.soundSelect);
+        break;
+      case this.soundSelect:
+        switch (evt.type) {
+          case 'change':
+            this.refreshSoundMenu(this.getSoundSelect());
+            this.previewSound();
+            break;
+          case 'blur':
+            this.stopPreviewSound();
+            break;
+        }
+        break;
+      case this.vibrateMenu:
+        this.focusMenu(this.vibrateSelect);
+        break;
+      case this.vibrateSelect:
+        this.refreshVibrateMenu(this.getVibrateSelect());
+        break;
+      case this.snoozeMenu:
+        this.focusMenu(this.snoozeSelect);
+        break;
+      case this.snoozeSelect:
+        this.refreshSnoozeMenu(this.getSnoozeSelect());
+        break;
+      case this.deleteButton:
+        ClockView.show();
+        this.delete();
+        break;
+    }
+  },
+
+  focusMenu: function aev_focusMenu(menu) {
+    setTimeout(function() { menu.focus(); }, 10);
+  },
+
+  getDefaultAlarm: function aev_getDefaultAlarm() {
+    // Reset the required message with default value
+    var now = new Date();
+    return {
+      id: '', // for Alarm APP indexedDB id
+      normalAlarmId: '', // for request AlarmAPI id (once, repeat)
+      snoozeAlarmId: '', // for request AlarmAPI id (snooze)
+      label: '',
+      hour: now.getHours(), // use current hour
+      minute: now.getMinutes(), // use current minute
+      enabled: true,
+      repeat: '0000000', // flags for days of week, init to false
+      sound: 'ac_classic_clock_alarm.opus',
+      vibrate: 1,
+      snooze: 5,
+      color: 'Darkorange'
+    };
+  },
+
+  load: function aev_load(alarm) {
+    if (this.element.classList.contains('hidden')) {
+      this.element.classList.remove('hidden');
+      this.init();
+    }
+
+    // scroll to top of form list
+    this.scrollList.scrollTop = 0;
+
+    window.location.hash = 'alarm';
+
+    if (!alarm) {
+      this.element.classList.add('new');
+      this.alarmTitle.textContent = _('newAlarm');
+      alarm = this.getDefaultAlarm();
+    } else {
+      this.element.classList.remove('new');
+      this.alarmTitle.textContent = _('editAlarm');
+    }
+    this.alarm = alarm;
+
+    this.element.dataset.id = alarm.id;
+    this.labelInput.value = alarm.label;
+
+    // Init time, repeat, sound, snooze selection menu.
+    this.initTimeSelect();
+    this.refreshTimeMenu();
+    this.initRepeatSelect();
+    this.refreshRepeatMenu();
+    this.initSoundSelect();
+    this.refreshSoundMenu();
+    this.initVibrateSelect();
+    this.refreshVibrateMenu();
+    this.initSnoozeSelect();
+    this.refreshSnoozeMenu();
+  },
+
+  initTimeSelect: function aev_initTimeSelect() {
+    this.timeSelect.value = this.alarm.hour + ':' + this.alarm.minute;
+  },
+
+  getTimeSelect: function aev_getTimeSelect() {
+    return parseTime(this.timeSelect.value);
+  },
+
+  refreshTimeMenu: function aev_refreshTimeMenu(time) {
+    if (!time) {
+      time = this.alarm;
+    }
+    this.timeMenu.textContent = formatTime(time.hour, time.minute);
+  },
+
+  initRepeatSelect: function aev_initRepeatSelect() {
+    var daysOfWeek = this.alarm.repeat;
+    var options = this.repeatSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      options[i].selected = (daysOfWeek.substr(i, 1) === '1') ? true : false;
+    }
+  },
+
+  getRepeatSelect: function aev_getRepeatSelect() {
+    var daysOfWeek = '';
+    var options = this.repeatSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      daysOfWeek += (options[i].selected) ? '1' : '0';
+    }
+    return daysOfWeek;
+  },
+
+  refreshRepeatMenu: function aev_refreshRepeatMenu(repeatOpts) {
+    var daysOfWeek = (repeatOpts) ? repeatOpts : this.alarm.repeat;
+    this.repeatMenu.textContent = summarizeDaysOfWeek(daysOfWeek);
+  },
+
+  initSoundSelect: function aev_initSoundSelect() {
+    changeSelectByValue(this.soundSelect, this.alarm.sound);
+  },
+
+  getSoundSelect: function aev_getSoundSelect() {
+    return getSelectedValue(this.soundSelect);
+  },
+
+  refreshSoundMenu: function aev_refreshSoundMenu(sound) {
+    // Refresh and parse the name of sound file for sound menu.
+    sound = (sound !== undefined) ? sound : this.alarm.sound;
+    // sound could either be string or int, so test for both
+    this.soundMenu.textContent = (sound === 0 || sound === '0') ?
+                               _('noSound') :
+                               _(sound.replace('.', '_'));
+  },
+
+  previewSound: function aev_previewSound() {
+    var ringtonePlayer = this.previewRingtonePlayer;
+    if (!ringtonePlayer) {
+      this.previewRingtonePlayer = new Audio();
+      ringtonePlayer = this.previewRingtonePlayer;
+    } else {
+      ringtonePlayer.pause();
+    }
+
+    var ringtoneName = this.getSoundSelect();
+    var previewRingtone = 'shared/resources/media/alarms/' + ringtoneName;
+    ringtonePlayer.mozAudioChannelType = 'alarm';
+    ringtonePlayer.src = previewRingtone;
+    ringtonePlayer.play();
+  },
+
+  stopPreviewSound: function aev_stopPreviewSound() {
+    if (this.previewRingtonePlayer)
+      this.previewRingtonePlayer.pause();
+  },
+
+  initVibrateSelect: function aev_initVibrateSelect() {
+    changeSelectByValue(this.vibrateSelect, this.alarm.vibrate);
+  },
+
+  getVibrateSelect: function aev_getVibrateSelect() {
+    return getSelectedValue(this.vibrateSelect);
+  },
+
+  refreshVibrateMenu: function aev_refreshVibrateMenu(vibrate) {
+    vibrate = (vibrate !== undefined) ? vibrate : this.alarm.vibrate;
+    // vibrate could be either string or int, so test for both
+    this.vibrateMenu.textContent = (vibrate === 0 || vibrate === '0') ?
+                                 _('vibrateOff') :
+                                 _('vibrateOn');
+  },
+
+  initSnoozeSelect: function aev_initSnoozeSelect() {
+    changeSelectByValue(this.snoozeSelect, this.alarm.snooze);
+  },
+
+  getSnoozeSelect: function aev_getSnoozeSelect() {
+    return getSelectedValue(this.snoozeSelect);
+  },
+
+  refreshSnoozeMenu: function aev_refreshSnoozeMenu(snooze) {
+    snooze = (snooze) ? this.getSnoozeSelect() : this.alarm.snooze;
+    this.snoozeMenu.textContent = _('nMinutes', {n: snooze});
+  },
+
+  save: function aev_save(callback) {
+    if (this.element.dataset.id !== '') {
+      this.alarm.id = parseInt(this.element.dataset.id, 10);
+    } else {
+      delete this.alarm.id;
+    }
+    var error = false;
+
+    this.alarm.label = this.labelInput.value;
+    this.alarm.enabled = true;
+
+    var time = this.getTimeSelect();
+    this.alarm.hour = time.hour;
+    this.alarm.minute = time.minute;
+    this.alarm.repeat = this.getRepeatSelect();
+    this.alarm.sound = this.getSoundSelect();
+    this.alarm.vibrate = this.getVibrateSelect();
+    this.alarm.snooze = parseInt(this.getSnoozeSelect(), 10);
+
+    if (!error) {
+      AlarmManager.putAlarm(this.alarm, function al_putAlarmList(alarm) {
+        AlarmManager.toggleAlarm(alarm, alarm.enabled);
+        AlarmList.refresh();
+        callback && callback(alarm);
+      });
+    }
+
+    return !error;
+  },
+
+  delete: function aev_delete(callback) {
+    if (!this.element.dataset.id)
+      return;
+
+    var alarm = this.alarm;
+    AlarmManager.delete(alarm, function aev_delete() {
+      AlarmList.refresh();
+      callback && callback(alarm);
+    });
+  }
+
+};
+

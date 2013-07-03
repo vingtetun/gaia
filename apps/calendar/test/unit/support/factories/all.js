@@ -18,16 +18,11 @@
     // handle case of defaults
 
     if (!obj.start) {
-      obj.start = Calc.dateToTransport(
-        new Date()
-      );
+      obj.start = Calc.dateToTransport(new Date());
     }
 
     if (!obj.end) {
-      obj.end = Calc.dateToTransport(
-        // 1 hour after now
-        new Date(Date.now() + 3600 * 1000)
-      );
+      obj.end = Calc.dateToTransport(new Date());
     }
 
     // handle case of given .start\end or defaults

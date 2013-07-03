@@ -6,12 +6,5 @@ var MockMozL10n = {
   },
   translate: function translate() {
 
-  },
-  DateTimeFormat: function() {
-    return {
-      localeFormat: function(date, format) {
-        return date.toISOString() + '|' + format;
-      }
-    };
   }
 };

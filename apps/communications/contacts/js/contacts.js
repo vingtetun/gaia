@@ -702,9 +702,6 @@ var Contacts = (function() {
       '/contacts/js/contacts_shortcuts.js',
       '/contacts/js/confirm_dialog.js',
       '/contacts/js/contacts_tag.js',
-      '/contacts/js/import_utils.js',
-      '/contacts/js/utilities/normalizer.js',
-      '/shared/js/text_normalizer.js',
       '/contacts/js/contacts_settings.js',
       '/contacts/js/contacts_details.js',
       '/contacts/js/contacts_form.js',
@@ -713,6 +710,7 @@ var Contacts = (function() {
       '/contacts/js/utilities/sdcard.js',
       '/contacts/js/utilities/vcard_parser.js',
       '/contacts/js/utilities/import_sim_contacts.js',
+      '/contacts/js/utilities/normalizer.js',
       '/contacts/js/utilities/status.js',
       '/contacts/js/utilities/overlay.js',
       '/contacts/js/utilities/dom.js',
@@ -834,16 +832,12 @@ var Contacts = (function() {
     window.addEventListener('online', Contacts.onLineChanged);
     window.addEventListener('offline', Contacts.onLineChanged);
 
-    document.addEventListener('visibilitychange', function visibility(e) {
-      if (ActivityHandler.currentlyHandling && document.hidden) {
+    document.addEventListener('mozvisibilitychange', function visibility(e) {
+      if (ActivityHandler.currentlyHandling && document.mozHidden) {
         ActivityHandler.postCancel();
         return;
       }
       Contacts.checkCancelableActivity();
-      if (document.hidden === false &&
-                                navigation.currentView() === 'view-settings') {
-        contacts.Settings.updateTimestamps();
-      }
     });
   };
 

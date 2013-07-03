@@ -36,10 +36,6 @@
   z-index: 65536;
 }
 
-#screen > [data-z-index-level="hardware-buttons"] {
-  z-index: 65536;
-}
-
 #screen > [data-z-index-level="sleep-menu"] {
   z-index: 65536;
 }
@@ -79,14 +75,20 @@
   z-index: 4096;
 }
 
-#screen > [data-z-index-level="utility-tray"] {
+#screen:not(.locked) > [data-z-index-level="progress"] {
+  z-index: 4096;
+}
+
+#screen > [data-z-index-level="utility-tray"],
+#screen > [data-z-index-level="notifications-tray"] {
   z-index: 4095;
 }
 
 /* Demote level 5 elements to homescreen level if there is an active
  * full screen app frame */
-#screen.fullscreen-app:not(.locked):not(.attention) > [data-z-index-level="statusbar"],
-#screen.fullscreen-app:not(.locked):not(.attention) > [data-z-index-level="utility-tray"] {
+#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="statusbar"],
+#screen:not(.locked):not(.attention):not(.notifications-tray) > [data-z-index-level="notifications-tray"],
+#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="utility-tray"] {
   z-index: 0;
 }
 
@@ -96,7 +98,8 @@
 #screen.attention:not(.active-statusbar) > [data-z-index-level="statusbar"] {
   z-index: 16386;
 }
-#screen.attention:not(.active-statusbar) > [data-z-index-level="utility-tray"] {
+#screen.attention:not(.active-statusbar) > [data-z-index-level="utility-tray"],
+#screen.attention:not(.active-statusbar) > [data-z-index-level="notifications-tray"] {
   z-index: 16385;
 }
 
@@ -105,27 +108,23 @@
   z-index: 2048;
 }
 
-/* Permission screen is here because of the lockscreen camera. */
-#screen > [data-z-index-level="permission-screen"] {
+#screen > [data-z-index-level="lockscreen-camera"] {
   z-index: 2047;
 }
 
-#screen > [data-z-index-level="lockscreen-camera"] {
-  z-index: 2046;
-}
-
 #screen > [data-z-index-level="simpin-dialog"] {
-  z-index: 2045;
+  z-index: 2046;
 }
 
 /* Keep keyboard under lockscreen when locked */
 #screen.locked > [data-z-index-level="keyboard-frame"] {
-  z-index: 2044;
+  z-index: 2045;
 }
 
 /* Level 7: Dialog Module */
 #screen > [data-z-index-level="dialog-overlay"],
 #screen > [data-z-index-level="value-selector"],
+#screen > [data-z-index-level="permission-screen"],
 #screen > [data-z-index-level="app-install-dialog"],
 #screen > [data-z-index-level="updates-download-dialog"],
 #screen > [data-z-index-level="updates-viaDataConnection-dialog"],
@@ -146,22 +145,6 @@
    * Keyboard should be kept upon #windows
    * and beneath #windows > .appWindow
    */
-}
-
-/* Styles during FTU. In this case lockscreen & homescreen should be behind FTU.
- * Once FTU is done, we will remove this styles in order to get the structure
- * of z-index as usual. */
-#screen.ftu > [data-z-index-level="statusbar"]{
-  z-index: 1;
-}
-
-#screen.ftu > [data-z-index-level="lockscreen"]{
-  z-index: 1;
-}
-
-#screen.ftu > [data-z-index-level="app"] > .appWindow.homescreen,
-#screen.ftu > [data-z-index-level="app"] > .appWindow.homescreen.active {
-  z-index: 0;
 }
 
 /* The below z-index numbers are used to meet the following conditions:
@@ -212,7 +195,6 @@
 #screen:-moz-full-screen-ancestor > [data-z-index-level="cards-view"],
 #screen:-moz-full-screen-ancestor > [data-z-index-level="attention-screen"],
 #screen:-moz-full-screen-ancestor > [data-z-index-level="permission-screen"],
-#screen:-moz-full-screen-ancestor > [data-z-index-level="app-install-dialog"],
-#screen:-moz-full-screen-ancestor > [data-z-index-level="fullscreen-software-home-button"] {
+#screen:-moz-full-screen-ancestor > [data-z-index-level="app-install-dialog"] {
   z-index: 2147483647;
 }

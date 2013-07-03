@@ -10,7 +10,7 @@ var UtilityTray = {
 
   overlay: document.getElementById('utility-tray'),
 
-  statusbar: document.getElementById('statusbar'),
+  statusbar: document.getElementById('top-panel'),
 
   screen: document.getElementById('screen'),
 

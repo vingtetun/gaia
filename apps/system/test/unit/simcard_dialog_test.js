@@ -6,19 +6,18 @@ if (!window['SystemDialog'])
   window['SystemDialog'] = null;
 if (!window['SimPinDialog'])
   window['SimPinDialog'] = null;
-if (!window['IccHelper'])
-  window['IccHelper'] = null;
 
 suite('simcard dialog', function() {
   var realL10n = window.navigator.mozL10n;
-  var realMobileConnection = window.navigator.mozMobileConnection;
-  var realIccManager = window.navigator.mozIccManager;
+  var realMobileConnection = window.navigator.mobileConnection;
   var mockUI;
 
   var MockMobileConnection = (function() {
     var _cardState = null;
     return {
       addEventListener: function(event, handler) {},
+      setCardLock: function(options) {},
+      unlockCardLock: function(options) {},
       get cardState() {
         return _cardState;
       },
@@ -28,23 +27,6 @@ suite('simcard dialog', function() {
       mTeardown: function() {
         _cardState = null;
       }
-    };
-  })();
-
-  var MockIccManager = (function() {
-    return {
-      addEventListener: function(event, handler) {},
-      setCardLock: function(options) {},
-      unlockCardLock: function(options) {}
-    };
-  })();
-
-  var MockIccHelper = (function() {
-    return {
-      get enabled() {
-        return true;
-      },
-      addEventListener: function(event, handler) {}
     };
   })();
 
@@ -58,9 +40,7 @@ suite('simcard dialog', function() {
   suiteSetup(function() {
     window.navigator.mozL10n = MockL10n;
     window.navigator.mozMobileConnection = MockMobileConnection;
-    window.navigator.mozIccManager = MockIccManager;
     window['SystemDialog'] = MockSystemDialog;
-    window['IccHelper'] = MockIccHelper;
 
     var mockUIMarkup = [
       '<header>',
@@ -126,9 +106,7 @@ suite('simcard dialog', function() {
   suiteTeardown(function() {
     window.navigator.mozL10n = realL10n;
     window.navigator.mozMobileConnection = realMobileConnection;
-    window.navigator.mozIccManager = realIccManager;
     window['SystemDialog'] = null;
-    window['IccHelper'] = null;
 
     mockUI.innerHTML = '';
     document.body.removeChild(mockUI);

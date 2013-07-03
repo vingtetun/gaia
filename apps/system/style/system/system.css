@@ -16,10 +16,7 @@ body {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  background-color: #000;
-  background-size: cover; /* Possible memory over-consumption with huge images, it should be removed for improving stability*/
-  background-repeat: no-repeat;
-  background-position: 50% 2rem;
+  background-color: black;
 }
 
 #screen.screenoff {
@@ -213,6 +210,149 @@ body {
   max-height: 100%;
 }
 
+
+#windows > iframe {
+  display: block;
+  position: fixed;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-clip: padding-box;
+
+  transform: translateX(-20%) scale(0.9);
+  opacity: 0.3;
+  animation-duration: .5s;
+  animation-iteration-count: 1;
+
+  z-index: 500;
+}
+
+#windows > iframe.animate {
+  animation-name: front-to-back;
+}
+
+#windows > iframe.shadow {
+  border-left: 8px rgba(0, 0, 0, 0.4) solid;
+}
+
+
+#windows > iframe[data-current="true"] {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+#windows > iframe[data-current="true"].animate {
+  animation-name: back-to-front;
+}
+
+#windows > iframe[data-current="true"].forward.animate {
+  animation-name: right-to-left;
+}
+
+#windows > iframe[data-current="true"].shadow {
+  transform: translateX(-8px);
+}
+
+#windows > iframe[data-current="true"].transitioned {
+  z-index: 1000;
+}
+
+#windows > iframe[data-current="true"] ~ iframe {
+  transform: translateX(100%);
+  opacity: 1;
+}
+
+#windows > iframe[data-current="true"] ~ iframe.shadow {
+  transform: translateX(calc(100% - 8px));
+}
+
+#windows > iframe[data-current="true"] ~ iframe.animate {
+  animation-name: left-to-right;
+}
+
+@keyframes front-to-back {
+  from {
+    transform: scale(1) translateX(0%);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1) translateX(0%);
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(0.9) translateX(-20%);
+    opacity: 0.3;
+  }
+}
+
+@keyframes back-to-front {
+  from {
+    transform: scale(0.9) translateX(-20%);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1) translateX(0%);
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(1) translateX(0%);
+    opacity: 1;
+  }
+}
+
+@keyframes right-to-left {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes left-to-right {
+  from {
+    transform: translateX(-8px);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+#screenshot {
+  position: fixed;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  z-index: 4096;
+  pointer-events: none;
+
+  /*
+  outline: 10px solid red;
+  outline-offset: -10px;
+  */
+}
+
 #windows > .appWindow {
   position: fixed;
   border: 0;
@@ -238,16 +378,6 @@ body {
 
   background-repeat: no-repeat;
   background-position: center center;
-}
-
-@media not all and (-moz-physical-home-button) {
-  #screen:not(.software-button-disabled) > #windows > .appWindow {
-    bottom: 5rem;
-  }
-}
-
-#screen.software-button-enabled #windows > .appWindow {
-  bottom: 5rem;
 }
 
 #windows > .appWindow:not(.homescreen) {
@@ -284,19 +414,19 @@ body {
   pointer-events: auto;
 }
 
-#windows > .appWindow.opening.portrait-primary {
+#windows > .appWindow.opening[data-orientation='portrait-primary'] {
   animation: openApp-portrait-primary 0.3s forwards ease;
 }
 
-#windows > .appWindow.opening.portrait-secondary {
+#windows > .appWindow.opening[data-orientation='portrait-secondary'] {
   animation: openApp-portrait-secondary 0.3s forwards ease;
 }
 
-#windows > .appWindow.opening.landscape-primary {
+#windows > .appWindow.opening[data-orientation='landscape-primary'] {
   animation: openApp-landscape-primary 0.3s forwards ease;
 }
 
-#windows > .appWindow.opening.landscape-secondary {
+#windows > .appWindow.opening[data-orientation='landscape-secondary'] {
   animation: openApp-landscape-secondary 0.3s forwards ease;
 }
 
@@ -304,19 +434,19 @@ body {
   animation-duration: 3s;
 }
 
-#screen.cards-view > #windows > .appWindow.opening.portrait-primary {
+#screen.cards-view > #windows > .appWindow.opening[data-orientation='portrait-primary'] {
   animation: openAppFromCardView-portrait-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.opening.portrait-secondary {
+#screen.cards-view > #windows > .appWindow.opening[data-orientation='portrait-secondary'] {
   animation: openAppFromCardView-portrait-secondary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.opening.landscape-primary {
+#screen.cards-view > #windows > .appWindow.opening[data-orientation='landscape-primary'] {
   animation: openAppFromCardView-landscape-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.opening.landscape-secondary {
+#screen.cards-view > #windows > .appWindow.opening[data-orientation='landscape-secondary'] {
   animation: openAppFromCardView-landscape-secondary 0.15s forwards ease;
 }
 
@@ -326,8 +456,8 @@ body {
 
 /* Opacity increases start up time then we don't use it anymore for opening */
 @keyframes openApp-portrait-primary {
-  0%   { transform: scale(0.1); }
-  100% { transform: scale(1.0); }
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0); }
 }
 
 @keyframes openApp-portrait-secondary {
@@ -346,7 +476,7 @@ body {
 }
 
 #windows > .appWindow.homescreen.zoom-in > iframe {
-  transform: scale(1);
+  transform: translateX(0);
   animation: zoom-in 0.3s forwards ease;
 }
 
@@ -360,8 +490,8 @@ body {
 }
 
 @keyframes zoom-in {
-  0%   { transform: scale(1); }
-  100% { transform: scale(1.8); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 @keyframes openAppFromCardView-portrait-primary {
@@ -420,10 +550,6 @@ body {
   animation: invokingApp 0.6s forwards ease-out;
 }
 
-#screen.switch-app > #windows > .appWindow.homescreen {
-  pointer-events: none;
-}
-
 #screen.switch-app > #windows.slow-transition > .appWindow.opening,
 #screen.switch-app > #windows.slow-transition > .appWindow.closing {
   animation-duration: 6s;
@@ -431,16 +557,14 @@ body {
 
 /* Invoking app moves out */
 @keyframes invokingApp {
-  0%   { transform: scale(1.0); opacity: 1 }
-  50%  { transform: scale(0.8) translateX(0); opacity: 0.3 }
-  100% { transform: scale(0.6) translateX(105%); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 /* Invoked app moves in */
 @keyframes invokedApp {
-  0%   { transform: scale(0.6) translateX(-133%); opacity: 0.3 }
-  50%  { transform: scale(0.6) translateX(-105%); opacity: 1 }
-  100% { transform: scale(1.0) translateX(0) }
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0) }
 }
 
 #windows > .appWindow.closing {
@@ -449,33 +573,33 @@ body {
   pointer-events: none;
 }
 
-#windows > .appWindow.portrait-secondary {
+#windows > .appWindow[data-orientation='portrait-secondary'] {
   transform: rotate(180deg);
   margin-top: -2rem;
   overflow: visible;
 }
 
-#windows > .appWindow.landscape-primary {
+#windows > .appWindow[data-orientation='landscape-primary'] {
   transform: rotate(90deg);
   overflow: visible;
 }
 
-#windows > .appWindow.landscape-secondary {
+#windows > .appWindow[data-orientation='landscape-secondary'] {
   transform: rotate(270deg);
   margin-left: 2rem;
   overflow: visible;
 }
 
-#windows > .appWindow.fullscreen-app.portrait-secondary,
-#windows > .appWindow.fullscreen-app.landscape-primary,
-#windows > .appWindow.fullscreen-app.landscape-secondary {
+#windows > .appWindow.fullscreen-app[data-orientation='portrait-secondary'],
+#windows > .appWindow.fullscreen-app[data-orientation='landscape-primary'],
+#windows > .appWindow.fullscreen-app[data-orientation='landscape-secondary'] {
   margin: 0;
 }
 
 /* placeholder for status bar of previous orientation */
-#windows > .appWindow.landscape-primary:not(.fullscreen-app):after,
-#windows > .appWindow.landscape-secondary:not(.fullscreen-app):after,
-#windows > .appWindow.portrait-secondary:not(.fullscreen-app):after {
+#windows > .appWindow[data-orientation='landscape-primary']:not(.fullscreen-app):after,
+#windows > .appWindow[data-orientation='landscape-secondary']:not(.fullscreen-app):after,
+#windows > .appWindow[data-orientation='portrait-secondary']:not(.fullscreen-app):after {
   display: block;
   height: 2rem;
   width: 100%;
@@ -488,19 +612,19 @@ body {
 }
 
 
-#windows > .appWindow.closing.portrait-primary {
+#windows > .appWindow.closing[data-orientation='portrait-primary'] {
   animation: closeApp-portrait-primary 0.3s forwards ease;
 }
 
-#windows > .appWindow.closing.portrait-secondary {
+#windows > .appWindow.closing[data-orientation='portrait-secondary'] {
   animation: closeApp-portrait-secondary 0.3s forwards ease;
 }
 
-#windows > .appWindow.closing.landscape-primary {
+#windows > .appWindow.closing[data-orientation='landscape-primary'] {
   animation: closeApp-landscape-primary 0.3s forwards ease;
 }
 
-#windows > .appWindow.closing.landscape-secondary {
+#windows > .appWindow.closing[data-orientation='landscape-secondary'] {
   animation: closeApp-landscape-secondary 0.3s forwards ease;
 }
 
@@ -509,7 +633,7 @@ body {
 }
 
 #windows > .appWindow.homescreen.zoom-out > iframe {
-  transform: scale(1.8);
+  transform: translateX(100%);
   animation: zoom-out 0.3s forwards ease;
 }
 
@@ -523,23 +647,23 @@ body {
 }
 
 @keyframes zoom-out {
-  0%   { transform: scale(1.8); }
-  100% { transform: scale(1); }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
 }
 
-#screen.cards-view > #windows > .appWindow.closing.portrait-primary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='portrait-primary'] {
   animation: closeAppTowardsCardView-landscape-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.portrait-secondary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='portrait-secondary'] {
   animation: closeAppTowardsCardView-landscape-secondary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.landscape-primary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='landscape-primary'] {
   animation: closeAppTowardsCardView-portrait-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.landscape-secondary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='landscape-secondary'] {
   animation: closeAppTowardsCardView-portrait-secondary 0.15s forwards ease;
 }
 
@@ -547,19 +671,19 @@ body {
   animation: closeAppTowardsCardView 1.5s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.portrait-primary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='portrait-primary'] {
   animation: closeAppTowardsCardView-portrait-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.portrait-secondary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='portrait-secondary'] {
   animation: closeAppTowardsCardView-portrait-secondary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.landscape-primary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='landscape-primary'] {
   animation: closeAppTowardsCardView-landscape-primary 0.15s forwards ease;
 }
 
-#screen.cards-view > #windows > .appWindow.closing.landscape-secondary {
+#screen.cards-view > #windows > .appWindow.closing[data-orientation='landscape-secondary'] {
   animation: closeAppTowardsCardView-landscape-secondary 0.15s forwards ease;
 }
 
@@ -574,8 +698,8 @@ body {
 }
 
 @keyframes closeApp-portrait-primary {
-  0%   { transform: scale(1.0); opacity: 1; }
-  100% { transform: scale(0.1); opacity: 0; }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes closeApp-portrait-secondary {
@@ -651,18 +775,6 @@ body {
   pointer-events: none;
 }
 
-@media not all and (-moz-physical-home-button) {
-  #dialog-overlay {
-    bottom: 5rem;
-    height: calc(100% - 2rem - 5rem);
-  }
-}
-
-#screen.software-button-enabled #windows > #dialog-overlay {
-  bottom: 5rem;
-  height: calc(100% - 2rem - 5rem);
-}
-
 #screen.active-statusbar #dialog-overlay {
   top: 4rem;
   height: calc(100% - 4rem);
@@ -730,5 +842,40 @@ body {
 
 #screen iframe.communication-frame {
   visibility: hidden;
+}
+
+/* Touch */
+.touch-panel {
+  position:absolute;
+  z-index: 4093;
+  background-color: transparent; /*rgba(255,0,0,0.2)*/
+}
+
+#top-panel {
+  left: 0;
+  top: 0;
+  height: 20px;
+  width: 100%;
+}
+
+#right-panel {
+  height: calc(100% - 40px);
+  width: 20px;
+  right: 0;
+  top: 20px;
+}
+
+#bottom-panel {
+  left: 0;
+  bottom: 0;
+  height: 20px;
+  width: 100%;
+}
+
+#left-panel {
+  height: calc(100% - 40px);
+  width: 20px;
+  left: 0;
+  top: 20px;
 }
 

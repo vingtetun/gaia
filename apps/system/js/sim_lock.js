@@ -5,7 +5,6 @@
 
 var SimLock = {
   _duringCall: false,
-  _showPrevented: false,
 
   init: function sl_init() {
     // Do not do anything if we can't have access to MobileConnection API
@@ -38,13 +37,6 @@ var SimLock = {
         break;
       case 'callscreenwillclose':
         this._duringCall = false;
-        if (this._showPrevented) {
-          this._showPrevented = false;
-
-          // We show the SIM dialog right away otherwise the user won't
-          // be able to receive calls.
-          this.showIfLocked();
-        }
         break;
       case 'unlock':
         // Check whether the lock screen was unlocked from the camera or not.
@@ -113,10 +105,8 @@ var SimLock = {
     if (FtuLauncher.isFtuRunning())
       return false;
 
-    if (this._duringCall) {
-      this._showPrevented = true;
+    if (this._duringCall)
       return false;
-    }
 
     switch (conn.cardState) {
       // do nothing in either absent, unknown or null card states

@@ -203,8 +203,8 @@ navigator.mozL10n.ready(function SettingsDateAndTime() {
     gTime.textContent = f.localeFormat(d, format);
   });
 
-  document.addEventListener('visibilitychange', function visibilityChange() {
-    if (!document.hidden) {
+  document.addEventListener('mozvisibilitychange', function visibilityChange() {
+    if (!document.mozHidden) {
       updateDate();
       updateClock();
     } else {

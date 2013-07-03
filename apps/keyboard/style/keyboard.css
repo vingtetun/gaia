@@ -244,36 +244,19 @@ button::-moz-focus-inner {
 }
 
 /* Key states */
-/* Active key, used for caps Lock key */
-.keyboard-key.kbr-key-active > .visual-wrapper {
-  background-color: #006a80;
-}
-
-.keyboard-key.kbr-key-active.highlighted > .visual-wrapper {
-  background-color: #2b8395;
-}
-
+/* Active */
 .keyboard-key.kbr-key-active > .visual-wrapper > span {
-  color: #fff;
-  border-color: rgba(255, 255, 255, .2);
-}
-
-.keyboard-key.kbr-key-active.highlighted > .visual-wrapper > span {
-  border-color: rgba(255,255,255, .2);
+  color: #00acd1;
 }
 
 /* Hold */
 .keyboard-key.kbr-key-hold > .visual-wrapper {
-  background-color: #00aac8;
+  background-color: #00acd1;
 }
 
 .keyboard-key.kbr-key-hold > .visual-wrapper > span {
-  color: #333;
+  color: #343939;
   border-color: rgba(255,255,255, .3);
-}
-
-.keyboard-key.kbr-key-hold.highlighted > .visual-wrapper {
-  background-color: #2bb8d1;
 }
 
 .keyboard-key.kbr-key-hold.highlighted > .visual-wrapper > span {
@@ -418,11 +401,6 @@ bubble above the key when you tap and hold. */
   white-space: normal;
 }
 
-.menu-container {
-  max-height: 34rem;
-  overflow-y: auto;
-}
-
 /* Special key menu enabled */
 .keyboard-key.special-key.highlighted.kbr-menu-on {
   position: relative;
@@ -441,21 +419,20 @@ bubble above the key when you tap and hold. */
   top: 0;
 }
 
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key {
   padding: 0;
   display: block;
 }
 
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key > .visual-wrapper {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key > .visual-wrapper {
   -moz-box-sizing: border-box;
   border: none;
   border-bottom: 0.1rem solid #3c3c3c;
-  width: 15rem;
-  height: 100%;
+  width: 10rem;
 }
 
 
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key > .visual-wrapper > span {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key > .visual-wrapper > span {
   font-weight: 500;
   font-size: 1.8rem;
   line-height: 5rem;
@@ -464,17 +441,17 @@ bubble above the key when you tap and hold. */
 }
 
 /* Change the text color since the current selected (kbr-key-hold) keyboard will have the same background color*/
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key.highlighted > .visual-wrapper > span {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key.highlighted > .visual-wrapper > span {
   color: #1a3f46;
 }
 
 #keyboard-accent-char-menu > .keyboard-key:last-child .visual-wrapper,
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key:last-child .visual-wrapper {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key:last-child .visual-wrapper {
   border: none;
 }
 
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key.kbr-key-hold > .visual-wrapper,
-#keyboard-accent-char-menu.kbr-menu-lang .keyboard-key.highlighted > .visual-wrapper {
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key.kbr-key-hold > .visual-wrapper,
+#keyboard-accent-char-menu.kbr-menu-lang > .keyboard-key.highlighted > .visual-wrapper {
   background-color: #00acd1;
 }
 
@@ -590,7 +567,7 @@ bubble above the key when you tap and hold. */
    * and make it fit.
    */
   display: inline;
-  font-size: 2.3rem;
+  font-size: 2.4rem;
   line-height: 3rem;
   height: 3rem;
   border: 0;

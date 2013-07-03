@@ -75,7 +75,9 @@
       state.enter(type);
   }
 
-  function buttonEventHandler(e) {
+  // This event handler listens for hardware button events and passes the
+  // event type to the process() method of the current state for processing
+  window.addEventListener('mozChromeEvent', function(e) {
     var type = e.detail.type;
     switch (type) {
       case 'home-button-press':
@@ -89,13 +91,7 @@
         state.process(type);
         break;
     }
-  }
-
-  // This event handler listens for hardware button events and passes the
-  // event type to the process() method of the current state for processing
-  window.addEventListener('mozChromeEvent', buttonEventHandler);
-
-  window.addEventListener('softwareButtonEvent', buttonEventHandler);
+  });
 
   // The base state is the default, when no hardware buttons are pressed
   var baseState = {

@@ -406,8 +406,14 @@ var fb = window.fb || {};
           var number = idx;
           var req;
           if (fb.isFbLinked(contact)) {
-            var fbContact = new fb.Contact(contact);
-            req = fbContact.unlink('hard');
+            if (mustUpdate) {
+              var fbContact = new fb.Contact(contact);
+              req = fbContact.unlink('hard');
+            }
+            else {
+              fb.markAsUnlinked(contact);
+              req = navigator.mozContacts.save(contact);
+            }
           }
           else {
             if (mustUpdate) {

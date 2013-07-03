@@ -22,7 +22,6 @@
     this.email = opts.email || '';
     this.editable = opts.editable || 'true';
     this.source = opts.source || 'manual';
-    this.display = opts.display || '';
   }
   /**
    * set
@@ -97,17 +96,9 @@
       },
       numbers: {
         get: function() {
-          var unique = [];
-          var numbers = list.map(function(recipient) {
+          return list.map(function(recipient) {
             return recipient.number || recipient.email;
           });
-
-          for (var number of numbers) {
-            if (unique.indexOf(number) === -1) {
-              unique.push(number);
-            }
-          }
-          return unique;
         }
       },
       inputValue: {
@@ -207,6 +198,7 @@
    */
   Recipients.prototype.add = function(entry) {
     var list = data.get(this);
+    var isSamePhoneNumber;
     /*
     Entry {
       name, number [, editable, source ]
@@ -228,11 +220,15 @@
       }
     });
 
-    // Don't bother rejecting duplicates, always add every
-    // entry to the recipients list. For reference, see:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=880628
-    list.push(new Recipient(entry));
+    isSamePhoneNumber = function(recipient) {
+      return recipient.number !== entry.number;
+    };
 
+    // Check that this is not a duplicate, if not,
+    // push into the recipients list
+    if (list.every(isSamePhoneNumber)) {
+      list.push(new Recipient(entry));
+    }
     // XXX:Workaround for cleaning search result while duplicate
     //     Dispatch add event no matter duplicate or not
     this.emit('add', list.length);
@@ -418,7 +414,12 @@
 
     // Loop and render each recipient as HTML view
     for (var i = 0; i < length; i++) {
-      html += template.interpolate(list[i]);
+      html += template.interpolate(list[i], {
+        // Names from contacts don't need to be escaped.
+        // Doing so results in displayed name transformations,
+        // ie. "Mike O'Malley" => "Mike O&apos;Malley"
+        safe: list[i].source === 'contacts' ? ['name'] : []
+      });
     }
 
     // An optionally provided "editable" object
@@ -649,15 +650,19 @@
       case 'pan':
         // Switch to multiline display when:
         //
-        //  1. The recipients in the list have caused the
+        //  1. There are 2 or more recipients in the list.
+        //  2. The recipients in the list have caused the
         //      container to grow enough to require the
         //      additional viewable area.
         //      (>1 visible lines or 1.5x the original size)
-        //  2. The user is "pulling down" the recipient list.
+        //  3. The user is "pulling down" the recipient list.
 
         // #1
-        if (view.inner.scrollHeight > (view.dims.inner.height * 1.5)) {
+        if (owner.length > 1 &&
           // #2
+          (view.inner.scrollHeight > (view.dims.inner.height * 1.5))) {
+
+          // #3
           if (event.detail.absolute.dy > 0) {
             this.visible('multiline');
           }
@@ -705,12 +710,7 @@
               //
               // 1.a Delete Mode
               //
-              var recipientWrapper = {
-                target: target,
-                recipient: recipient
-              };
-              Recipients.View.prompts.remove(recipientWrapper,
-                function(result) {
+              Recipients.View.prompts.remove(target, function(result) {
                 if (result.isConfirmed) {
                   owner.remove(
                     relation.get(target)
@@ -902,47 +902,20 @@
   };
 
   Recipients.View.prompts = {
-    remove: function(params, callback) {
+    remove: function(candidate, callback) {
       var response = {
         isConfirmed: false,
-        recipient: params.target
+        recipient: candidate
       };
+      var message = navigator.mozL10n.get('recipientRemoval', {
+        recipient: candidate.textContent.trim()
+      });
       // If it's a contact we should ask to remove
-      var dialog = new Dialog(
-        {
-          title: {
-            value: params.recipient.name || params.recipient.number,
-            l10n: false
-          },
-          body: {
-            value: params.recipient.display,
-            l10n: false
-          },
-          options: {
-            cancel: {
-              text: {
-                value: 'cancel',
-                l10n: true
-              }
-            },
-            confirm: {
-              text: {
-                value: 'remove',
-                l10n: true
-              },
-              method: function(callback, response) {
-                if (response) {
-                  response.isConfirmed = true;
-                  if (callback && typeof callback === 'function') {
-                     callback(response);
-                  }
-                }
-              },
-              params: [callback, response]
-            }
-          }
-        });
-      dialog.show();
+      if (confirm(message)) {
+        response.isConfirmed = true;
+      }
+
+      callback(response);
     }
   };
 

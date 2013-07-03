@@ -270,7 +270,7 @@ var CardsView = (function() {
         }
 
         // Handling cards in different orientations
-        var orientation = app.currentOrientation;
+        var orientation = app.frame.dataset.orientation;
         var isLandscape = false;
         if (orientation == 'landscape-primary' ||
             orientation == 'landscape-secondary') {
@@ -330,7 +330,7 @@ var CardsView = (function() {
     }
   }
 
-  function tap(e) {
+  function runApp(e) {
     // Handle close events
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
@@ -521,7 +521,7 @@ var CardsView = (function() {
     prevCardStyle.opacity = nextCardStyle.opacity = SC_OPA;
   }
 
-  function alignCurrentCard(noTransition) {
+  function alignCurrentCard() {
     // We're going to release memory hiding card out of screen
     if (deltaX < 0) {
       prevCard && prevCard.dispatchEvent(outViewPortEvent);
@@ -547,10 +547,6 @@ var CardsView = (function() {
       nextCardStyle.MozTransition = '';
       currentCardStyle.pointerEvents = 'auto';
     });
-
-    if (noTransition) {
-      currentCard.dispatchEvent(new Event('transitionend'));
-    }
   }
 
   function moveCards() {
@@ -718,8 +714,7 @@ var CardsView = (function() {
         }
         alignCurrentCard();
       } else {
-        alignCurrentCard(true);
-        tap(evt);
+        alignCurrentCard();
       }
 
       return;
@@ -848,7 +843,7 @@ var CardsView = (function() {
         break;
 
       case 'tap':
-        tap(evt);
+        runApp(evt);
         break;
 
       case 'home':

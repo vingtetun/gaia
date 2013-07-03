@@ -148,8 +148,7 @@ var BluetoothTransfer = {
 
     var confirm = {
       title: _('transfer'),
-      callback: this.acceptReceive.bind(this, address),
-      recommend: true
+      callback: this.acceptReceive.bind(this, address)
     };
 
     var deviceName = '';

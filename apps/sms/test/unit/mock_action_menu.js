@@ -1,5 +1,6 @@
 'use strict';
 
+
 function MockOptionMenu(options) {
   MockOptionMenu.calls.push(options);
   MockOptionMenu.instances.push(this);

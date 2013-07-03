@@ -104,7 +104,9 @@ var scanningBigImages = false;
 
 // The localized event is the main entry point for the app.
 // We don't do anything until we receive it.
-navigator.mozL10n.ready(function showBody() {
+window.addEventListener('localized', function showBody() {
+  window.removeEventListener('localized', showBody);
+
   // Set the 'lang' and 'dir' attributes to <html> when the page is translated
   document.documentElement.lang = navigator.mozL10n.language.code;
   document.documentElement.dir = navigator.mozL10n.language.direction;
@@ -843,8 +845,8 @@ function cleanupPick() {
 // Remove this code when https://github.com/mozilla-b2g/gaia/issues/2916
 // is fixed and replace it with an onerror handler on the activity to
 // switch out of pickView.
-window.addEventListener('visibilitychange', function() {
-  if (document.hidden && pendingPick)
+window.addEventListener('mozvisibilitychange', function() {
+  if (document.mozHidden && pendingPick)
     cancelPick();
 });
 

@@ -5,6 +5,5 @@ var MockContactsSettings = {
   close: function() {},
   refresh: function() {},
   onLineChanged: function() {},
-  cardStateChanged: function() {},
-  updateTimestamps: function() {}
+  cardStateChanged: function() {}
 };

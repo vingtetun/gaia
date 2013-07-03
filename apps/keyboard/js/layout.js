@@ -108,7 +108,7 @@ const Keyboards = {
   en: {
     label: 'English',
     imEngine: 'latin',
-    autoCorrectLanguage: 'en_us',
+    needsCandidatePanel: 'true',
     menuLabel: 'English',
     alt: {
       a: 'áàâäåãāæ',
@@ -118,7 +118,7 @@ const Keyboards = {
       o: 'öóòôōœøɵ',
       u: 'üúùûū',
       s: 'ßśš$',
-      S: 'ŚŠ$',
+      S: 'ŚŠŞ',
       n: 'ñń',
       l: 'ł£',
       y: 'ÿ¥',
@@ -188,7 +188,7 @@ const Keyboards = {
     label: 'Spanish',
     menuLabel: 'Español',
     imEngine: 'latin',
-    autoCorrectLanguage: 'es',
+    needsCandidatePanel: 'true',
     alt: {
       a: 'áªàâäåãāæ',
       c: 'ç',
@@ -287,7 +287,7 @@ const Keyboards = {
     label: 'Portuguese',
     menuLabel: 'Português',
     imEngine: 'latin',
-    autoCorrectLanguage: 'pt_br',
+    needsCandidatePanel: 'true',
     alt: {
       a: 'áãàâäåæª',
       e: 'éêèęėēëɛ',
@@ -383,7 +383,6 @@ const Keyboards = {
   cz: {
     label: 'Czech',
     menuLabel: 'Česká',
-    imEngine: 'latin',
     alt: {
       a: 'á',
       c: 'č',
@@ -423,7 +422,7 @@ const Keyboards = {
     label: 'French',
     menuLabel: 'Français',
     imEngine: 'latin',
-    autoCorrectLanguage: 'fr',
+    needsCandidatePanel: 'true',
     alt: {
       a: 'àâæáãäåā',
       c: 'çćč',
@@ -460,7 +459,7 @@ const Keyboards = {
     label: 'German',
     menuLabel: 'Deutsch',
     imEngine: 'latin',
-    autoCorrectLanguage: 'de',
+    needsCandidatePanel: 'true',
     alt: {
       a: 'äàáâãåāæ',
       c: 'çćč',
@@ -501,7 +500,7 @@ const Keyboards = {
     keys: [
       [
         { value: 'ק' }, { value: 'ר' }, { value: 'א' }, { value: 'ט' },
-        { value: 'ו' }, { value: 'ן' }, { value: 'ם' }, { value: 'פ' },
+        { value: 'ו' }, { value: 'ו' }, { value: 'ם' }, { value: 'פ' },
         { value: '⌫', ratio: 2, keyCode: KeyEvent.DOM_VK_BACK_SPACE }
       ], [
         { value: 'ש' }, { value: 'ד' }, { value: 'ג' }, { value: 'כ' },
@@ -520,7 +519,6 @@ const Keyboards = {
   nb: {
     label: 'Norwegian Bokmal',
     menuLabel: 'Norsk',
-    imEngine: 'latin',
     alt: {
       a: 'äáàâąã',
       e: 'éèêëę€',
@@ -563,7 +561,6 @@ const Keyboards = {
   ru: {
     label: 'Russian',
     menuLabel: 'Pусский',
-    imEngine: 'latin',
     alt: {
       // incomplete
     },
@@ -591,7 +588,6 @@ const Keyboards = {
   'sr-Cyrl': {
     label: 'Serbian (Cyrillic)',
     menuLabel: 'Српски (ћирилица)',
-    imEngine: 'latin',
     alt: {
       // incomplete
     },
@@ -619,7 +615,6 @@ const Keyboards = {
   'sr-Latn': {
     label: 'Serbian (Latin)',
     menuLabel: 'Srpski',
-    imEngine: 'latin',
     alt: {
       c: 'čć',
       d: 'đ',
@@ -678,7 +673,6 @@ const Keyboards = {
   },
   sk: {
     label: 'Slovak',
-    imEngine: 'latin',
     menuLabel: 'Slovenčina',
     alt: {
       a: 'áàâąãäæ',
@@ -717,7 +711,6 @@ const Keyboards = {
   },
   tr: {
     label: 'Turkish',
-    imEngine: 'latin',
     menuLabel: 'Türkçe',
     upperCase: {
       'i': 'İ'
@@ -757,7 +750,7 @@ const Keyboards = {
     label: 'English - Dvorak',
     menuLabel: 'Dvorak',
     imEngine: 'latin',
-    autoCorrectLanguage: 'en_us',
+    needsCandidatePanel: 'true',
     alt: {
       a: 'àáâãäåāæ',
       c: 'çćč',
@@ -1061,7 +1054,6 @@ const Keyboards = {
   el: {
     label: 'Greek',
     menuLabel: 'Greek',
-    imEngine: 'latin',
     alt: {
       α: 'ά',
       ε: 'έ€',
@@ -1097,8 +1089,8 @@ const Keyboards = {
   pl: {
     label: 'Polish',
     imEngine: 'latin',
-    autoCorrectLanguage: 'pl',
     menuLabel: 'Polski',
+    needsCandidatePanel: true,
     alt: {
       a: 'ąáàâäåãāæ',
       c: 'ćčç',
@@ -1284,6 +1276,7 @@ const Keyboards = {
   ca: {
     label: 'Catalan',
     imEngine: 'latin',
+    needsCandidatePanel: 'true',
     menuLabel: 'català',
     alt: {
       a: 'àáâäåãāæª@',

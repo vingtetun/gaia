@@ -58,8 +58,8 @@ function setup(){
 
   // If we become hidden, then draw() stops requesting redraws.
   // So when we become visible again, start drawing again
-  document.addEventListener('visibilitychange', function vis() {
-    if (!document.hidden) 
+  document.addEventListener('mozvisibilitychange', function vis() {
+    if (!document.mozHidden) 
       draw();
   });
 }
@@ -73,7 +73,7 @@ function onMouseMove(e) {
 
 function draw() {
   // Keep redrawing while we're not hidden
-  if (!document.hidden)
+  if (!document.mozHidden)
     requestAnimationFrame(draw);
 
   shader.chromaticDispertion = [

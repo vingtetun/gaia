@@ -3,6 +3,9 @@
 // Support different versions of IndexedDB
 var idb = window.indexedDB || window.webkitIndexedDB ||
   window.mozIndexedDB || window.msIndexedDB;
+IDBTransaction = IDBTransaction || {};
+IDBTransaction.READ_WRITE = IDBTransaction.READ_WRITE || 'readwrite';
+IDBTransaction.READ = IDBTransaction.READ || 'readonly';
 
 var Places = {
   DEFAULT_ICON_EXPIRATION: 86400000, // One day
@@ -249,7 +252,8 @@ Places.db = {
   },
 
   createPlace: function db_createPlace(uri, callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -300,7 +304,8 @@ Places.db = {
   },
 
   updatePlace: function db_updatePlace(place, callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to update place: ' +
         place.uri);
@@ -321,7 +326,8 @@ Places.db = {
   },
 
   saveVisit: function db_saveVisit(visit, callback) {
-    var transaction = this._db.transaction(['visits'], 'readwrite');
+    var transaction = this._db.transaction(['visits'],
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to save visit');
     };
@@ -355,7 +361,7 @@ Places.db = {
     var transaction = db.transaction(['visits', 'places']);
     var visitsStore = transaction.objectStore('visits');
     var placesStore = transaction.objectStore('places');
-    visitsStore.openCursor(null, 'prev').onsuccess =
+    visitsStore.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor && history.length < maximum) {
@@ -374,7 +380,7 @@ Places.db = {
     var transaction = self._db.transaction('places');
     var placesStore = transaction.objectStore('places');
     var frecencyIndex = placesStore.index('frecency');
-    frecencyIndex.openCursor(null, 'prev').onsuccess =
+    frecencyIndex.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor && topSites.length < maximum) {
@@ -403,7 +409,7 @@ Places.db = {
     var transaction = this._db.transaction('places');
     var placesStore = transaction.objectStore('places');
     var frecencyIndex = placesStore.index('frecency');
-    frecencyIndex.openCursor(null, 'prev').onsuccess =
+    frecencyIndex.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor && topSites.length < maximum) {
@@ -417,7 +423,8 @@ Places.db = {
 
   clearPlaces: function db_clearPlaces(callback) {
     var db = Places.db._db;
-    var transaction = db.transaction('places', 'readwrite');
+    var transaction = db.transaction('places',
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to clear places');
     };
@@ -433,7 +440,8 @@ Places.db = {
 
   clearVisits: function db_clearVisits(callback) {
     var db = Places.db._db;
-    var transaction = db.transaction('visits', 'readwrite');
+    var transaction = db.transaction('visits',
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to clear visits');
     };
@@ -450,7 +458,8 @@ Places.db = {
 
   clearIcons: function db_clearIcons(callback) {
     var db = Places.db._db;
-    var transaction = db.transaction('icons', 'readwrite');
+    var transaction = db.transaction('icons',
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to clear icons');
     };
@@ -466,7 +475,8 @@ Places.db = {
 
   clearBookmarks: function db_clearBookmarks(callback) {
     var db = Places.db._db;
-    var transaction = db.transaction('bookmarks', 'readwrite');
+    var transaction = db.transaction('bookmarks',
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to clear bookmarks');
     };
@@ -481,7 +491,8 @@ Places.db = {
   },
 
   saveIcon: function db_saveIcon(iconEntry, callback) {
-    var transaction = this._db.transaction(['icons'], 'readwrite');
+    var transaction = this._db.transaction(['icons'],
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to save icon');
     };
@@ -514,7 +525,8 @@ Places.db = {
   },
 
   saveBookmark: function db_saveBookmark(bookmark, callback) {
-    var transaction = this._db.transaction(['bookmarks'], 'readwrite');
+    var transaction = this._db.transaction(['bookmarks'],
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to save bookmark');
     };
@@ -548,7 +560,8 @@ Places.db = {
   },
 
   deleteBookmark: function db_deleteBookmark(uri, callback) {
-    var transaction = this._db.transaction(['bookmarks'], 'readwrite');
+    var transaction = this._db.transaction(['bookmarks'],
+      IDBTransaction.READ_WRITE);
     transaction.onerror = function dbTransactionError(e) {
       console.log('Transaction error while trying to delete bookmark');
     };
@@ -582,7 +595,7 @@ Places.db = {
     var bookmarksStore = transaction.objectStore('bookmarks');
     var bookmarksIndex = bookmarksStore.index('timestamp');
     var placesStore = transaction.objectStore('places');
-    bookmarksIndex.openCursor(null, 'prev').onsuccess =
+    bookmarksIndex.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor) {
@@ -604,7 +617,7 @@ Places.db = {
     var transaction = db.transaction('bookmarks');
     var objectStore = transaction.objectStore('bookmarks');
 
-    objectStore.openCursor(null, 'prev').onsuccess =
+    objectStore.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor) {
@@ -625,7 +638,8 @@ Places.db = {
       return;
     }
 
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -662,7 +676,8 @@ Places.db = {
   },
 
   resetPlaceFrecency: function db_resetPlaceFrecency(uri, callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -694,7 +709,8 @@ Places.db = {
   },
 
   updatePlaceIconUri: function db_updatePlaceIconUri(uri, iconUri, callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -731,7 +747,8 @@ Places.db = {
   },
 
   updatePlaceTitle: function db_updatePlaceTitle(uri, title, callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -768,7 +785,8 @@ Places.db = {
 
   updatePlaceScreenshot: function db_updatePlaceScreenshot(uri, screenshot,
     callback) {
-    var transaction = this._db.transaction(['places'], 'readwrite');
+    var transaction = this._db.transaction(['places'],
+      IDBTransaction.READ_WRITE);
 
     var objectStore = transaction.objectStore('places');
     var readRequest = objectStore.get(uri);
@@ -809,11 +827,12 @@ Places.db = {
     // Clear all visits
     this.clearVisits();
 
-    var transaction = this._db.transaction(['places', 'icons'], 'readwrite');
+    var transaction = this._db.transaction(['places', 'icons'],
+      IDBTransaction.READ_WRITE);
     var placesStore = transaction.objectStore('places');
     var iconStore = transaction.objectStore('icons');
 
-    placesStore.openCursor(null, 'prev').onsuccess =
+    placesStore.openCursor(null, IDBCursor.PREV).onsuccess =
       function onSuccess(e) {
       var cursor = e.target.result;
       if (cursor) {

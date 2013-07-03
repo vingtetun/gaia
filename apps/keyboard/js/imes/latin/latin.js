@@ -50,8 +50,7 @@
     displaysCandidates: displaysCandidates,
     click: click,
     select: select,
-    setLayoutParams: setLayoutParams,
-    setLanguage: setLanguage
+    setLayoutParams: setLayoutParams
   };
 
   // This is the object that is passed to init().
@@ -162,6 +161,7 @@
   // This gets called whenever the keyboard pops up to tell us everything
   // we need to provide useful typing assistance.
   function activate(lang, state, options) {
+    language = lang;
     inputMode = getInputMode(state.type, state.inputmode);
     inputText = state.value;
     cursor = state.selectionStart;
@@ -176,57 +176,39 @@
     suggesting = (options.suggest && inputMode !== 'verbatim');
     correcting = (options.correct && inputMode !== 'verbatim');
 
+    // If we are going to offer suggestions, set up the worker thread.
+    if (suggesting || correcting)
+      setupSuggestionsWorker();
+
     // Reset the double space flag
     lastSpaceTimestamp = 0;
 
-    // Start off with the correct capitalization
+    // Start off with the correct capitalization and suggestions
     updateCapitalization();
-
-    // If we are going to offer suggestions, set up the worker thread.
-    // This will also request a first batch of suggestions.
-    if (suggesting || correcting)
-      setLanguage(lang);
+    updateSuggestions();
   }
 
   function deactivate() {
     if (!worker || idleTimer)
       return;
-    idleTimer = setTimeout(terminateWorker, workerTimeout);
-  }
-
-  function terminateWorker() {
-    if (idleTimer) {
-      clearTimeout(idleTimer);
-      idleTimer = null;
-    }
-    if (worker) {
+    idleTimer = setTimeout(function onIdleTimeout() {
+      // Let's terminate the worker.
       worker.terminate();
       worker = null;
-      keyboard.sendCandidates([]); // Clear any displayed suggestions
-      autoCorrection = null;       // and forget any pending correction.
-    }
+      idleTimer = null;
+    }, workerTimeout);
   }
 
-  function setLanguage(newlang) {
-    // The keyboard isn't idle anymore, so clear the timer
+  function displaysCandidates() {
+    return suggesting;
+  }
+
+  function setupSuggestionsWorker() {
     if (idleTimer) {
       clearTimeout(idleTimer);
       idleTimer = null;
     }
 
-    // If there is no worker and no language, or if there is a worker and
-    // the language has not changed, then there is nothing to do here.
-    if ((!worker && !newlang) || (worker && newlang === language))
-      return;
-
-    // If there is a worker, and no new language, then kill the worker
-    if (worker && !newlang) {
-      terminateWorker();
-      return;
-    }
-
-    // If we get here, then we have to create a worker and set its language
-    // or change the language of an existing worker.
     if (!worker) {
       // If we haven't created the worker before, do it now
       worker = new Worker('js/imes/latin/worker.js');
@@ -240,15 +222,10 @@
           break;
         case 'error':
           console.error(e.data.message);
-          // If the error was a result of our setLanguage call, then
-          // kill the worker because it can't do anything without
-          // a valid dictionary.
-          if (e.data.message.startsWith('setLanguage')) {
-            terminateWorker();
-          }
           break;
         case 'predictions':
-          // The worker is suggesting words: ask the keyboard to display them
+          // The worker is suggesting words. If the input is a word, it
+          // will be first.
           handleSuggestions(e.data.input, e.data.suggestions);
           break;
         }
@@ -257,15 +234,7 @@
 
     // Tell the worker what language we're using. They may cause it to
     // load or reload its dictionary.
-    language = newlang;  // Remember the new language
     worker.postMessage({ cmd: 'setLanguage', args: [language]});
-
-    // And now that we've changed the language, ask for new suggestions
-    updateSuggestions();
-  }
-
-  function displaysCandidates() {
-    return suggesting && worker;
   }
 
   /*
@@ -422,11 +391,12 @@
   // field. Also update our internal state to match the new textfield
   // content and cursor position.
   function replaceBeforeCursor(oldWord, newWord) {
-    var oldWordLen = oldWord.length;
     if (keyboard.replaceSurroundingText) {
-      keyboard.replaceSurroundingText(newWord, oldWordLen, 0);
+      keyboard.replaceSurroundingText(newWord, oldWord.length, 0);
     }
     else {
+      var oldWordLen = oldWord.length;
+
       // Find the first character in currentWord and newWord that differs
       // so we know how many backspaces we need to send.
       for (var firstdiff = 0; firstdiff < oldWordLen; firstdiff++) {
@@ -486,7 +456,7 @@
     }
     else if (punctuating && cursor >= 2 &&
              isWhiteSpace(inputText[cursor - 1]) &&
-             !WORDSEP.test(inputText[cursor - 2]))
+             !isWhiteSpace(inputText[cursor - 2]))
     {
       autoPunctuate(keycode);
     }
@@ -501,18 +471,15 @@
     // Get the word before the cursor
     var currentWord = wordBeforeCursor();
 
-    // The space or punctuation that triggered the autocorrect
-    var delimiter = String.fromCharCode(keycode);
-
     // Figure out the auto correction text
-    var newWord = autoCorrection + delimiter;
+    var newWord = autoCorrection + String.fromCharCode(keycode);
 
     // Make the correction
     replaceBeforeCursor(currentWord, newWord);
 
     // Remember the change we just made so we can revert it if the
     // user types backspace
-    revertTo = currentWord + delimiter;
+    revertTo = currentWord;
     revertFrom = newWord;
     justAutoCorrected = true;
   }
@@ -676,12 +643,8 @@
 
     nearbyKeyMap = newmap;
     serializedNearbyKeyMap = serialized;
-    if (worker) {
+    if (worker)
       worker.postMessage({ cmd: 'setNearbyKeys', args: [nearbyKeyMap]});
-      // Ask for new suggestions since the new layout may affect them.
-      // (When switching from QWERTY to Dvorak, e.g.)
-      updateSuggestions();
-    }
   }
 
   function nearbyKeys(layout) {
@@ -733,13 +696,6 @@
       var dx = (cx1 - cx2) / radius;
       var dy = (cy1 - cy2) / radius;
       var distanceSquared = dx * dx + dy * dy;
-
-      if (distanceSquared < 1) {
-        console.warn('Keys too close',
-                     JSON.stringify(key1), JSON.stringify(key2));
-        return 0;
-      }
-
       if (distanceSquared > 2.5 * 2.5)
         return 0;
       else
@@ -767,11 +723,6 @@
     // If the user hasn't enabled suggestions, or if they're not appropriate
     // for this input type, or are turned off by the input mode, do nothing
     if (!suggesting && !correcting)
-      return;
-
-    // If we don't have a worker (probably because no dictionary) then
-    // do nothing
-    if (!worker)
       return;
 
     // If we deferred suggestions because of a key repeat, clear that timer

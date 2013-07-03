@@ -69,11 +69,11 @@ Create Gaia's profile with:
 
 And launch it in a desktop build:
 
-    $ b2g-bin -profile profile-debug/
+    $ b2g-bin -profile profile/
 
 ...or in Firefox:
 
-    $ firefox -profile profile-debug/
+    $ firefox -profile profile/
 
 You can now use Gaia and test the localization.  When you make changes to the 
 files in the HG clone, just reload the Gaia app to see changes.

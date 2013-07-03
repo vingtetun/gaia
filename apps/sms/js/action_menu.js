@@ -46,9 +46,6 @@
     // Optional section text or node
     section: ...
 
-    // Optional data-type: confirm or action
-    type: 'confirm'
-
     // Optional callback to be invoked when a
     // button in the menu is pressed. Can be
     // overridden by an "incomplete: true" set
@@ -71,7 +68,7 @@ var OptionMenu = function(options) {
   var items = options.items;
   // Create the structure
   this.form = document.createElement('form');
-  this.form.dataset.type = options.type || 'action';
+  this.form.dataset.type = 'action';
   this.form.setAttribute('role', 'dialog');
   // We append title if needed
   if (options.header) {
@@ -99,7 +96,6 @@ var OptionMenu = function(options) {
 
   // We append a menu with the list of options
   var menu = document.createElement('menu');
-  menu.dataset.items = items.length;
 
   // For each option, we append the item and listener
   items.forEach(function renderOption(item) {
@@ -121,24 +117,18 @@ var OptionMenu = function(options) {
 
   menu.addEventListener('click', function(event) {
     var action = handlers.get(event.target);
-    var method;
+    var method = (action && action.method) || function() {};
 
     // Delegate operation to target method. This allows
-    // for a custom "Cancel" to be provided by calling program.
-    //
-    // Further operations should only be processed if
-    // an actual button was pressed.
-    if (typeof action !== 'undefined') {
-      method = action.method || function() {};
-
+    // for a custom "Cancel" to be provided by calling program
+    if (action) {
       method.apply(null, action.params || []);
+    }
+    // Hide action menu when click is received
+    this.hide();
 
-      // Hide action menu when click is received
-      this.hide();
-
-      if (typeof options.complete === 'function' && !action.incomplete) {
-        options.complete();
-      }
+    if (typeof options.complete === 'function' && !action.incomplete) {
+      options.complete();
     }
   }.bind(this));
   // Appending the action menu to the form

@@ -44,8 +44,5 @@ var MockContacts = {
   extServices: {
     importLive: function() {},
     importGmail: function() {}
-  },
-  navigation: {
-    home: function() {}
   }
 };

@@ -116,9 +116,6 @@ var ScreenManager = {
             // Turn screen on if wake lock is acquire
             self.turnScreenOn();
           self._reconfigScreenTimeout();
-        } else if (topic == 'cpu') {
-          power.cpuSleepAllowed = (state != 'locked-foreground' &&
-                                    state != 'locked-background');
         }
       });
     }
@@ -394,12 +391,12 @@ var ScreenManager = {
       this._setIdleTimeout(10, true);
       var self = this;
       var stopShortIdleTimeout = function scm_stopShortIdleTimeout() {
-        window.removeEventListener('will-unlock', stopShortIdleTimeout);
+        window.removeEventListener('unlock', stopShortIdleTimeout);
         window.removeEventListener('lockpanelchange', stopShortIdleTimeout);
         self._setIdleTimeout(self._idleTimeout, false);
       };
 
-      window.addEventListener('will-unlock', stopShortIdleTimeout);
+      window.addEventListener('unlock', stopShortIdleTimeout);
       window.addEventListener('lockpanelchange', stopShortIdleTimeout);
     } else {
       this._setIdleTimeout(this._idleTimeout, false);

@@ -454,25 +454,6 @@ var Predictions = function() {
     {
       var weight = frequency * multiplier;
 
-      // If no major corrections have been made to this candidate, then
-      // artificially increase its weight so that it appears in the
-      // candidates list before any corrected candidates. This should
-      // ensure that if the user is typing an infrequent word we don't
-      // bump the actual word off the list if there are lots of frequent
-      // words that have similar spellings. The artificial weight does
-      // not carry through to the list of words, so more frequent words may
-      // still be predicted instead of the user's input when the user is
-      // typing an infrequent word. But we shouldn't ever not be able to
-      // find the user's input as a valid word.  Adding letters to the
-      // end of partial input does not count as a correction so we also
-      // test the multiplier so that we don't boost the weight of every
-      // extension. But we do allow one letter to be added on and still
-      // get the extra weight.
-      if (corrections === 0 &&
-          multiplier > wordExtensionMultiplier * wordExtensionMultiplier) {
-        weight += 100;
-      }
-
       // If this candidate could never become a word, don't add it
       if (weight <= words.threshold)
         return;
@@ -614,10 +595,7 @@ var Predictions = function() {
         // the list of candidates, we don't need to continue. None of the
         // nodes that follow in the next pointer linked list will have a
         // higher weight than this one.
-        // Note however, that we only use this shortcut if we've already
-        // made at least one correction because uncorrected matches are given
-        // high weight by addCandidate.
-        if (corrections > 0 && weight <= candidates.threshold)
+        if (weight <= candidates.threshold)
           break;
 
         // If we generate new candidates from this node, this is what
@@ -816,7 +794,7 @@ var Predictions = function() {
     var haschar = firstbyte & 0x80;
     var bigchar = firstbyte & 0x40;
     var hasnext = firstbyte & 0x20;
-    node.freq = (firstbyte & 0x1F) + 1;  // frequencies range from 1 to 32
+    node.freq = firstbyte & 0x1F;
 
     if (haschar) {
       node.ch = tree[offset++];

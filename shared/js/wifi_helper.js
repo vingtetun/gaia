@@ -1,12 +1,8 @@
 'use strict';
 
 var WifiHelper = {
-  getWifiManager: function() {
-    return this.wifiManager;
-  },
-
   // create a fake mozWifiManager if required (e.g. desktop browser)
-  wifiManager: function() {
+  getWifiManager: function() {
     var navigator = window.navigator;
     if ('mozWifiManager' in navigator)
       return navigator.mozWifiManager;
@@ -16,7 +12,7 @@ var WifiHelper = {
      * {
      *   ssid              : SSID string (human-readable name)
      *   bssid             : network identifier string
-     *   security          : array of strings (supported authentication methods)
+     *   capabilities      : array of strings (supported authentication methods)
      *   relSignalStrength : 0-100 signal level (integer)
      *   connected         : boolean state
      * }
@@ -26,28 +22,28 @@ var WifiHelper = {
       {
         ssid: 'Mozilla-G',
         bssid: 'xx:xx:xx:xx:xx:xx',
-        security: ['WPA-EAP'],
+        capabilities: ['WPA-EAP'],
         relSignalStrength: 67,
         connected: false
       },
       {
         ssid: 'Livebox 6752',
         bssid: 'xx:xx:xx:xx:xx:xx',
-        security: ['WEP'],
+        capabilities: ['WEP'],
         relSignalStrength: 32,
         connected: false
       },
       {
         ssid: 'Mozilla Guest',
         bssid: 'xx:xx:xx:xx:xx:xx',
-        security: [],
+        capabilities: [],
         relSignalStrength: 98,
         connected: false
       },
       {
         ssid: 'Freebox 8953',
         bssid: 'xx:xx:xx:xx:xx:xx',
-        security: ['WPA2-PSK'],
+        capabilities: ['WPA2-PSK'],
         relSignalStrength: 89,
         connected: false
       }
@@ -150,51 +146,10 @@ var WifiHelper = {
         network: null
       }
     };
-  }(),
-
-  setPassword: function(network, password, identity) {
-    var encType = this.getKeyManagement(network);
-    switch (encType) {
-      case 'WPA-PSK':
-        network.psk = password;
-        break;
-      case 'WPA-EAP':
-        network.password = password;
-        if (identity && identity.length) {
-          network.identity = identity;
-        }
-        break;
-      case 'WEP':
-        network.wep = password;
-        break;
-      default:
-        return;
-    }
-    network.keyManagement = encType;
-  },
-
-  setSecurity: function(network, encryptions) {
-    // Bug 791506: Code for backward compatibility. Modify after landed.
-    if (network.security === undefined) {
-      network.capabilities = encryptions;
-    } else {
-      network.security = encryptions;
-    }
-  },
-
-  getSecurity: function(network) {
-    // Bug 791506: Code for backward compatibility. Modify after landed.
-    return network.security === undefined ?
-      network.capabilities : network.security;
-  },
-
-  getCapabilities: function(network) {
-    // Bug 791506: Code for backward compatibility. Modify after landed.
-    return network.security === undefined ? [] : network.capabilities;
   },
 
   getKeyManagement: function(network) {
-    var key = this.getSecurity(network)[0];
+    var key = network.capabilities[0];
     if (/WEP$/.test(key))
       return 'WEP';
     if (/PSK$/.test(key))
@@ -202,22 +157,6 @@ var WifiHelper = {
     if (/EAP$/.test(key))
       return 'WPA-EAP';
     return '';
-  },
-
-  isConnected: function(network) {
-    /**
-     * XXX the API should expose a 'connected' property on 'network',
-     * and 'wifiManager.connection.network' should be comparable to 'network'.
-     * Until this is properly implemented, we just compare SSIDs to tell wether
-     * the network is already connected or not.
-     */
-    var currentNetwork = this.wifiManager.connection.network;
-    if (!currentNetwork || !network)
-      return false;
-    var key = network.ssid + '+' + this.getSecurity(network).join('+');
-    var curkey = currentNetwork.ssid + '+' +
-        this.getSecurity(currentNetwork).join('+');
-    return key === curkey;
   },
 
   isValidInput: function(key, password, identity) {
@@ -254,16 +193,6 @@ var WifiHelper = {
         break;
     }
     return true;
-  },
-
-  isWpsAvailable: function(network) {
-    var capabilities = this.getCapabilities(network);
-    for (var i = 0; i < capabilities.length; i++) {
-      if (/WPS/.test(capabilities[i])) {
-        return true;
-      }
-    }
-    return false;
   },
 
   isOpen: function(network) {

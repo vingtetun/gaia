@@ -18,17 +18,15 @@ settings = {
  "audio.volume.bt_sco": 15,
  "audio.volume.dtmf": 15,
  "audio.volume.content": 15,
- "audio.volume.master": 5,
  "audio.volume.notification": 15,
  "audio.volume.tts": 15,
  "audio.volume.telephony": 5,
  "audio.volume.cemaxvol": 11,
  "bluetooth.enabled": False,
  "bluetooth.debugging.enabled": False,
- "bluetooth.suspended": False,
+ "bootshutdown.sound.enabled": False,
  "camera.shutter.enabled": True,
  "clear.remote-windows.data": False,
- "debug.console.enabled": False,
  "debug.grid.enabled": False,
  "debug.oop.disabled": False,
  "debug.fps.enabled": False,
@@ -36,10 +34,8 @@ settings = {
  "debug.log-animations.enabled": False,
  "debug.paint-flashing.enabled": False,
  "debug.peformancedata.shared": False,
- "debug.gaia.enabled": False,
  "deviceinfo.firmware_revision": "",
  "deviceinfo.hardware": "",
- "deviceinfo.mac": "",
  "deviceinfo.os": "",
  "deviceinfo.platform_build_id": "",
  "deviceinfo.platform_version": "",
@@ -47,23 +43,12 @@ settings = {
  "deviceinfo.software": "",
  "deviceinfo.update_channel": "",
  "device.storage.writable.name": "sdcard",
- "dom.mozContacts.debugging.enabled": False,
  "gaia.system.checkForUpdates": False,
  "geolocation.enabled": True,
- "geolocation.suspended": False,
- "icc.applications": None,
- "icc.data": None,
- "icc.displayTextTimeout": 40000,
- "icc.inputTextTimeout": 40000,
  "keyboard.layouts.english": True,
  "keyboard.layouts.dvorak": False,
- "keyboard.layouts.czech": False,
- "keyboard.layouts.french": False,
- "keyboard.layouts.german": False,
- "keyboard.layouts.norwegian": False,
- "keyboard.layouts.slovak": False,
- "keyboard.layouts.turkish": False,
- "keyboard.layouts.russian": False,
+ "keyboard.layouts.otherlatins": False,
+ "keyboard.layouts.cyrillic": False,
  "keyboard.layouts.arabic": False,
  "keyboard.layouts.hebrew": False,
  "keyboard.layouts.zhuyin": False,
@@ -77,8 +62,8 @@ settings = {
  "keyboard.layouts.catalan": False,
  "keyboard.vibration": False,
  "keyboard.clicksound": False,
- "keyboard.autocorrect": True,
- "keyboard.wordsuggestion": True,
+ "keyboard.autocorrect": False,
+ "keyboard.wordsuggestion": False,
  "keyboard.current": "en",
  "language.current": "en-US",
  "layers.draw-borders": False,
@@ -93,15 +78,14 @@ settings = {
  "message.sent-sound.enabled": True,
  "operatorvariant.mcc": "0",
  "operatorvariant.mnc": "0",
+ "ril.iccInfo.mbdn":"",
+ "ril.sms.strict7BitEncoding.enabled": False,
+ "ril.cellbroadcast.searchlist": "",
+ "debug.console.enabled": False,
  "phone.ring.keypad": True,
  "powersave.enabled": False,
  "powersave.threshold": -1,
  "privacy.donottrackheader.enabled": False,
- "ril.data.suspended": False,
- "ril.iccInfo.mbdn": "",
- "ril.sms.strict7BitEncoding.enabled": False,
- "ril.sms.requestStatusReport.enabled": False,
- "ril.cellbroadcast.searchlist": "",
  "ril.callwaiting.enabled": None,
  "ril.cf.enabled": False,
  "ril.data.enabled": False,
@@ -127,7 +111,7 @@ settings = {
  "ril.mms.user": "",
  "ril.mms.retrieval_mode": "automatic-home",
  "ril.mms.authtype": "notDefined",
- "dom.mms.operatorSizeLimitation": 307200,
+ "dom.mms.operatorSizeLimitation": 0,
  "ril.radio.preferredNetworkType": "",
  "ril.radio.disabled": False,
  "ril.supl.apn": "",
@@ -138,12 +122,9 @@ settings = {
  "ril.supl.user": "",
  "ril.supl.authtype": "notDefined",
  "ril.sms.strict7BitEncoding.enabled": False,
- "ril.cellbroadcast.disabled": False,
- "ril.data.apnSettings": "",
  "screen.automatic-brightness": True,
  "screen.brightness": 1,
  "screen.timeout": 60,
- "software-button.enabled": False,
  "telephony.speaker.enabled": False,
  "tethering.usb.enabled": False,
  "tethering.usb.ip": "192.168.0.1",
@@ -169,10 +150,11 @@ settings = {
  "vibration.enabled": True,
  "wifi.enabled": True,
  "wifi.screen_off_timeout": 600000,
- "wifi.suspended": False,
  "wifi.disabled_by_wakelock": False,
  "wifi.notification": False,
- "wifi.connect_via_settings": False
+ "wifi.connect_via_settings": False,
+ "icc.displayTextTimeout": 40000,
+ "icc.inputTextTimeout": 40000
 }
 
 def main():
@@ -186,7 +168,7 @@ def main():
     parser.add_option("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_option(      "--noftu", help="bypass the ftu app", action="store_true")
     parser.add_option(      "--locale", help="specify the default locale to use")
-    parser.add_option(      "--profile-folder", help="specify a profile directory")
+    parser.add_option(      "--hidpi", help="specify if the target device has hidpi screen")
     parser.add_option(      "--enable-debugger", help="enable remote debugger (and ADB for VARIANT=user builds)", action="store_true")
     (options, args) = parser.parse_args(sys.argv[1:])
 
@@ -202,20 +184,18 @@ def main():
     else:
         ftu_url = "app://communications.gaiamobile.org/manifest.webapp"
 
-    if options.profile_folder:
-        profile_folder = options.profile_folder
-    else:
-        profile_folder = "profile"
-
     if options.output:
         settings_filename = options.output
     else:
-        settings_filename = profile_folder + "/settings.json"
+        settings_filename = "profile/settings.json"
 
-    if options.wallpaper and os.path.exists(options.wallpaper):
+    if options.wallpaper:
         wallpaper_filename = options.wallpaper
     else:
-        wallpaper_filename = "build/wallpaper.jpg"
+        if options.hidpi:
+            wallpaper_filename = "build/wallpaper@2x.jpg"
+        else:
+            wallpaper_filename = "build/wallpaper.jpg"
 
     enable_debugger = (options.enable_debugger == True)
 
@@ -226,7 +206,6 @@ def main():
         print "Setting Filename:",settings_filename
         print "Wallpaper Filename:", wallpaper_filename
         print "Enable Debugger:", enable_debugger
-        print "Profile Folder:", profile_folder
 
     # Set the default console output
     if options.console:
@@ -243,13 +222,10 @@ def main():
     if options.locale:
         settings["language.current"] = options.locale
         keyboard_layouts_name = "shared/resources/keyboard_layouts.json"
-        keyboard_layouts_res = json.load(open(keyboard_layouts_name))
-        keyboard_layouts = keyboard_layouts_res["layout"]
-        keyboard_nonLatins = keyboard_layouts_res["nonLatin"]
+        keyboard_layouts = json.load(open(keyboard_layouts_name))
         if options.locale in keyboard_layouts:
             default_layout = keyboard_layouts[options.locale]
-            if options.locale not in keyboard_nonLatins:
-                settings["keyboard.layouts.english"] = False
+            settings["keyboard.layouts.english"] = False
             settings["keyboard.layouts.{0}".format(default_layout)] = True
 
     settings["devtools.debugger.remote-enabled"] = enable_debugger

@@ -49,9 +49,7 @@ suite('Recipients', function() {
       email: 'a@b.com',
       source: 'none',
       // Mapped to node attr, not true boolean
-      editable: 'true',
-      // Disambiguation 'display' attribute
-      display: 'Type | Carrier, Number'
+      editable: 'true'
     };
   });
 
@@ -96,7 +94,7 @@ suite('Recipients', function() {
       assert.ok(isValid(recipients.list[1], '777'));
     });
 
-    test('recipients.add() allows dups ', function() {
+    test('recipients.add() rejects dups ', function() {
       recipients.add({
         number: '999'
       });
@@ -104,9 +102,8 @@ suite('Recipients', function() {
         number: '999'
       });
 
-      assert.equal(recipients.length, 2);
+      assert.equal(recipients.length, 1);
       assert.ok(isValid(recipients.list[0], '999'));
-      assert.ok(isValid(recipients.list[1], '999'));
     });
 
     test('recipients.add() [invalid] >', function() {
@@ -192,15 +189,6 @@ suite('Recipients', function() {
       assert.equal(recipients.numbers[0], '999');
 
       recipients.numbers[0] = '***';
-      assert.equal(recipients.numbers[0], '999');
-    });
-
-    test('recipients.numbers is a unique list ', function() {
-      recipients.add(fixture);
-      recipients.add(fixture);
-      recipients.add(fixture);
-
-      assert.equal(recipients.numbers.length, 1);
       assert.equal(recipients.numbers[0], '999');
     });
 
@@ -316,7 +304,7 @@ suite('Recipients', function() {
       );
     });
 
-    test('recipients.add() allows dups, displays correctly ', function() {
+    test('recipients.add() rejects dups, displays correctly ', function() {
       var view = document.getElementById('messages-recipients-list');
 
       recipients.add({
@@ -330,20 +318,17 @@ suite('Recipients', function() {
       // 1 duplicate
       // -------------
       // 1 recipient
-      assert.equal(recipients.length, 2);
+      assert.equal(recipients.length, 1);
 
       // 1 recipients
       // 1 placeholder
       // -------------
       // 2 children
-      assert.equal(view.children.length, 3);
+      assert.equal(view.children.length, 2);
 
 
       assert.ok(
         is.corresponding(recipients.list[0], view.children[0], '999')
-      );
-      assert.ok(
-        is.corresponding(recipients.list[1], view.children[1], '999')
       );
       assert.ok(
         is.placeholder(view.lastElementChild)

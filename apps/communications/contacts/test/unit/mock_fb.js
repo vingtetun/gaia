@@ -284,10 +284,6 @@ Mockfb.utils = (function() {
       else {
         cbs.success(MockLinkedContacts);
       }
-    },
-
-    getImportChecked: function() {
-
     }
   };
 }());

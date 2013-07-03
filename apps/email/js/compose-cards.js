@@ -49,7 +49,7 @@ function ComposeCard(domNode, mode, args) {
   this.sendButton = domNode.getElementsByClassName('cmp-send-btn')[0];
   this.sendButton.addEventListener('click', this.onSend.bind(this), false);
   this._bound_onVisibilityChange = this.onVisibilityChange.bind(this);
-  document.addEventListener('visibilitychange',
+  document.addEventListener('mozvisibilitychange',
                             this._bound_onVisibilityChange);
 
   this.toNode = domNode.getElementsByClassName('cmp-to-text')[0];
@@ -87,7 +87,7 @@ function ComposeCard(domNode, mode, args) {
   }
   // Add attachments area event listener
   var attachmentBtns =
-    domNode.getElementsByClassName('cmp-attachment-btn');
+    domNode.getElementsByClassName('cmp-attachment-container');
   for (var i = 0; i < attachmentBtns.length; i++) {
     attachmentBtns[i].addEventListener('click',
                                        this.onAttachmentAdd.bind(this));
@@ -411,7 +411,7 @@ ComposeCard.prototype = {
 
   insertAttachments: function() {
     var attachmentsContainer =
-      this.domNode.getElementsByClassName('cmp-attachment-container')[0];
+      this.domNode.getElementsByClassName('cmp-attachments-container')[0];
 
     if (this.composer.attachments && this.composer.attachments.length) {
       // Clean the container before we insert the new attachments
@@ -480,10 +480,8 @@ ComposeCard.prototype = {
   updateAttachmentsSize: function() {
     var attachmentLabel =
       this.domNode.getElementsByClassName('cmp-attachment-label')[0];
-    var attachmentTotal =
-      this.domNode.getElementsByClassName('cmp-attachment-total')[0];
     var attachmentsSize =
-      this.domNode.getElementsByClassName('cmp-attachment-size')[0];
+      this.domNode.getElementsByClassName('cmp-attachments-size')[0];
 
     attachmentLabel.textContent =
       mozL10n.get('compose-attachments',
@@ -495,7 +493,7 @@ ComposeCard.prototype = {
       // When there is no attachments, hide the container
       // to keep the style of empty attachments
       var attachmentsContainer =
-        this.domNode.getElementsByClassName('cmp-attachment-container')[0];
+        this.domNode.getElementsByClassName('cmp-attachments-container')[0];
 
       attachmentsContainer.classList.add('collapsed');
     }
@@ -507,12 +505,6 @@ ComposeCard.prototype = {
 
       attachmentsSize.textContent = prettyFileSize(totalSize);
     }
-
-    // Only display the total size when the number of attachments is more than 1
-    if (this.composer.attachments.length > 1)
-      attachmentTotal.classList.remove('collapsed');
-    else
-      attachmentTotal.classList.add('collapsed');
   },
 
   onClickRemoveAttachment: function(node, attachment) {
@@ -569,7 +561,7 @@ ComposeCard.prototype = {
    * Save the draft if there's anything to it, close the card.
    */
   onVisibilityChange: function() {
-    if (document.hidden && this._saveNeeded()) {
+    if (document.mozHidden && this._saveNeeded()) {
       this._saveDraft();
     }
   },
@@ -678,7 +670,7 @@ ComposeCard.prototype = {
   },
 
   die: function() {
-    document.removeEventListener('visibilitychange',
+    document.removeEventListener('mozvisibilitychange',
                                  this._bound_onVisibilityChange);
     this.composer.die();
     this.composer = null;

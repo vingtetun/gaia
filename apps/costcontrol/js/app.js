@@ -266,9 +266,9 @@ var CostControlApp = (function() {
     );
 
     // Check card state when visible
-    document.addEventListener('visibilitychange',
+    document.addEventListener('mozvisibilitychange',
       function _onVisibilityChange(evt) {
-        if (!document.hidden && initialized) {
+        if (!document.mozHidden && initialized) {
           checkCardState();
         }
       }

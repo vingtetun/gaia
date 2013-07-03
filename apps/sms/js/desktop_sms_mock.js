@@ -263,17 +263,6 @@
         type: 'sms',
         timestamp: new Date(Date.now() - 600000)
        },
-      {
-        threadId: 4,
-        sender: null,
-        receiver: '197746797',
-        body: 'This message is intended to demonstrate natural line ' +
-          'wrapping. (delivery: sent ; deliveryStatus: success)',
-        delivery: 'sent',
-        deliveryStatus: 'success',
-        type: 'sms',
-        timestamp: new Date(Date.now() - 550000)
-       },
        {
         threadId: 4,
         sender: '197746797',
@@ -313,17 +302,6 @@
         delivery: 'sent',
         type: 'sms',
         timestamp: new Date(Date.now() - 200000)
-      },
-      {
-        threadId: 4,
-        sender: null,
-        receiver: '197746797',
-        read: true,
-        body: 'short (delivery success)',
-        delivery: 'sent',
-        deliveryStatus: 'success',
-        type: 'sms',
-        timestamp: new Date(Date.now() - 150000)
       },
       {
         threadId: 4,
@@ -407,7 +385,7 @@
       },
       {
         id: 7,
-        participants: ['999', '888', '777', '123456'],
+        participants: ['999', '888', '777'],
         lastMessageType: 'mms',
         timestamp: new Date(now),
         unreadCount: 0
@@ -422,13 +400,6 @@
       {
         id: 9,
         participants: participants,
-        lastMessageType: 'mms',
-        timestamp: new Date(now),
-        unreadCount: 0
-      },
-      {
-        id: 10,
-        participants: ['+12125551234', '+15551237890'],
         lastMessageType: 'mms',
         timestamp: new Date(now),
         unreadCount: 0
@@ -508,23 +479,6 @@
   }
 
 
-  messagesDb.messages.push({
-    threadId: 10,
-    receivers: ['+12125551234', '+15551237890'],
-    delivery: 'received',
-    id: messagesDb.id++,
-    read: true,
-    type: 'mms',
-    subject: '',
-    smil: '<smil><body><par><text src="text1"/></par></body></smil>',
-    attachments: [{
-      location: 'text1',
-      content: new Blob(
-        ['one contact with two numbers'], { type: 'text/plain' }
-      )
-    }],
-    timestamp: new Date()
-  });
 
   // Internal publisher/subscriber implementation
   var allHandlers = {};

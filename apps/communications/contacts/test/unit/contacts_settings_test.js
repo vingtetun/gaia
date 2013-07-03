@@ -1,24 +1,20 @@
-require('/shared/js/lazy_loader.js');
+requireApp('/shared/js/lazy_loader.js');
 requireApp('communications/contacts/test/unit/mock_contacts.js');
 requireApp('communications/contacts/test/unit/mock_asyncstorage.js');
 requireApp('communications/contacts/test/unit/mock_fb.js');
 requireApp('communications/contacts/test/unit/mock_sdcard.js');
 requireApp('communications/dialer/test/unit/mock_confirm_dialog.js');
-requireApp('communications/contacts/test/unit/mock_vcard_parser.js');
-requireApp('communications/contacts/js/import_utils.js');
 requireApp('communications/contacts/js/contacts_settings.js');
+requireApp('communications/contacts/test/unit/mock_vcard_parser.js');
 
 if (!this._) this._ = null;
 if (!this.utils) this.utils = null;
-
-if (!window.Rest) {
-  window.Rest = null;
+if (!realSdCard) {
+  var realSdcard = null;
 }
 
-window.self = null;
-
 var mocksHelperForContactSettings = new MocksHelper([
-  'Contacts', 'asyncStorage', 'fb', 'ConfirmDialog', 'VCFReader'
+  'Contacts', 'AsyncStorage', 'fb', 'ConfirmDialog'
 ]);
 mocksHelperForContactSettings.init();
 
@@ -49,17 +45,14 @@ suite('Contacts settings', function() {
     if (!window.utils) {
       window.utils = { sdcard: MockSdCard };
     } else {
+      realSdCard = window.utils.sdcard;
       window.utils.sdcard = MockSdCard;
     }
-    window.utils.time = {
-      pretty: function(date) {
-        return date;
-      }
-    };
     window._ = stub('blah');
   });
 
   suiteTeardown(function() {
+    window.utils.realSdCard && (sdcard = realSdCard);
     window._ = real_;
     mocksHelper.suiteTeardown();
   });
@@ -91,26 +84,26 @@ suite('Contacts settings', function() {
     '<h2 data-l10n-id="importContactsTitle">Import Contacts</h2>\n' +
     '</header>\n' +
     '<ul data-type="list" id="importSources">\n' +
-    '<li id="settingsSIM" data-source="sim">\n' +
+    '<li id="settingsSIM">\n' +
     '<button class="icon icon-sim" data-l10n-id="importSim2">\n' +
-    'SIM card\n' + '<p><span></span><time></time></p>\n' +
+    'SIM card\n' +
     '</button>\n' +
     '<p id="no-sim" data-l10n-id="noSimMsg"></p>\n' +
     '</li>\n' +
-    '<li id="settingsStorage" data-source="sd">\n' +
-    '<button class="icon icon-gmail" data-l10n-id="importMemoryCard">\n' +
-    'Memory card\n' + '<p><span></span><time></time></p>\n' +
+    '<li id="settingsStorage">\n' +
+    '<button class="icon icon-gmail" data-l10n-id="importSd">\n' +
+    'Memory card\n' +
     '</button>\n' +
-    '<p id="no-memorycard" data-l10n-id="noMemoryCardMsg"></p>\n' +
+    '<p id="no-sd" data-l10n-id="noSdMsg"></p>\n' +
     '</li>\n' +
-    '<li class="importService" data-source="gmail">\n' +
+    '<li class="importService">\n' +
     '<button class="icon icon-gmail" data-l10n-id="importGmail">\n' +
-    'Gmail\n' + '<p><span></span><time></time></p>\n' +
+    'Gmail\n' +
     '</button>\n' +
     '</li>\n' +
-    '<li class="importService" data-source="live">\n' +
+    '<li class="importService">\n' +
     '<button class="icon icon-live" data-l10n-id="importOutlook">\n' +
-    'Windows Live\n' + '<p><span></span><time></time></p>\n' +
+    'Windows Live\n' +
     '</button>\n' +
     '</li>\n' +
     '</ul>\n' +
@@ -162,7 +155,7 @@ suite('Contacts settings', function() {
       assert.equal(document.getElementById('settingsStorage')
         .firstElementChild.hasAttribute('disabled'), false);
 
-      assert.equal(document.querySelector('#no-memorycard')
+      assert.equal(document.querySelector('#no-sd')
         .classList.contains('hide'), true);
     });
 
@@ -175,7 +168,7 @@ suite('Contacts settings', function() {
       assert.equal(document.getElementById('settingsStorage')
         .firstElementChild.hasAttribute('disabled'), true);
 
-      assert.equal(document.querySelector('#no-memorycard')
+      assert.equal(document.querySelector('#no-sd')
         .classList.contains('hide'), false);
     });
 
@@ -184,7 +177,7 @@ suite('Contacts settings', function() {
       Contacts.hideOverlay = stub();
       Contacts.showStatus = stub();
 
-      document.querySelector('[data-l10n-id="importMemoryCard"]').click();
+      document.querySelector('[data-l10n-id="importSd"]').click();
 
       setTimeout(function() {
         assert.equal(Contacts.showOverlay.callCount, 1);
@@ -197,50 +190,6 @@ suite('Contacts settings', function() {
       window.navigator.mozMobileConnection = realNavigatorConn;
         utils.sdcard.checkStorageCard = checkForCard;
       mocksHelper.teardown();
-      MockasyncStorage.clear();
-    });
-  });
-
-  suite('Timestamp Import', function() {
-    var gmailTime = Date.now();
-    var liveTime = Date.now() - 24 * 60 * 60 * 1000;
-
-    suiteSetup(function() {
-      document.body.innerHTML = dom;
-      contacts.Settings.init();
-
-      MockasyncStorage.setItem('gmail_last_import_timestamp', gmailTime);
-      MockasyncStorage.setItem('live_last_import_timestamp', liveTime);
-
-      contacts.Settings.updateTimestamps();
-    });
-
-    test('Contacts from SD card and SIM are not imported yet', function() {
-      var time = document.querySelector('[data-source="sd"] time');
-      assert.equal(time.textContent, '');
-      assert.isNull(time.getAttribute('datetime'));
-
-      time = document.querySelector('[data-source="sim"] time');
-      assert.equal(time.textContent, '');
-      assert.isNull(time.getAttribute('datetime'));
-    });
-
-    test('Contacts from Gmail and Live are already imported ', function() {
-      var time = document.querySelector('[data-source="gmail"] time');
-      assert.equal(time.textContent, gmailTime);
-      assert.equal(time.getAttribute('datetime'),
-                    (new Date(gmailTime)).toLocaleString());
-
-      time = document.querySelector('[data-source="live"] time');
-      assert.equal(time.textContent, liveTime);
-      assert.equal(time.getAttribute('datetime'),
-                    (new Date(liveTime)).toLocaleString());
-
-    });
-
-    suiteTeardown(function() {
-      document.body.innerHTML = '';
-      MockasyncStorage.clear();
     });
   });
 });

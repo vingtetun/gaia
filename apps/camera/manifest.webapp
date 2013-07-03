@@ -27,7 +27,7 @@
     },
     "pick": {
       "filters": {
-        "type": ["image/*", "image/jpeg", "video/*", "video/3gpp"]
+        "type": ["image/*", "image/jpeg"]
        },
       "returnValue": true,
       "disposition": "inline",

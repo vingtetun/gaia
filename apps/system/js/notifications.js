@@ -78,7 +78,7 @@ var NotificationScreen = {
 
     window.addEventListener('utilitytrayshow', this);
     window.addEventListener('unlock', this.clearLockScreen.bind(this));
-    window.addEventListener('visibilitychange', this);
+    window.addEventListener('mozvisibilitychange', this);
     window.addEventListener('foreground', this.handleAppopen.bind(this));
 
     this._sound = 'style/notifications/ringtones/notifier_exclamation.ogg';
@@ -112,9 +112,9 @@ var NotificationScreen = {
         this.updateTimestamps();
         StatusBar.updateNotificationUnread(false);
         break;
-      case 'visibilitychange':
+      case 'mozvisibilitychange':
         //update timestamps in lockscreen notifications
-        if (!document.hidden) {
+        if (!document.mozHidden) {
           this.updateTimestamps();
         }
         break;
@@ -317,9 +317,9 @@ var NotificationScreen = {
     }
 
     if (this.vibrates) {
-      if (document.hidden) {
-        window.addEventListener('visibilitychange', function waitOn() {
-          window.removeEventListener('visibilitychange', waitOn);
+      if (document.mozHidden) {
+        window.addEventListener('mozvisibilitychange', function waitOn() {
+          window.removeEventListener('mozvisibilitychange', waitOn);
           navigator.vibrate([200, 200, 200, 200]);
         });
       } else {

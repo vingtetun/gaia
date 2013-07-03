@@ -100,7 +100,7 @@ var FriendListRenderer = (function() {
       friend.picwidth = box.width;
       friend.picheight = box.height;
 
-      friend.search = Normalizer.toAscii(friend.search);
+      friend.search = utils.text.normalize(friend.search);
 
       // New friend appended
       utils.templates.append(list, friend);

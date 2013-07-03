@@ -212,13 +212,13 @@
   />
 
   <apn carrier="VM WAP"
-      mcc="208"
+      mmc="208"
       mnc="01"
       name="Virgin Mobile"
   />
 
   <apn carrier="VM MMS"
-      mcc="208"
+      mmc="208"
       mnc="01"
       name="Virgin Mobile MMS"
   />

@@ -12553,8 +12553,7 @@ MailBridge.prototype = {
             handle: msg.handle,
             error: null,
             identity: identity,
-            subject: $composer.mailchew
-                       .generateForwardSubject(msg.refSubject),
+            subject: 'Fwd: ' + msg.refSubject,
             // blank lines at the top are baked in by the func
             body: $composer.mailchew.generateForwardMessage(
                     msg.refAuthor, msg.refDate, msg.refSubject,

@@ -1,5 +1,3 @@
-kFontStep = 4;
-
 var MockKeypadManager = {
   formatPhoneNumber:
     function khm_formatPhoneNumber(ellipsisSide) {

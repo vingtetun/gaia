@@ -151,10 +151,6 @@ Calendar.ns('Models').Event = (function() {
     },
 
     set calendarId(value) {
-      if (value && typeof(value) !== 'number') {
-        value = Calendar.probablyParseInt(value);
-      }
-
       this.data.calendarId = value;
     },
 
@@ -220,7 +216,7 @@ Calendar.ns('Models').Event = (function() {
       var start = this.startDate.valueOf();
       var errors = [];
 
-      if (start >= end) {
+      if (start > end) {
         errors.push({
           name: 'start-after-end'
         });

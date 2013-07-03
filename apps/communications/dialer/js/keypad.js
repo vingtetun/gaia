@@ -1,7 +1,6 @@
 'use strict';
 
 var kFontStep = 4;
-var loader = LazyLoader;
 
 // Frequencies coming from http://en.wikipedia.org/wiki/Telephone_keypad
 var gTonesFrequencies = {
@@ -165,7 +164,7 @@ var KeypadManager = {
                                                 this.hangUpCallFromKeypad);
     }
 
-    TonePlayer.init(this._onCall ? 'telephony' : 'normal');
+    TonePlayer.init(this._onCall ? 'telephony' : 'ringer');
 
     this.render();
     loader.load(['/shared/style/action_menu.css',
@@ -185,11 +184,15 @@ var KeypadManager = {
 
   render: function hk_render(layoutType) {
     if (layoutType == 'oncall') {
-      if (CallScreen.activeCall) {
-        this._phoneNumber = CallScreen.activeCall.call.number;
-      }
+      var numberNode = CallScreen.activeCall.querySelector('.number');
+      this._phoneNumber = numberNode.textContent;
+      var additionalContactInfoNode = CallScreen.activeCall.
+        querySelector('.additionalContactInfo');
+      this._additionalContactInfo = additionalContactInfoNode.textContent;
       this._isKeypadClicked = false;
       this.phoneNumberViewContainer.classList.add('keypad-visible');
+      this._originalPhoneNumber = this._phoneNumber;
+      this._originalAdditionalContactInfo = this._additionalContactInfo;
       if (this.callBar) {
         this.callBar.classList.add('hide');
       }
@@ -243,31 +246,104 @@ var KeypadManager = {
   },
 
   formatPhoneNumber: function kh_formatPhoneNumber(ellipsisSide, maxFontSize) {
-    var fakeView = this.fakePhoneNumberView;
-    var view = this.phoneNumberView;
+    if (this._onCall) {
+      var fakeView = CallScreen.activeCall.querySelector('.fake-number');
+      var view = CallScreen.activeCall.querySelector('.number');
+    } else {
+      var fakeView = this.fakePhoneNumberView;
+      var view = this.phoneNumberView;
 
-    // We consider the case where the delete button may have
-    // been used to delete the whole phone number.
-    if (view.value == '') {
-      view.style.fontSize = this.maxFontSize;
-      return;
+      // We consider the case where the delete button may have
+      // been used to delete the whole phone number.
+      if (view.value == '') {
+        view.style.fontSize = this.maxFontSize;
+        return;
+      }
     }
 
     var newFontSize;
     if (maxFontSize) {
       newFontSize = this.maxFontSize;
     } else {
-      newFontSize =
-        Utils.getNextFontSize(view, fakeView, this.maxFontSize,
-          this.minFontSize, kFontStep);
+      newFontSize = this.getNextFontSize(view, fakeView);
     }
     view.style.fontSize = newFontSize + 'px';
-    Utils.addEllipsis(view, fakeView, ellipsisSide);
+    this.addEllipsis(view, fakeView, ellipsisSide);
   },
 
-  _lastPressedKey: null,
-  _keyPressStart: null,
-  _dtmfToneTimer: null,
+  addEllipsis: function kh_addEllipsis(view, fakeView, ellipsisSide) {
+    var side = ellipsisSide || 'begin';
+    LazyL10n.get(function localized(_) {
+      var localizedSide;
+      if (navigator.mozL10n.language.direction === 'rtl') {
+        localizedSide = (side === 'begin' ? 'right' : 'left');
+      } else {
+        localizedSide = (side === 'begin' ? 'left' : 'right');
+      }
+      var computedStyle = window.getComputedStyle(view, null);
+      var currentFontSize = parseInt(
+        computedStyle.getPropertyValue('font-size')
+      );
+      var viewWidth = view.getBoundingClientRect().width;
+      fakeView.style.fontSize = currentFontSize + 'px';
+      fakeView.innerHTML = view.value ? view.value : view.innerHTML;
+
+      var value = fakeView.innerHTML;
+
+      // Guess the possible position of the ellipsis in order to minimize
+      // the following while loop iterations:
+      var counter = value.length -
+        (viewWidth *
+         (fakeView.textContent.length /
+           fakeView.getBoundingClientRect().width));
+
+      var newPhoneNumber;
+      while (fakeView.getBoundingClientRect().width > viewWidth) {
+
+        if (localizedSide == 'left') {
+          newPhoneNumber = '\u2026' + value.substr(-value.length + counter);
+        } else if (localizedSide == 'right') {
+          newPhoneNumber = value.substr(0, value.length - counter) + '\u2026';
+        }
+
+        fakeView.innerHTML = newPhoneNumber;
+        counter++;
+      }
+
+      if (newPhoneNumber) {
+        if (view.value) {
+          view.value = newPhoneNumber;
+        } else {
+          view.innerHTML = newPhoneNumber;
+        }
+      }
+    });
+  },
+
+  getNextFontSize: function kh_getNextFontSize(view, fakeView) {
+    var computedStyle = window.getComputedStyle(view, null);
+    var fontSize = parseInt(computedStyle.getPropertyValue('font-size'));
+    var viewWidth = view.getBoundingClientRect().width;
+    var viewHeight = view.getBoundingClientRect().height;
+    fakeView.style.fontSize = fontSize + 'px';
+    fakeView.innerHTML = (view.value ? view.value : view.innerHTML);
+
+    var rect = fakeView.getBoundingClientRect();
+
+    while ((rect.width < viewWidth) && (fontSize < this.maxFontSize)) {
+      fontSize = Math.min(fontSize + kFontStep, this.maxFontSize);
+      fakeView.style.fontSize = fontSize + 'px';
+      rect = fakeView.getBoundingClientRect();
+    }
+
+    while ((rect.width > viewWidth) && (fontSize > this.minFontSize)) {
+      fontSize = Math.max(fontSize - kFontStep, this.minFontSize);
+      fakeView.style.fontSize = fontSize + 'px';
+      rect = fakeView.getBoundingClientRect();
+    }
+
+    return fontSize;
+  },
 
   keyHandler: function kh_keyHandler(event) {
     var key = event.target.dataset.value;
@@ -296,15 +372,20 @@ var KeypadManager = {
     var telephony = navigator.mozTelephony;
 
     event.stopPropagation();
-    if (event.type == 'mousedown' || event.type == 'touchstart') {
+    if (event.type == 'mousedown') {
       this._longPress = false;
-      this._keyPressStart = Date.now();
-      this._lastPressedKey = key;
 
       if (key != 'delete') {
         if (keypadSoundIsEnabled) {
           // We do not support long press if not on a call
           TonePlayer.start(gTonesFrequencies[key], !this._onCall);
+        }
+
+        // Sending the DTMF tone if on a call
+        if (this._onCall) {
+          // Stop previous tone before dispatching a new one
+          telephony.stopTone();
+          telephony.startTone(key);
         }
       }
 
@@ -342,7 +423,8 @@ var KeypadManager = {
         if (!this._isKeypadClicked) {
           this._isKeypadClicked = true;
           this._phoneNumber = key;
-          this.replaceAdditionalContactInfo('');
+          this._additionalContactInfo = '';
+          this._updateAdditionalContactInfoView();
         } else {
           this._phoneNumber += key;
         }
@@ -350,39 +432,9 @@ var KeypadManager = {
         this._phoneNumber += key;
       }
       this._updatePhoneNumberView('begin', false);
-    } else if (event.type == 'mouseleave') {
-        if (key !== 'delete' && key === this._lastPressedKey) {
-          this._keyPressStart = null;
-          this._lastPressedKey = null;
-        }
-    } else if (event.type == 'mouseup') {
+    } else if (event.type == 'mouseup' || event.type == 'mouseleave') {
       // Stop playing the DTMF/tone after a small delay
       // or right away if this is a long press
-
-      // Sending the DTMF tone if on a call on mouseup or mouseleave
-      // to prevent sending unwanted tones (BUG #829406);
-      if (key !== 'delete' && key === this._lastPressedKey) {
-        var keyPressStop = Date.now(),
-            toneLength = keyPressStop - this._keyPressStart;
-
-        if (keypadSoundIsEnabled) {
-          TonePlayer.stop();
-        }
-
-        this._keyPressStart = null;
-        this._lastPressedKey = null;
-
-        if (this._onCall) {
-          clearTimeout(this._dtmfToneTimer);
-          // Stop previous tone before dispatching a new one
-          telephony.stopTone();
-          telephony.startTone(key);
-
-          this._dtmfToneTimer = window.setTimeout(function ch_playDTMF() {
-            telephony.stopTone();
-          }, toneLength, this);
-        }
-      }
 
       var delay = this._longPress ? 0 : 100;
       if (keypadSoundIsEnabled) {
@@ -435,9 +487,7 @@ var KeypadManager = {
 
     // If there are digits in the phone number, show the delete button
     // and enable the add contact button
-    if (this._onCall) {
-      this.replacePhoneNumber(phoneNumber, ellipsisSide, maxFontSize);
-    } else {
+    if (!this._onCall) {
       var visibility;
       if (phoneNumber.length > 0) {
         visibility = 'visible';
@@ -447,40 +497,52 @@ var KeypadManager = {
         this.callBarAddContact.classList.add('disabled');
       }
       this.deleteButton.style.visibility = visibility;
-
-      this.phoneNumberView.value = phoneNumber;
-      this.moveCaretToEnd(this.phoneNumberView);
-
-      this.formatPhoneNumber(ellipsisSide, maxFontSize);
     }
 
+    if (this._onCall) {
+      var view = CallScreen.activeCall.querySelector('.number');
+      view.textContent = phoneNumber;
+    } else {
+      this.phoneNumberView.value = phoneNumber;
+      this.moveCaretToEnd(this.phoneNumberView);
+    }
+
+    this.formatPhoneNumber(ellipsisSide, maxFontSize);
     if (this.onValueChanged)
       this.onValueChanged(this._phoneNumber);
   },
 
-  replacePhoneNumber:
-    function kh_replacePhoneNumber(phoneNumber, ellipsisSide, maxFontSize) {
-      if (this._onCall) {
-        CallScreen.activeCall.
-          replacePhoneNumber(phoneNumber, ellipsisSide, maxFontSize);
-      }
+  restorePhoneNumber: function kh_restorePhoneNumber(ellipsisSide,
+    maxFontSize) {
+    this.updatePhoneNumber(this._originalPhoneNumber, ellipsisSide,
+      maxFontSize);
   },
 
-  restorePhoneNumber: function kh_restorePhoneNumber() {
-    if (this._onCall) {
-      CallScreen.activeCall.restorePhoneNumber();
-    }
-  },
-
-  replaceAdditionalContactInfo:
+  updateAdditionalContactInfo:
     function kh_updateAdditionalContactInfo(additionalContactInfo) {
-    CallScreen.activeCall.replaceAdditionalContactInfo(additionalContactInfo);
+    this._additionalContactInfo = additionalContactInfo;
+    this._updateAdditionalContactInfoView();
+  },
+
+  _updateAdditionalContactInfoView:
+    function kh__updateAdditionalContactInfoView() {
+    var phoneNumberView = CallScreen.activeCall.querySelector('.number');
+    var additionalview = CallScreen.activeCall.querySelector(
+      '.additionalContactInfo');
+    if (!this._additionalContactInfo ||
+      this._additionalContactInfo.trim() === '') {
+      additionalview.textContent = '';
+      additionalview.classList.add('noAdditionalContactInfo');
+      phoneNumberView.classList.add('noAdditionalContactInfo');
+    } else {
+      phoneNumberView.classList.remove('noAdditionalContactInfo');
+      additionalview.classList.remove('noAdditionalContactInfo');
+      additionalview.textContent = this._additionalContactInfo;
+    }
   },
 
   restoreAdditionalContactInfo: function kh_restoreAdditionalContactInfo() {
-    if (this._onCall) {
-      CallScreen.activeCall.restoreAdditionalContactInfo();
-    }
+    this.updateAdditionalContactInfo(this._originalAdditionalContactInfo);
   },
 
   _callVoicemail: function kh_callVoicemail() {

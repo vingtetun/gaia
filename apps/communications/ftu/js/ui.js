@@ -45,7 +45,7 @@ var UIManager = {
     'sim-import-button',
     'no-sim',
     'sd-import-button',
-    'no-memorycard',
+    'no-sd',
     // Wifi
     'networks',
     'wifi-refresh-button',

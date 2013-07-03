@@ -47,9 +47,6 @@ var BookmarkEditor = {
     this.data = options.data;
     this.onsaved = options.onsaved;
     this.oncancelled = options.oncancelled;
-    document.getElementById('bookmark-form').onsubmit = function() {
-      return false;
-    };
     this.bookmarkEntrySheet = document.getElementById('bookmark-entry-sheet');
     this.bookmarkTitle = document.getElementById('bookmark-title');
     this.bookmarkUrl = document.getElementById('bookmark-url');
@@ -88,3 +85,4 @@ var BookmarkEditor = {
     }
   }
 };
+

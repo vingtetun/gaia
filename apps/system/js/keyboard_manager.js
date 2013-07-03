@@ -101,10 +101,7 @@ var KeyboardManager = (function() {
   var closeKeyboardEvents = [
     'appwillclose',
     'activitywillclose',
-    'activitymenuwillopen',
-    // Hide the keyboard when the cards view is shown (i.e. by long
-    // pressing the home button -- 'holdhome')
-    'holdhome'
+    'activitymenuwillopen'
   ];
   closeKeyboardEvents.forEach(function onEvent(eventType) {
     window.addEventListener(eventType, function closeKeyboard() {

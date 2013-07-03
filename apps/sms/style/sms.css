@@ -8,20 +8,6 @@ html, body {
   overflow-y: hidden !important;
 }
 
-
-/* 
-  Override BB. Some CSS tweaks for having a better confirm readability
-*/
-form[role="dialog"][data-type="confirm"] p {
-  margin-top: 0 !important;
-  border-bottom: 0.1rem solid #686868;
-}
-
-form[role="dialog"][data-type="confirm"] p small{
-  line-height: 2rem;
-}
-
-
 /* Override Building Block [Header] styles */
 section[role="region"] > header:first-child .icon.icon-clear {
   background-image: url(images/icons/clear.png);
@@ -98,7 +84,7 @@ form[role="dialog"][data-type="edit"] header menu[type="toolbar"] button {
 }
 
 [data-type="list"] header:first-child {
-  padding-top: 1.2rem;
+  padding-top: 1.5rem;
 }
 
 #threads-container[data-type="list"] ul {
@@ -235,9 +221,8 @@ form[data-type="action"] img[src=""] {
   transform: translateY(0);
 }
 
-/* Completely hide the Compose form from view when in Edit mode */
 .edit .messages-compose-form {
-  transform: translateY(100%);
+  transform: translateY(3.6rem);
 }
 
 .edit form[role="dialog"][data-type="edit"] header {
@@ -271,6 +256,10 @@ section[role="region"].new > header:first-child form {
   display: block;
 }
 
+.new .carrier-wrapper {
+  display: none;
+}
+
 .new #messages-edit-icon {
   display: none;
 }
@@ -295,23 +284,15 @@ section[role="region"].new > header:first-child form {
   Messages Style as 'bubbles'
 */
 
-#contact-carrier {
-  display: none;
-}
-
-section[class="panel has-carrier"] #contact-carrier {
-  display: block;
-}
-
-section.has-carrier .article-list header:first-child {
-  margin-top: 2rem;
-}
-
 .article-list {
   -moz-box-sizing: border-box;
   background: none repeat scroll 0 0 #E4E4E4;
   text-align: left;
   z-index: 5;
+}
+
+.article-list header:first-child {
+  margin-top: 2rem;
 }
 
 .article-list header {
@@ -437,9 +418,11 @@ section.has-carrier .article-list header:first-child {
   right: 0;
   bottom: 0;
   z-index: auto;
+
   display: none;
   overflow: hidden;
-  width: 4rem;
+  width: 5rem;
+
   text-align: center;
 }
 
@@ -449,8 +432,7 @@ section.has-carrier .article-list header:first-child {
   margin: 0 0.5rem 0 0;
 }
 
-.article-list[data-type="list"] .message.error .bubble > aside progress,
-.article-list[data-type="list"] .message.delivered .bubble > aside progress {
+.article-list[data-type="list"] .message.error .bubble > aside progress {
   display: none;
 }
 
@@ -458,12 +440,6 @@ section.has-carrier .article-list header:first-child {
   display: block;
 
   background: url('images/icons/exclamation.png') no-repeat center center;
-  background-size: 2.2rem;
-}
-
-.article-list[data-type="list"] .message.delivered .bubble > aside {
-  display: block;
-  background: url('images/icons/deliveredtick.png') no-repeat center center;
   background-size: 2.2rem;
 }
 
@@ -486,17 +462,11 @@ section.has-carrier .article-list header:first-child {
   margin: 0 auto;
 }
 
-.edit .article-list[data-type="list"] .message.error .bubble > aside,
-.edit .article-list[data-type="list"] .message.pending .bubble > aside progress,
-.edit .article-list[data-type="list"] .message.sending .bubble > aside progress {
-  display: none;
-}
-
 .article-list[data-type="list"] .message .bubble p {
   text-align: left;
   font-size: 1.8rem;
   line-height: 2.3rem;
-  white-space: pre-wrap;
+  white-space: normal;
   padding: 0;
 }
 
@@ -618,15 +588,11 @@ form.bottom[role="search"].messages-compose-form {
   content: attr(placeholder);
   pointer-events: none;
 }
-
 .attachment {
+  border: none;
+  max-width: 10rem;
+  max-height: 10rem;
   display: block;
-  max-width: 120px;
-  max-height: 120px;
-  border: 1px solid #018eac;
-  border-radius: 2px;
-
-  background-color: rgba(0, 170, 205, 0.45);
 }
 
 #send-message-container {
@@ -735,13 +701,15 @@ section[role="region"].new #messages-to-field {
 }
 
 #to-label {
-  margin: 1.5rem 0.5rem 0 0;
-
+  display: inline-block;
+  width: 2.5rem;
+  position: absolute;
+  top: 1.5rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
   white-space: nowrap;
   color: black;
   font-size: 1.465rem;
-  float: left;
-  overflow: hidden;
 }
 
 #add-contact {
@@ -761,26 +729,28 @@ section[role="region"].new #messages-to-field {
 }
 
 #messages-recipients-list {
+  /* From JS, Make this overflow:scroll when it's time to make this field scrollable
+  */
+  overflow-y: hidden;
+  overflow-x: hidden;
+  left: 3rem;
+  position: relative;
+  width: 10rem;
+  width: -moz-calc(100% - 5.5rem);
   height: 2.4rem;
+  transition: height 0.2s ease-in-out;
   padding-top: 1.2rem;
   margin-bottom: 0.8rem;
-
-  transition: height 0.2s ease-in-out;
-  /* From JS, Make this overflow:scroll when it's time to make this field
-   * scrollable */
-  overflow: hidden;
 }
 
 /*
 Used by Recipients.View to display multi or single line.
 Do not remove.
-
-generateHeightRule() (in ThreadUI/thread_ui.js) will create:
+*/
 #messages-recipients-list.multiline {
   overflow-y: scroll;
-  height: {max available height}px;
+  height: 8.8rem;
 }
-*/
 #messages-recipients-list.singleline {
   overflow-y: hidden;
   height: 2.4rem;
@@ -817,7 +787,7 @@ generateHeightRule() (in ThreadUI/thread_ui.js) will create:
   font-size: 1.8rem;
 }
 
-.article-list[data-type="list"] ul.contact-list {
+ul.contact-list {
   position: absolute;
   width: calc(100% - 3.1rem);
   z-index: 5;
@@ -862,7 +832,8 @@ section[role="region"].new .article-list[data-type="list"]  li {
 }
 
 .subheader menu {
-  margin-top: 1.3rem;
-
-  float: right;
+  position:absolute;
+  right: 1.5rem;
+  top: 1.3rem;
+  z-index: 11;
 }

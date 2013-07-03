@@ -200,32 +200,31 @@ suite('ThreadUI Integration', function() {
       toField.click();
 
       // Simulate list growth
-      recipientsList.style.height = '100px';
+      recipientsList.style.height = '50px';
 
       // Listen for the pan event, simulated immediately following.
       toField.addEventListener('pan', function panTest() {
-        done(function() {
-          assert.isTrue(toField.classList.contains('multiline'));
+        assert.isTrue(toField.classList.contains('multiline'));
 
-          toField.removeEventListener('pan', panTest, false);
+        toField.removeEventListener('pan', panTest, false);
 
-          // Once the pan event has occured, the following steps
-          // will simulate the user actions necessary for testing
-          // the return to single line mode
+        // Once the pan event has occured, the following steps
+        // will simulate the user actions necessary for testing
+        // the return to single line mode
 
-          // 1. Enter text into the editable "placeholder"
-          children[2].textContent = '0';
+        // 1. Enter text into the editable "placeholder"
+        children[2].textContent = '0';
 
-          // 2. Trigger a "keyup" event
-          children[2].dispatchEvent(
-            new CustomEvent('keyup', {
-              bubbles: true
-            })
-          );
+        // 2. Trigger a "keyup" event
+        children[2].dispatchEvent(
+          new CustomEvent('keyup', {
+            bubbles: true
+          })
+        );
 
-          // toField should now be "singleline" again
-          assert.isTrue(toField.classList.contains('singleline'));
-        });
+        // toField should now be "singleline" again
+        assert.isTrue(toField.classList.contains('singleline'));
+        done();
       });
 
       // Simulate pan event
@@ -258,16 +257,15 @@ suite('ThreadUI Integration', function() {
       });
 
       // Simulate list growth
-      recipientsList.style.height = '100px';
+      recipientsList.style.height = '50px';
 
       // Listen for the pan event, simulated immediately following.
       toField.addEventListener('click', function clickTest() {
-        done(function() {
-          toField.removeEventListener('click', clickTest, false);
+        toField.removeEventListener('click', clickTest, false);
 
-          // toField should now be "singleline" again
-          assert.isTrue(toField.classList.contains('singleline'));
-        });
+        // toField should now be "singleline" again
+        assert.isTrue(toField.classList.contains('singleline'));
+        done();
       });
 
       // Artificially set the list to multiline view
@@ -425,9 +423,9 @@ suite('ThreadUI Integration', function() {
 
       // Ensure that the "unaccepted" recipient was assimilated
       // and included in the recipients list when message was sent
-      var calledWith = MessageManager.sendSMS.args[0];
-      assert.deepEqual(calledWith[0], ['999', '000']);
-      assert.deepEqual(calledWith[1], 'foo');
+      assert.deepEqual(
+        MessageManager.sendSMS.args[0], [['999', '000'], 'foo']
+      );
     });
 
     test('Lone ";" are not recipients', function() {
@@ -446,12 +444,6 @@ suite('ThreadUI Integration', function() {
       assert.equal(recipients.length, 0);
       // And one displayed child...
       assert.equal(children.length, 1);
-
-      // The the ";" has been removed from the
-      // recipients list
-      assert.equal(
-        ThreadUI.recipientsList.children[0].textContent, ''
-      );
     });
 
 
@@ -568,7 +560,7 @@ suite('ThreadUI Integration', function() {
           input: '+99',
           target: ul,
           isContact: true,
-          isSuggestion: true
+          isHighlighted: true
         });
       });
 
@@ -588,7 +580,7 @@ suite('ThreadUI Integration', function() {
           input: '*67 [800]-555-1212',
           target: ul,
           isContact: true,
-          isSuggestion: true
+          isHighlighted: true
         });
       });
       assert.ok(Utils.getContactDetails.called);
@@ -608,7 +600,7 @@ suite('ThreadUI Integration', function() {
           input: '\\^$*+?.',
           target: ul,
           isContact: true,
-          isSuggestion: true
+          isHighlighted: true
         });
       });
       assert.ok(Utils.getContactDetails.called);
@@ -627,7 +619,7 @@ suite('ThreadUI Integration', function() {
         input: contact.tel[0].value,
         target: ul,
         isContact: true,
-        isSuggestion: true
+        isHighlighted: true
       });
 
       assert.isTrue(isRendered);
@@ -643,7 +635,7 @@ suite('ThreadUI Integration', function() {
         input: null,
         target: ul,
         isContact: true,
-        isSuggestion: true
+        isHighlighted: true
       });
 
       assert.isFalse(isNotRendered);

@@ -31,7 +31,7 @@ var SimPinLock = {
 
     // with SIM card, query its status
     var self = this;
-    var req = IccHelper.getCardLock('pin');
+    var req = this.mobileConnection.getCardLock('pin');
     req.onsuccess = function spl_checkSuccess() {
       var enabled = req.result.enabled;
       self.simSecurityDesc.textContent = (enabled) ?
@@ -47,9 +47,6 @@ var SimPinLock = {
   init: function spl_init() {
     this.mobileConnection = window.navigator.mozMobileConnection;
     if (!this.mobileConnection)
-      return;
-
-    if (!IccHelper.enabled)
       return;
 
     this.mobileConnection.addEventListener('cardstatechange',

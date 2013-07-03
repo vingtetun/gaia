@@ -10,18 +10,6 @@ var About = {
     this.loadHardwareInfo();
     this.loadGaiaCommit();
     this.loadLastUpdated();
-    this.networkStatus();
-  },
-
-  networkStatus: function about_networkStatus() {
-    var button = document.getElementById('check-update-now');
-    var status = {
-      offline: function() { button.disabled = true; },
-      online: function() { button.disabled = false; }
-    };
-    window.addEventListener('offline', status.offline);
-    window.addEventListener('online', status.online);
-    status[(window.navigator.onLine ? 'online' : 'offline')]();
   },
 
   loadGaiaCommit: function about_loadGaiaCommit() {
@@ -103,10 +91,7 @@ var About = {
 
     var req = mobileConnection.sendMMI('*#06#');
     req.onsuccess = function getIMEI() {
-      if (req.result && req.result.statusMessage) {
-        document.getElementById('deviceInfo-imei').textContent =
-          req.result.statusMessage;
-      }
+      document.getElementById('deviceInfo-imei').textContent = req.result;
     };
   },
 

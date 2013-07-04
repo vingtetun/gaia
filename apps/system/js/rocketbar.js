@@ -1,36 +1,99 @@
 'use strict';
 
 var Rocketbar = {
-  /**
-   * Initialise rocketbar.
-   */
+  zone: document.getElementById('top-panel'),
+  progress: document.getElementById('progress'),
+  bar: document.getElementById('rocketbar'),
+  input: document.getElementById('rocketbar-input'),
+  results: document.getElementById('rocketbar-results'),
+
   init: function rocketbar_init() {
-    this.progress = document.getElementById('progress');
-    this.bar = document.getElementById('rocketbar');
-    this.input = document.getElementById('rocketbar-input');
-    this.results = document.getElementById('rocketbar-results');
     this.input.addEventListener('focus', this.handleFocus.bind(this));
     this.input.addEventListener('blur', function() {
       setTimeout(this.handleBlur.bind(this));
     }.bind(this));
+
     this.input.addEventListener('keyup', this.handleKeyUp.bind(this));
     this.bar.addEventListener('submit', this.handleSubmit.bind(this));
+
     this.results.addEventListener('click', this.handleClick.bind(this));
-    window.addEventListener('utilitytrayshow',
-      this.handleUtilityTrayShow.bind(this));
     window.addEventListener('historychange',
       this.handleWindowChange.bind(this));
+
+    window.addEventListener('lock', (function onLock() {
+      this.close(true);
+    }).bind(this));
+
+    ['touchstart', 'touchmove', 'touchend'].forEach(function(e) {
+      this.zone.addEventListener(e, this);
+    }, this);
   },
 
-  handleUtilityTrayShow: function rocketbar_handleUtilityTrayShow(evt) {
-    this.results.innerHTML = '';
-    this.input.focus();
+  lastY: 0,
+  startY: 0,
+  handleEvent: function rb_handleEvent(e) {
+    var diffY = this.lastY - this.startY;
+    var progress = Math.abs(diffY / (window.innerHeight / 5));
+
+    switch(e.type) {
+      case 'touchstart':
+        this.lastY = this.startY = e.touches[0].pageY;
+        this.lastDate = Date.now();
+
+        this.bar.style.MozTransition = 'transform';
+        break;
+      case 'touchmove':
+        this.lastY = e.touches[0].pageY;
+        this.lastProgress = progress;
+        this.lastDate = Date.now();
+
+        var translation = -100 + Math.min(progress * 100, 100);
+
+        this.bar.style.MozTransform = 'translateY(' + translation + '%)';
+
+        break;
+      case 'touchend':
+        if (progress >= 1) {
+          this.bar.style.MozTransition = '';
+          this.open(true);
+        } else {
+          var durationLeft = 0.3 - (1 - progress) * 0.3;
+          this.bar.style.MozTransition = 'transform ' + durationLeft + 's linear';
+          this.close();
+        }
+
+        this.bar.style.MozTransform = '';
+
+        break;
+    }
   },
-  
+
+  open: function rb_open(focus) {
+    this.results.innerHTML = '';
+    this.bar.classList.add('open');
+
+    if (focus) {
+      this.input.focus();
+      this.results.classList.add('open');
+    }
+  },
+
+  close: function rb_close(evenIfFocused) {
+    var focus = (this.input == document.activeElement);
+    if (!focus || evenIfFocused) {
+      this.bar.classList.remove('open');
+      this.results.classList.remove('open');
+    }
+  },
+
   currentWindow: null,
   currentTitle: null,
   currentLocation: null,
-  
+
+  get currentlyOnApp() {
+    return (this.currentLocation.indexOf('app://') == -1);
+  },
+
   /**
    * Handle rocketbar focus.
    *
@@ -38,14 +101,17 @@ var Rocketbar = {
    */
   handleFocus: function rocketbar_handleFocus(evt) {
     // Don't show app:// URLs of packaged apps
-    if (this.currentLocation.indexOf('app://') == -1) {
+    if (this.currentlyOnApp) {
       this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
     }
     this.input.select();
+
+    this.results.classList.add('open');
+    this._clearEarlyHide();
   },
-  
+
   /**
    * Handle rocketbar blur.
    *
@@ -54,13 +120,13 @@ var Rocketbar = {
   handleBlur: function rocketbar_handleBlur(evt) {
     if (this.currentTitle) {
       this.input.value = this.currentTitle;
-    } else if (this.currentLocation.indexOf('app://') == -1) {
+    } else if (this.currentlyOnApp) {
       this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
     }
   },
-  
+
   /**
    * Handle rocketbar key presses.
    *
@@ -68,20 +134,19 @@ var Rocketbar = {
    */
   handleKeyUp: function rocketbar_handleKeyUp(evt) {
     var results = [];
-    
+
     // Clean up the query and display blank results if blank
     var query = this.input.value.toLowerCase().trim();
     if (query.length == 0) {
       this.showResults(results);
       return;
     }
-    
+
     // Create a list of manifestURLs for apps with names which match the query
     var installedApps = Applications.installedApps;
     var manifestURLs = Object.keys(installedApps);
     manifestURLs.forEach(function(manifestURL) {
       if (this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
-        console.log('MANIFEST ' + manifestURL);
       }
       var appName = installedApps[manifestURL].manifest.name.toLowerCase();
       if (appName.indexOf(query) != -1 &&
@@ -91,19 +156,20 @@ var Rocketbar = {
     }, this);
     this.showResults(results);
   },
-  
+
   /**
    * Handle clicks on rocketbar results.
    *
    * @param Event evt Click event
    */
   handleClick: function rocketbar_handleClick(evt) {
+    this.close(true);
+
     var manifestURL = evt.target.getAttribute('data-manifest-url');
     if (Applications.installedApps[manifestURL])
       Applications.installedApps[manifestURL].launch();
-    UtilityTray.hide();
   },
-  
+
   /**
    * Handle submitting the rocketbar.
    *
@@ -111,26 +177,26 @@ var Rocketbar = {
    */
   handleSubmit: function rocketbar_handleSubmit(evt) {
     evt.preventDefault();
-    UtilityTray.hide();
-    
+
+    this.close(true);
     var input = this.input.value;
 
     // No protocol, could be a search term
     if (this.isNotURL(input)) {
       input = 'http://google.com' + '/search?q=' + input;
     }
-    
+
     var httpPattern = /^(?:[a-z\u00a1-\uffff0-9-+]+)(?::|:\/\/)/i;
     var hasScheme = !!(httpPattern.exec(input) || [])[0];
     // No scheme, prepend basic protocol and return
     if (!hasScheme) {
       input = 'http://' + input;
     }
-    
+
     var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: input }});
     this.input.dispatchEvent(e);
   },
-  
+
   /**
    * Show rocketbar results for a list of app manifest URLs.
    *
@@ -150,7 +216,7 @@ var Rocketbar = {
       this.results.appendChild(li);
     }, this);
   },
-  
+
   /**
    * Handle window history change event.
    *
@@ -166,12 +232,13 @@ var Rocketbar = {
     } else {
       this.input.value = this.currentLocation;
     }
+
     this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
     history.onlocationchange = this.setLocation.bind(this);
     history.onstatuschange = this.setLoading.bind(this);
   },
-  
+
   /**
    * Set rocketbar title.
    *
@@ -183,7 +250,7 @@ var Rocketbar = {
       this.input.value = title;
     }
   },
-  
+
   /**
    * Set rocketbar location.
    *
@@ -194,15 +261,34 @@ var Rocketbar = {
     this.currentLocation = location;
     this.input.value = location;
   },
-  
+
+  _earlyHideID: null,
   setLoading: function rocketbar_setLoading(status) {
+    this._clearEarlyHide();
+
     if (status) {
       this.progress.classList.add('loading');
+
+
+      if (this.currentlyOnApp) {
+        this.open(false);
+        this._earlyHideID = setTimeout((function() {
+          this.close(false);
+        }).bind(this), 5000);
+      }
     } else {
       this.progress.classList.remove('loading');
+      this.close(false);
     }
   },
-  
+
+  _clearEarlyHide: function rb_clearEarlyHide() {
+    if (this._earlyHideID) {
+      clearTimeout(this._earlyHideID);
+      this._earlyHideID = null;
+    }
+  },
+
   isNotURL: function rocketbar_isNotURL(input) {
     // NOTE: NotFound is equal to the upper bound of Uint32 (2^32-1)
     var dLoc = input.indexOf('.') >>> 0;
@@ -238,7 +324,7 @@ var Rocketbar = {
     }
     return false;
   },
-  
+
   HIDDEN_APPS: ["app://keyboard.gaiamobile.org/manifest.webapp","app://wallpaper.gaiamobile.org/manifest.webapp","app://bluetooth.gaiamobile.org/manifest.webapp","app://pdfjs.gaiamobile.org/manifest.webapp","app://homescreen.gaiamobile.org/manifest.webapp","app://system.gaiamobile.org/manifest.webapp","app://image-uploader.gaiamobile.org/manifest.webapp","http://keyboard.gaiamobile.org:8080/manifest.webapp","http://wallpaper.gaiamobile.org:8080/manifest.webapp","http://bluetooth.gaiamobile.org:8080/manifest.webapp","http://pdfjs.gaiamobile.org:8080/manifest.webapp","http://homescreen.gaiamobile.org:8080/manifest.webapp","http://system.gaiamobile.org:8080/manifest.webapp","http://image-uploader.gaiamobile.org/manifest.webapp"]
 }
 
@@ -267,7 +353,7 @@ window.addEventListener('load', function rocketbar_onLoad() {
   }
 
   history.type; //certified, privileged, hosted, remote
-  
+
   var evt = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: your_url }});
   this.input.dispatchEvent(evt);
 });*/

@@ -84,11 +84,6 @@
     <!-- Keyboard -->
     <script defer src="js/keyboard_manager.js"></script>
 
-    <!-- Utility Tray -->
-    <link rel="stylesheet" type="text/css" href="style/utility_tray/utility_tray.css">
-    <script defer src="js/utility_tray.js"></script>
-
-    
     <!-- Notification Tray -->
     <link rel="stylesheet" type="text/css" href="style/notifications_tray/notifications_tray.css">
     <script defer src="js/notifications_tray.js"></script>
@@ -328,18 +323,15 @@
         <div id="carrier-logo"></div>
       </div>
 
-      <div id="utility-tray" data-z-index-level="utility-tray">
-        <!-- Rocketbar -->
-        <form id="rocketbar" data-z-index-level="rocketbar">
-          <input id="rocketbar-input" type="text" x-inputmode="verbatim" placeholder="Search for anything...">
-          </input>
-        </form>
-
-        <ul id="rocketbar-results" data-z-index-level="rocketbar">
-        </ul>
-        <div id="utility-tray-grippy">
-        </div>
+      <!-- Rocketbar -->
+      <div id="progress" data-z-index-level="progress">
       </div>
+      <form id="rocketbar" data-z-index-level="rocketbar">
+        <input id="rocketbar-input" type="text" x-inputmode="verbatim" placeholder="Search for anything...">
+        </input>
+      </form>
+      <ul id="rocketbar-results" data-z-index-level="rocketbar-results">
+      </ul>
 
       <div id="statusbar" data-z-index-level="statusbar">
         <!-- Carrier & date label -->
@@ -377,9 +369,6 @@
         <!-- Activity -->
         <canvas id="statusbar-system-downloads" hidden></canvas>
         <canvas id="statusbar-network-activity" hidden></canvas>
-      </div>
-      
-      <div id="progress" data-z-index-level="progress">
       </div>
 
       <div id="windows" data-z-index-level="app">

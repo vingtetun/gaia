@@ -80,8 +80,13 @@
 }
 
 #screen > [data-z-index-level="utility-tray"],
+#screen > [data-z-index-level="rocketbar"],
 #screen > [data-z-index-level="notifications-tray"] {
   z-index: 4095;
+}
+
+#screen > [data-z-index-level="rocketbar-results"] {
+  z-index: 4094;
 }
 
 /* Demote level 5 elements to homescreen level if there is an active

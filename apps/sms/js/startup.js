@@ -71,6 +71,10 @@ window.addEventListener('load', function() {
         return;
       }
       MessageManager.init(initUIApp);
+ 
+      // HAIDA PROTO
+      startupFunction();
+      
     });
   });
 });

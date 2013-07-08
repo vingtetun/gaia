@@ -121,10 +121,6 @@ var ThreadUI = global.ThreadUI = {
       'scroll', this.manageScroll.bind(this)
     );
 
-    this.backButton.addEventListener(
-      'click', this.back.bind(this)
-    );
-
     this.checkAllButton.addEventListener(
       'click', this.toggleCheckedAll.bind(this, true)
     );

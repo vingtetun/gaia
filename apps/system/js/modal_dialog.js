@@ -84,9 +84,12 @@ var ModalDialog = {
     var elements = this.elements;
     switch (evt.type) {
       case 'mozbrowsershowmodalprompt':
+        /*
+        XXX let's not care about the frame type here.
         var frameType = evt.target.dataset.frameType;
         if (frameType != 'window' && frameType != 'inline-activity')
           return;
+        */
 
         evt.preventDefault();
         var origin = evt.target.dataset.frameOrigin;

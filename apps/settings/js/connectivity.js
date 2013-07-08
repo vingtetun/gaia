@@ -17,18 +17,21 @@ var Connectivity = (function(window, document, undefined) {
 
   // in util.js, we fake these device interfaces if they are not exist.
   var wifiManager = WifiHelper.getWifiManager();
-  var bluetooth = getBluetooth();
-  var mobileConnection = getMobileConnection();
 
-  mobileConnection.addEventListener('datachange', updateCarrier);
-  mobileConnection.addEventListener('cardstatechange', updateCallSettings);
+  var mobileConnection = null;
+  if ('getMobileConnection' in window) {
+    var mobileConnection = getMobileConnection();
+
+    mobileConnection.addEventListener('datachange', updateCarrier);
+    mobileConnection.addEventListener('cardstatechange', updateCallSettings);
+  }
 
   // XXX if wifiManager implements addEventListener function
   // we can remove these listener lists.
   var wifiEnabledListeners = [updateWifi];
   var wifiDisabledListeners = [updateWifi];
   var wifiStatusChangeListeners = [updateWifi];
-  var settings = Settings.mozSettings;
+  var settings = window.navigator.mozSettings;
 
   //
   // Set wifi.enabled so that it mirrors the state of the hardware.
@@ -51,16 +54,19 @@ var Connectivity = (function(window, document, undefined) {
   wifiManager.onstatuschange = wifiStatusChange;
 
   // Register callbacks to track the state of the bluetooth hardware
-  bluetooth.addEventListener('adapteradded', function() {
-    dispatchEvent(new CustomEvent('bluetooth-adapter-added'));
-    updateBluetooth();
-  });
-  bluetooth.addEventListener('disabled', function() {
-    dispatchEvent(new CustomEvent('bluetooth-disabled'));
-    updateBluetooth();
-  });
+  if ('getBluetooth' in window) {
+    var bluetooth = getBluetooth();
+    bluetooth.addEventListener('adapteradded', function() {
+      dispatchEvent(new CustomEvent('bluetooth-adapter-added'));
+      updateBluetooth();
+    });
+    bluetooth.addEventListener('disabled', function() {
+      dispatchEvent(new CustomEvent('bluetooth-disabled'));
+      updateBluetooth();
+    });
 
-  window.addEventListener('bluetooth-pairedstatuschanged', updateBluetooth);
+    window.addEventListener('bluetooth-pairedstatuschanged', updateBluetooth);
+  }
 
   // called when localization is done
   function init() {
@@ -172,16 +178,19 @@ var Connectivity = (function(window, document, undefined) {
       var data = msg.data || '';
       var text = msg.error ||
         ((data && operator) ? (operator + ' - ' + data) : operator);
-      dataDesc.textContent = text;
-      dataDesc.dataset.l10nId = msg.l10nId || '';
 
-      /**
-       * XXX italic style for specifying state change is not a ideal solution
-       * for non-Latin alphabet scripts in terms of typography, e.g. Chinese,
-       * Japanese, etc.
-       * We might have to switch to labels with parenthesis for these languages.
-       */
-      dataDesc.style.fontStyle = msg.error ? 'italic' : 'normal';
+      if (dataDesc) {
+        dataDesc.textContent = text;
+        dataDesc.dataset.l10nId = msg.l10nId || '';
+
+        /**
+         * XXX italic style for specifying state change is not a ideal solution
+         * for non-Latin alphabet scripts in terms of typography, e.g. Chinese,
+         * Japanese, etc.
+         * We might have to switch to labels with parenthesis for these languages.
+         */
+        dataDesc.style.fontStyle = msg.error ? 'italic' : 'normal';
+      }
 
       // in case the "Carrier & Data" panel is displayed...
       var dataNetwork = document.getElementById('dataNetwork-desc');
@@ -223,7 +232,9 @@ var Connectivity = (function(window, document, undefined) {
    */
 
   var callDesc = document.getElementById('call-desc');
-  callDesc.style.fontStyle = 'italic';
+  if (callDesc) {
+    callDesc.style.fontStyle = 'italic';
+  }
 
   function updateCallSettings() {
     if (!_initialized) {

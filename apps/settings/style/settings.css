@@ -19,48 +19,11 @@ html, body {
 
 /* Setting panels: full-size <section role="region"> blocks */
 section[role="region"] {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   border: 0;
   background: url(images/document_bg.png);
   overflow: hidden;
-}
-
-
-/**
- * Panel targets -- transitions
- * the `.previous', '.current' and '.forward' classes are set by settings.js
- * we use the '.peek' class to force the rendering of the panel before
- * starting the transition, thus avoiding an ugly flickering with gecko 18
- */
-
-section[role="region"] {
-  transform: translateX(+100%);
-  transition: transform .4s ease;
-}
-section[role="region"].peek {
-  transition: transform 1ms linear;
-  transform: translateX(+0.1%);
-}
-
-section[role="region"].previous {
-  transform: translateX(-100%);
-}
-section[role="region"].previous.peek {
-  transform: translateX(-0.1%);
-}
-
-section[role="region"].current {
-  transform: translateX(0);
-}
-section[role="region"].current.peek.forward {
-  transform: translateX(99.9%);
-}
-section[role="region"].current.peek {
-  transform: translateX(-99.9%);
 }
 
 /**

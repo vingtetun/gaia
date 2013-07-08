@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <base target="_blank">
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+  </head>
+  <body class="skin-organic">
+
+    <!-- Device :: Help -->
+    <section role="region" id="help">
+      <header>
+        <h1 data-l10n-id="help"></h1>
+      </header>
+
+      <div>
+        <ul>
+          <li class="support-info">
+            <a data-l10n-id="online-support" id="online-support-link"> Online Support:
+              <span class="link-text" id="online-support-text"></span>
+            </a>
+          </li>
+          <li class="support-info">
+            <span data-l10n-id="call-support"> Call Support:
+              <span class="tel-text" id="call-support-numbers"></span>
+            </span>
+          </li>
+          <li>
+            <label>
+              <button data-l10n-id="user-guide"> User Guide </button>
+            </label>
+          </li>
+          <li class="no-support-info description" data-l10n-id="default-support">
+            Please contact your local provider for support.
+          </li>
+        </ul>
+      </div>
+
+      <script src="js/support.js"></script>
+    </section>
+  </body>
+</html>

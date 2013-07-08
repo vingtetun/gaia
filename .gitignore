@@ -5,9 +5,6 @@
 .svn
 *~
 manifest.appcache
-profile-debug/
-test_apps/music2/
-apps/system/resources/icc.json
 
 /apps/calendar/js/presets.js
 /apps/homescreen/js/init.json

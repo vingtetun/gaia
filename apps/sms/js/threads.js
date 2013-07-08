@@ -6,8 +6,8 @@
   var currentId, lastId;
 
   function cacheId() {
-    var matches = rthread.exec(window.location.hash);
-    currentId = (matches && matches.length) ? +(matches[1].trim()) : null;
+    //var matches = rthread.exec(window.location.hash);
+    currentId = parseInt(window.location.hash.substr(1), 10);//(matches && matches.length) ? +(matches[1].trim()) : null;
 
     if (currentId !== null && currentId !== lastId) {
       lastId = currentId;
@@ -57,13 +57,13 @@
     },
     get currentId() {
 
-      if (window.location.hash.startsWith('#thread=')) {
+      //if (window.location.hash.startsWith('#thread=')) {
         if (!currentId) {
           currentId = cacheId();
         }
-      } else {
-        currentId = null;
-      }
+      //} else {
+      //  currentId = null;
+      //}
 
       return currentId;
     },

@@ -825,7 +825,7 @@ var ThreadUI = global.ThreadUI = {
     this.cleanFields();
     this.checkInputs();
     // Clean list of messages
-    this.container.innerHTML = '';
+    //this.container.innerHTML = '';
     // Init readMessages array
     this.readMessages = [];
     // Initialize infinite scroll params
@@ -1296,7 +1296,7 @@ var ThreadUI = global.ThreadUI = {
     var recipients;
 
     // Depending where we are, we get different nums
-    if (window.location.hash === '#new') {
+    if (window.location.toString().indexOf('new-message.html') > -1) {
       if (!this.recipients.length) {
         return;
       }

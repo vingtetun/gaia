@@ -47,9 +47,9 @@ var MessageManager = {
       Threads.get(message.threadId).messages.push(message);
     }
 
-    if (window.location.hash === '#new') {
+    if (window.location.toString().indexOf('new-message.html') > -1) {
       // If we are in 'new' we go to right to thread view
-      window.location.hash = '#thread=' + threadId;
+      window.location = 'thread.html#' + threadId;
     } else {
       ThreadUI.appendMessage(message);
       ThreadUI.scrollViewToBottom();
@@ -159,9 +159,9 @@ var MessageManager = {
 
     // If we receive a message with screen off, the height is
     // set to 0 and future checks will fail. So we update if needed
-    if (!ThreadListUI.fullHeight || ThreadListUI.fullHeight === 0) {
-      ThreadListUI.fullHeight = ThreadListUI.container.offsetHeight;
-    }
+    // if (!ThreadListUI.fullHeight || ThreadListUI.fullHeight === 0) {
+    //   ThreadListUI.fullHeight = ThreadListUI.container.offsetHeight;
+    // }
   },
 
   slide: function mm_slide(direction, callback) {

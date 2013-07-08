@@ -248,13 +248,13 @@
         <input type="checkbox" value="${id}">
         <span></span>
       </label>
-      <a href="#thread=${id}">
+      <a data-thread-id="${id}">
         <aside class="icon icon-unread">unread</aside>
         <aside class="pack-end">
           <img src="">
         </aside>
         <p class="name">${number}</p>
-        <p>
+        <p data-thread-id="${id}">
           <time>${formattedDate}</time>
           <span class="mms-icon">MMS</span>
           <span class="body-text">${body}</span>

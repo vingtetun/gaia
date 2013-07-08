@@ -878,4 +878,9 @@ window.addEventListener('load', function() {
     window.open('informations.html');
     e.preventDefault();
   });
+
+  document.getElementById('menuItem-sound').addEventListener('click', function(e) {
+    window.open('sound.html');
+    e.preventDefault();
+  });
 });

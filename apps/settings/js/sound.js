@@ -16,7 +16,7 @@
   };
 
   // Root path containing the sounds
-  var root = '/shared/resources/media/';
+  var root = 'app://settings.gaiamobile.org/shared/resources/media/';
 
   function debug(str) {
     dump(' -*- SoundsPanel: ' + str + '\n');
@@ -30,7 +30,6 @@
     xhr.open('GET', url, true);
     xhr.responseType = 'json';
     xhr.send(null);
-
     xhr.onload = function successGetSoundsFor() {
       debug('success: get list for ' + type + '(' + url + ')');
 

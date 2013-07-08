@@ -254,6 +254,7 @@ function History(origin, type) {
   this.location = origin;
   this.loading = true;
   this.canGoBack = false;
+  this.canGoForward = false;
   this.type = type;
 
   this.iframe = null;
@@ -306,6 +307,14 @@ History.prototype = {
             this.oncangoback(this.canGoBack);
           }
         }).bind(this);
+
+        this.iframe.getCanGoForward().onsuccess = (function(e) {
+          this.canGoForward = e.target.result;
+
+          if (this.oncangoforward) {
+            this.oncangoforward(this.canGoForward);
+          }
+        }).bind(this);
         break;
 
       case 'loadstart':
@@ -352,7 +361,14 @@ History.prototype = {
     if (!this.iframe)
       return;
 
-    this.iframe.goBack(str);
+    this.iframe.goBack();
+  },
+
+  goForward: function history_goForward() {
+    if (!this.iframe)
+      return;
+
+    this.iframe.goForward();
   },
 
   reload: function history_reload() {
@@ -374,11 +390,13 @@ History.prototype = {
     this.onlocationchange = null;
     this.onstatuschange = null;
     this.oncangoback = null;
+    this.oncangoforward = null;
   },
 
   ontitlechange: null,
   onlocationchange: null,
   onstatuschange: null,
   oncangoback: null
+  oncangoforward: null
 };
 

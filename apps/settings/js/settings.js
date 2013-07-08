@@ -18,88 +18,6 @@ var Settings = {
         settings : null;
   },
 
-  _currentPanel: '#root',
-
-  get currentPanel() {
-    return this._currentPanel;
-  },
-
-  set currentPanel(hash) {
-    if (!hash.startsWith('#')) {
-      hash = '#' + hash;
-    }
-
-    if (hash === '#wifi') {
-      PerformanceTestingHelper.dispatch('start');
-    }
-    var oldPanelHash = this._currentPanel;
-    var oldPanel = document.querySelector(this._currentPanel);
-    this._currentPanel = hash;
-    var newPanelHash = this._currentPanel;
-    var newPanel = document.querySelector(this._currentPanel);
-
-    // load panel (+ dependencies) if necessary -- this should be synchronous
-    this.lazyLoad(newPanel);
-
-    // switch previous/current/forward classes
-    // FIXME: The '.peek' is here to avoid an ugly white
-    // flickering when transitioning (gecko 18)
-    // the forward class helps us 'peek' in the right direction
-    oldPanel.className = newPanel.className ? 'peek' : 'peek previous forward';
-    newPanel.className = newPanel.className ?
-                           'current peek' : 'peek current forward';
-
-    /**
-     * Most browsers now scroll content into view taking CSS transforms into
-     * account.  That's not what we want when moving between <section>s,
-     * because the being-moved-to section is offscreen when we navigate to its
-     * #hash.  The transitions assume the viewport is always at document 0,0.
-     * So add a hack here to make that assumption true again.
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=803170
-     */
-    if ((window.scrollX !== 0) || (window.scrollY !== 0)) {
-      window.scrollTo(0, 0);
-    }
-
-    window.addEventListener('transitionend', function paintWait() {
-      window.removeEventListener('transitionend', paintWait);
-
-      // We need to wait for the next tick otherwise gecko gets confused
-      setTimeout(function nextTick() {
-        oldPanel.classList.remove('peek');
-        oldPanel.classList.remove('forward');
-        newPanel.classList.remove('peek');
-        newPanel.classList.remove('forward');
-
-        // Bug 818056 - When multiple visible panels are present,
-        // they are not painted correctly. This appears to fix the issue.
-        // Only do this after the first load
-        if (oldPanel.className === 'current')
-          return;
-
-        oldPanel.addEventListener('transitionend', function onTransitionEnd(e) {
-          oldPanel.removeEventListener('transitionend', onTransitionEnd);
-          var detail = {
-            previous: oldPanelHash,
-            current: newPanelHash
-          };
-          var event = new CustomEvent('panelready', {detail: detail});
-          window.dispatchEvent(event);
-          switch (newPanel.id) {
-            case 'about-licensing':
-              // Workaround for bug 825622, remove when fixed
-              var iframe = document.getElementById('os-license');
-              iframe.src = iframe.dataset.src;
-              break;
-            case 'wifi':
-              PerformanceTestingHelper.dispatch('settings-panel-wifi-visible');
-              break;
-          }
-        });
-      });
-    });
-  },
-
   // Early initialization of parts of the application that don't
   // depend on the DOM being loaded.
   preInit: function settings_preInit() {
@@ -750,15 +668,15 @@ var Settings = {
       return;
     }
 
-    LazyLoader.load(['shared/style/action_menu.css',
-                     'shared/style/buttons.css',
-                     'shared/style/confirm.css',
-                     'shared/style/input_areas.css',
-                     'shared/style_unstable/progress_activity.css',
-                     'style/apps.css',
-                     'style/phone_lock.css',
-                     'style/simcard.css',
-                     'style/updates.css'],
+    LazyLoader.load(['/shared/style/action_menu.css',
+                     '/shared/style/buttons.css',
+                     '/shared/style/confirm.css',
+                     '/shared/style/input_areas.css',
+                     '/shared/style_unstable/progress_activity.css',
+                     '/style/apps.css',
+                     '/style/phone_lock.css',
+                     '/style/simcard.css',
+                     '/style/updates.css'],
     function callback() {
       self._panelStylesheetsLoaded = true;
     });
@@ -826,16 +744,16 @@ window.addEventListener('load', function loadSettings() {
   handleRadioAndCardState();
 
   LazyLoader.load([
-      'js/utils.js',
-      'js/airplane_mode.js',
-      'js/battery.js',
-      'shared/js/async_storage.js',
-      'js/storage.js',
-      'shared/js/mobile_operator.js',
-      'shared/js/wifi_helper.js',
-      'js/connectivity.js',
-      'js/security_privacy.js',
-      'js/icc_menu.js'
+      '/js/utils.js',
+      '/js/airplane_mode.js',
+      '/js/battery.js',
+      '/shared/js/async_storage.js',
+      '/js/storage.js',
+      '/shared/js/mobile_operator.js',
+      '/shared/js/wifi_helper.js',
+      '/js/connectivity.js',
+      '/js/security_privacy.js',
+      '/js/icc_menu.js'
   ]);
 
   function handleRadioAndCardState() {
@@ -871,29 +789,6 @@ window.addEventListener('load', function loadSettings() {
       disableSIMRelatedSubpanels(cardState !== 'ready');
     });
   }
-
-  // startup
-  document.addEventListener('click', function settings_backButtonClick(e) {
-    var target = e.target;
-    if (target.classList.contains('icon-back')) {
-      Settings.currentPanel = target.parentNode.getAttribute('href');
-    }
-  });
-  document.addEventListener('click', function settings_sectionOpenClick(e) {
-    var target = e.target;
-    var nodeName = target.nodeName.toLowerCase();
-    if (nodeName != 'a') {
-      return;
-    }
-
-    var href = target.getAttribute('href');
-    if (!href || !href.startsWith('#')) {
-      return;
-    }
-
-    Settings.currentPanel = href;
-    e.preventDefault();
-  });
 });
 
 // back button = close dialog || back to the root page
@@ -966,3 +861,21 @@ window.addEventListener('localized', function updateLocalized() {
 // Do initialization work that doesn't depend on the DOM, as early as
 // possible in startup.
 Settings.preInit();
+
+
+window.addEventListener('load', function() {
+  document.getElementById('menuItem-wifi').addEventListener('click', function(e) {
+    window.open('wifi.html');
+    e.preventDefault();
+  });
+
+  document.getElementById('menuItem-help').addEventListener('click', function(e) {
+    window.open('help.html');
+    e.preventDefault();
+  });
+
+  document.getElementById('menuItem-deviceInfo').addEventListener('click', function(e) {
+    window.open('informations.html');
+    e.preventDefault();
+  });
+});

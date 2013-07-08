@@ -396,7 +396,7 @@ History.prototype = {
   ontitlechange: null,
   onlocationchange: null,
   onstatuschange: null,
-  oncangoback: null
+  oncangoback: null,
   oncangoforward: null
 };
 

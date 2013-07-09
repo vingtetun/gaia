@@ -534,3 +534,78 @@ var fakeSelector = function() {
     });
   }
 }
+
+var Language = {
+
+  selectEl: document.querySelector('select[name="language.current"]'),
+  smallEl: document.getElementById('language-desc'),
+  dateEl: document.getElementById('region-date'),
+  timeEl: document.getElementById('region-time'),
+
+  init: function() {
+    // Fill select
+    this.supported(this.fill.bind(this));
+    // Update infos
+    window.addEventListener('localized', this.update.bind(this));
+  },
+
+  update: function() {
+    var d = new Date();
+    var f = new navigator.mozL10n.DateTimeFormat();
+    var _ = navigator.mozL10n.get;
+    this.dateEl.textContent = f.localeFormat(d, _('longDateFormat'));
+    this.timeEl.textContent = f.localeFormat(d, _('shortTimeFormat'));
+  },
+
+  // Use from index.html to update the small
+  updateSmall: function() {
+    this.supported(this.small.bind(this));
+  },
+
+  small: function(languages) {
+    this.smallEl.textContent = languages[navigator.mozL10n.language.code];
+  },
+
+  fill: function(languages) {
+    this.selectEl.innerHTML = '';
+    for (var lang in languages) {
+      var option = document.createElement('option');
+      option.value = lang;
+      // Right-to-Left (RTL) languages:
+      // (http://www.w3.org/International/questions/qa-scripts)
+      // Arabic, Hebrew, Farsi, Pashto, Urdu
+      var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
+      // Use script direction control-characters to wrap the text labels
+      // since markup (i.e. <bdo>) does not work inside <option> tags
+      // http://www.w3.org/International/tutorials/bidi-xhtml/#nomarkup
+      var lEmbedBegin =
+          (rtlList.indexOf(lang) >= 0) ? '&#x202B;' : '&#x202A;';
+      var lEmbedEnd = '&#x202C;';
+      // The control-characters enforce the language-specific script
+      // direction to correctly display the text label (Bug #851457)
+      option.innerHTML = lEmbedBegin + languages[lang] + lEmbedEnd;
+      option.selected = (lang == document.documentElement.lang);
+      this.selectEl.appendChild(option);
+    }
+  },
+
+  // old getSupportedLanguages
+  supported: function(callback) {
+    if (!callback)
+      return;
+
+    if (this._languages) {
+      callback(this._languages);
+    } else {
+      var self = this;
+      var LANGUAGES = '/shared/resources/languages.json';
+      loadJSON(LANGUAGES, function loadLanguages(data) {
+        if (data) {
+          self._languages = data;
+          callback(self._languages);
+        }
+      });
+    }
+  }
+
+};

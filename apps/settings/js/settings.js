@@ -188,35 +188,6 @@ var Settings = {
         bug344618_polyfill();     // XXX to be removed when bug344618 is fixed
         this.updateDisplayPanel();
         break;
-      case 'sound':               // <input type="range">
-        bug344618_polyfill();     // XXX to be removed when bug344618 is fixed
-        break;
-      case 'languages':           // fill language selector
-        var langSel = document.querySelector('select[name="language.current"]');
-        langSel.innerHTML = '';
-        Settings.getSupportedLanguages(function fillLanguageList(languages) {
-          for (var lang in languages) {
-            var option = document.createElement('option');
-            option.value = lang;
-            // Right-to-Left (RTL) languages:
-            // (http://www.w3.org/International/questions/qa-scripts)
-            // Arabic, Hebrew, Farsi, Pashto, Urdu
-            var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
-            // Use script direction control-characters to wrap the text labels
-            // since markup (i.e. <bdo>) does not work inside <option> tags
-            // http://www.w3.org/International/tutorials/bidi-xhtml/#nomarkup
-            var lEmbedBegin =
-                (rtlList.indexOf(lang) >= 0) ? '&#x202B;' : '&#x202A;';
-            var lEmbedEnd = '&#x202C;';
-            // The control-characters enforce the language-specific script
-            // direction to correctly display the text label (Bug #851457)
-            option.innerHTML = lEmbedBegin + languages[lang] + lEmbedEnd;
-            option.selected = (lang == document.documentElement.lang);
-            langSel.appendChild(option);
-          }
-        });
-        setTimeout(this.updateLanguagePanel);
-        break;
       case 'keyboard':
         Settings.updateKeyboardPanel();
         break;
@@ -580,24 +551,6 @@ var Settings = {
     openDialog(dialogID, submit);
   },
 
-  getSupportedLanguages: function settings_getLanguages(callback) {
-    if (!callback)
-      return;
-
-    if (this._languages) {
-      callback(this._languages);
-    } else {
-      var self = this;
-      var LANGUAGES = '/shared/resources/languages.json';
-      loadJSON(LANGUAGES, function loadLanguages(data) {
-        if (data) {
-          self._languages = data;
-          callback(self._languages);
-        }
-      });
-    }
-  },
-
   getSupportedKbLayouts: function settings_getSupportedKbLayouts(callback) {
     if (!callback)
       return;
@@ -647,19 +600,6 @@ var Settings = {
         settings.createLock().set(cset);
       }
     });
-  },
-
-  updateLanguagePanel: function settings_updateLanguagePanel() {
-    var panel = document.getElementById('languages');
-    if (panel) { // update the date and time samples in the 'languages' panel
-      var d = new Date();
-      var f = new navigator.mozL10n.DateTimeFormat();
-      var _ = navigator.mozL10n.get;
-      panel.querySelector('#region-date').textContent =
-          f.localeFormat(d, _('longDateFormat'));
-      panel.querySelector('#region-time').textContent =
-          f.localeFormat(d, _('shortTimeFormat'));
-    }
   },
 
   loadPanelStylesheetsIfNeeded: function settings_loadPanelStylesheetsIN() {
@@ -820,11 +760,7 @@ window.addEventListener('localized', function updateLocalized() {
   document.documentElement.dir = navigator.mozL10n.language.direction;
 
   // display the current locale in the main panel
-  Settings.getSupportedLanguages(function displayLang(languages) {
-    document.getElementById('language-desc').textContent =
-        languages[navigator.mozL10n.language.code];
-  });
-  Settings.updateLanguagePanel();
+  Language.updateSmall();
 
   // update the enabled keyboards list with the language associated keyboard
   Settings.getSupportedKbLayouts(function updateEnabledKb(keyboards) {
@@ -897,6 +833,11 @@ window.addEventListener('load', function() {
 
   document.getElementById('menuItem-dateAndTime').addEventListener('click', function(e) {
     window.open('date_time.html');
+    e.preventDefault();
+  });
+
+  document.getElementById('menuItem-languageAndRegion').addEventListener('click', function(e) {
+    window.open('language.html');
     e.preventDefault();
   });
 

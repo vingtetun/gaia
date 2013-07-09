@@ -1,8 +1,7 @@
 /*
- * There 3 are transition related definitions to keep in sync:
-*   * the full keyframes based animation in system.css
-*   * the transforms in system.css use to snap in place
-*   * the as-you-go transforms in te _movingStyles method
+ * There are 2 transition related definitions to keep in sync:
+   * the transforms in system.css use to snap in place
+   * the as-you-go transforms in te _movingStyles method
  * */
 var TransitionManager = (function() {
   'use strict';
@@ -11,90 +10,98 @@ var TransitionManager = (function() {
     console.log('TransitionManager: ' + str + '\n');
   }
 
-  var current = {
-    dataset: {},
-    getScreenshot: function() {
-      var request = {};
-      setTimeout(function() { request.onerror(); }, 500);
-      return request;
-    },
-    setVisible: function() {}
-  };
-
+  var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
     var previous = current;
-    current = e.detail.current.iframe;
+    current = e.detail.current;
     var forward = e.detail.forward;
-    var partial = e.detail.partial;
+
+    var prevWrapper = previous ? previous.wrapper : null;
+    var curWrapper = current.wrapper;
+
+    if (prevWrapper) {
+      prevWrapper.classList.add('transitioning');
+    }
+    curWrapper.classList.add('transitioning');
 
     function afterTransition() {
-      previous.style.zIndex = '';
-      current.style.zIndex = '';
-      previous.classList.remove('shadow');
-      current.classList.remove('shadow');
-
-      current.classList.add('transitioned');
-      previous.setVisible(false);
-
-      var div = document.getElementById('screenshot');
-      if (!div) {
-        div = document.createElement('div');
-        div.id = 'screenshot';
-        document.body.appendChild(div);
+      if (prevWrapper) {
+        prevWrapper.classList.remove('transitioning');
+        prevWrapper.style.MozTransition = '';
+        prevWrapper.classList.remove('shadow');
+        prevWrapper.style.zIndex = '';
       }
-      div.style.backgroundImage = current.style.backgroundImage;
-      div.style.display = 'block';
 
-      current.addNextPaintListener(function onNextPaint() {
-        current.removeNextPaintListener(onNextPaint);
-        setTimeout(function() {
-          current.style.backgroundImage = '';
-          document.getElementById('screenshot').style.display = 'none';
-        }, 200);
+      curWrapper.style.MozTransition = '';
+      curWrapper.classList.remove('shadow');
+      curWrapper.classList.remove('forward');
+
+      curWrapper.classList.remove('transitioning');
+      curWrapper.style.zIndex = '';
+
+      if (previous) {
+        var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
+        request.onsuccess = function(e) {
+          if (e.target.result) {
+            var cover = prevWrapper.querySelector('.cover');
+            cover.style.visibility = 'visible';
+            cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+          }
+        };
+
+        request.onerror = function(e) {
+        }
+      }
+
+      var cover = curWrapper.querySelector('.cover');
+      cover.style.opacity = 0.5;
+
+      cover.addEventListener('transitionend', function trWait() {
+        cover.removeEventListener('transitionend', trWait);
+
+        cover.style.visibility = 'hidden';
+        cover.style.backgroundImage = '';
+
+        cover.style.MozTransition = '';
+        cover.style.opacity = '';
       });
-      current.setVisible(true);
     }
 
-    current.classList.remove('transitioned');
-    delete previous.dataset.current;
+    var partial = !!curWrapper.style.MozTransition;
     if (forward) {
-      current.classList.add('forward');
+      curWrapper.classList.add('forward');
     } else {
-      current.classList.remove('forward');
+      curWrapper.classList.remove('forward');
     }
-    current.dataset.current = true;
 
     if (partial) {
-      current.addEventListener('transitionend', function animWait(e) {
-        current.removeEventListener('transitionend', animWait);
-
-        afterTransition();
-      });
-    } else {
-      previous.classList.remove('shadow');
-      current.classList.add('shadow');
-
-      previous.classList.add('animate');
-      current.classList.add('animate');
-      current.addEventListener('animationend', function animWait(e) {
-        current.removeEventListener('animationend', animWait);
-
-        previous.classList.remove('animate');
-        current.classList.remove('animate');
-
-        afterTransition();
-      });
-    }
-
-    var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
-    request.onsuccess = function(e) {
-      if (e.target.result) {
-        previous.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+      // Already in the middle of the transition
+      if (prevWrapper) {
+        delete prevWrapper.dataset.current;
       }
-    };
-
-    request.onerror = function(e) {
+      curWrapper.dataset.current = true;
+    } else {
+      // Making sure we transition for the right position
+      setTimeout(function nextTick() {
+        if (prevWrapper) {
+          prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
+          delete prevWrapper.dataset.current;
+        }
+        curWrapper.style.MozTransition = 'transform 0.4s linear';
+        curWrapper.dataset.current = true;
+      });
     }
+
+    curWrapper.addEventListener('transitionend', function animWait(e) {
+      if (e.propertyName != 'transform') {
+        return;
+      }
+      curWrapper.removeEventListener('transitionend', animWait);
+
+      setTimeout(function nextTick() {
+        afterTransition();
+      });
+    });
   });
 })();
 
@@ -112,9 +119,10 @@ var PanelSwitcher = {
   lastX: 0,
   lastDate: null,
   lastProgress: 0,
-  frame: null,
-  _frameMovingStyles: null,
-  _currentMovingStyles: null,
+  out: null,
+  in: null,
+  _inMovingStyles: null,
+  _outMovingStyles: null,
   handleEvent: function navigation_handleEvent(e) {
     var forward = (e.target == this.next);
     var diffX = this.lastX - this.startX;
@@ -125,37 +133,42 @@ var PanelSwitcher = {
         this.lastX = this.startX = e.touches[0].pageX;
         this.lastDate = Date.now();
 
-        var frame = (forward ? WindowManager.getNext().iframe :
-                               WindowManager.getPrevious().iframe);
-        if (!frame) {
+        var history = (forward ? WindowManager.getNext() :
+                                 WindowManager.getPrevious());
+        if (!history) {
           return;
         }
 
-        this.frame = frame;
-        this.current = WindowManager.getCurrent().iframe;
+        var wrapper = history.wrapper;
 
-        this._setStyles.apply(null, this._initialStyles(this.frame, forward));
-        this._setStyles.apply(null, this._initialStyles(this.current, forward));
+        this.in = wrapper;
+        this.out = WindowManager.getCurrent().wrapper;
 
-        this._frameMovingStyles = this._generateMovingStyles(this.frame, forward);
-        this._currentMovingStyles = this._generateMovingStyles(this.current, forward);
+        this.in.classList.add('transitioning');
+        this.out.classList.add('transitioning');
 
-        this.frame.style.MozTransition = 'transform, opacity';
-        this.current.style.MozTransition = 'transform, opacity';
+        this._setStyles.apply(null, this._initialStyles(this.out, forward));
+        this._setStyles.apply(null, this._initialStyles(this.in, forward));
+
+        this._inMovingStyles = this._generateMovingStyles(this.out, forward);
+        this._outMovingStyles = this._generateMovingStyles(this.in, forward);
+
+        this.out.style.MozTransition = 'transform, opacity';
+        this.in.style.MozTransition = 'transform, opacity';
         break;
       case 'touchmove':
-        if (!this.frame)
+        if (!this.in)
           return;
 
         this.lastX = e.touches[0].pageX;
         this.lastProgress = progress;
         this.lastDate = Date.now();
 
-        this._setStyles.apply(null, this._frameMovingStyles(progress));
-        this._setStyles.apply(null, this._currentMovingStyles(progress));
+        this._setStyles.apply(null, this._inMovingStyles(progress));
+        this._setStyles.apply(null, this._outMovingStyles(progress));
         break;
       case 'touchend':
-        if (!this.frame)
+        if (!this.in)
           return;
 
         var deltaT = Date.now() - this.lastDate;
@@ -164,27 +177,27 @@ var PanelSwitcher = {
 
         var snapBack = true;
         if ((progress + inertia) >= 0.32) {
-          forward ? WindowManager.goNext(true) : WindowManager.goBack(true);
+          forward ? WindowManager.goNext() : WindowManager.goBack();
           snapBack = false;
         }
 
         var progressToAnimate = snapBack ? progress : (1 - progress);
         var durationLeft = Math.min((progressToAnimate / deltaP) * deltaT, progressToAnimate * 500);
 
-        this.frame.style.MozTransition = this.current.style.MozTransition =
+        this.out.style.MozTransition = this.in.style.MozTransition =
           'transform ' + durationLeft + 'ms linear, opacity ' + durationLeft + 'ms linear';
 
-        this._clearStyles(this.frame);
-        this._clearStyles(this.current);
+        this._clearStyles(this.out);
+        this._clearStyles(this.in);
 
-        this.frame = this.current = null;
+        this.out = this.in = null;
         break;
     }
   },
 
-  _initialStyles: function t_initialStyles(frame, forward) {
+  _initialStyles: function t_initialStyles(wrapper, forward) {
     var zIndex, shadow;
-    if (frame === this.current) {
+    if (wrapper === this.out) {
       zIndex = forward ? 500 : 1000;
       shadow = forward ? false : true;
     } else {
@@ -192,10 +205,10 @@ var PanelSwitcher = {
       shadow = forward ? true : false;
     }
 
-    return [frame, null, null, null, zIndex, shadow];
+    return [wrapper, null, null, null, zIndex, shadow];
   },
 
-  _generateMovingStyles: function t_movingStyles(frame, forward) {
+  _generateMovingStyles: function t_movingStyles(wrapper, forward) {
     return function(progress) {
       var translate = 0, scale = 1, opacity = 1;
       var remainingFactor = forward ? ((progress - 0.5) / 0.5) :
@@ -204,50 +217,50 @@ var PanelSwitcher = {
                                      (progress * 100);
 
       // back-to-front and front-to-back keyframes
-      if ((frame == this.current && forward && progress >= 0.5) ||
-          (frame !== this.current && !forward && progress <= 0.5)) {
+      if ((wrapper == this.out && forward && progress >= 0.5) ||
+          (wrapper !== this.out && !forward && progress <= 0.5)) {
 
         translate = (-20 * remainingFactor) + '%';
         opacity = 1 - 0.7 * remainingFactor;
         scale = 1 - 0.1 * remainingFactor;
 
-        return [frame, translate, scale, opacity];
+        return [wrapper, translate, scale, opacity];
       }
 
       // left-to-right and right-to-left keyframes
-      if ((frame == this.current && !forward) ||
-          (frame !== this.current && forward)) {
+      if ((wrapper == this.out && !forward) ||
+          (wrapper !== this.out && forward)) {
 
         translate = 'calc(' + progressFactor + '% - 8px)';
       }
 
-      return [frame, translate, scale, opacity];
+      return [wrapper, translate, scale, opacity];
     }
   },
 
-  _setStyles: function t_setStyles(frame, translate, scale, opacity, zIndex, shadow) {
+  _setStyles: function t_setStyles(wrapper, translate, scale, opacity, zIndex, shadow) {
     if (translate && scale) {
       var transform = 'translateX(' + translate + ') scale(' + scale + ')';
-      frame.style.MozTransform = transform;
+      wrapper.style.MozTransform = transform;
     }
     if (opacity) {
-      frame.style.opacity = opacity;
+      wrapper.style.opacity = opacity;
     }
     if (zIndex) {
-      frame.style.zIndex = zIndex;
+      wrapper.style.zIndex = zIndex;
     }
     if (typeof shadow == "boolean") {
       if (shadow) {
-        frame.classList.add('shadow');
+        wrapper.classList.add('shadow');
       } else {
-        frame.classList.remove('shadow');
+        wrapper.classList.remove('shadow');
       }
     }
   },
 
-  _clearStyles: function t_clearStyles(frame) {
-    frame.style.MozTransform = '';
-    frame.style.opacity = '';
+  _clearStyles: function t_clearStyles(wrapper) {
+    wrapper.style.MozTransform = '';
+    wrapper.style.opacity = '';
   }
 };
 

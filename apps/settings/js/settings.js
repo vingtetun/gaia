@@ -864,6 +864,7 @@ Settings.preInit();
 
 
 window.addEventListener('load', function() {
+
   document.getElementById('menuItem-wifi').addEventListener('click', function(e) {
     window.open('wifi.html');
     e.preventDefault();
@@ -886,6 +887,11 @@ window.addEventListener('load', function() {
 
   document.getElementById('menuItem-display').addEventListener('click', function(e) {
     window.open('display.html');
+    e.preventDefault();
+  });
+
+  document.getElementById('menuItem-notifications').addEventListener('click', function(e) {
+    window.open('notifications.html');
     e.preventDefault();
   });
 

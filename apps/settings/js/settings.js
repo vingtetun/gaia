@@ -895,4 +895,9 @@ window.addEventListener('load', function() {
     e.preventDefault();
   });
 
+  document.getElementById('menuItem-dateAndTime').addEventListener('click', function(e) {
+    window.open('date_time.html');
+    e.preventDefault();
+  });
+
 });

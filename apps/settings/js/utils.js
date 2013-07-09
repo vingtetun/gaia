@@ -482,6 +482,21 @@ var initSettingsCheckbox = function() {
   }
 }
 
+var initSettingsRange = function() {
+  // preset all range inputs
+  rule = 'input[type="range"]:not([data-ignore])';
+  var ranges = document.querySelectorAll(rule);
+  for (i = 0; i < ranges.length; i++) {
+    var key = ranges[i].name;
+    if (key && result[key] != undefined) {
+      ranges[i].value = parseFloat(result[key]);
+      if (ranges[i].refresh) {
+        ranges[i].refresh(); // XXX to be removed when bug344618 lands
+      }
+    }
+  }
+}
+
 var fakeSelector = function() {
   // use a <button> instead of the <select> element
 

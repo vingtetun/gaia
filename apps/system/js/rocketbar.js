@@ -203,10 +203,7 @@ var Rocketbar = {
     // If site, open site in new sheet
     var siteURL = evt.target.getAttribute('data-site-url');
     if (siteURL) {
-     var e = new CustomEvent('mozbrowseropenwindow', {
-       bubbles: true, detail: {url: siteURL }
-    });
-    this.results.dispatchEvent(e);
+      WindowManager.openNewSheet(siteURL);
     }
   },
 
@@ -233,10 +230,7 @@ var Rocketbar = {
       input = 'http://' + input;
     }
 
-    var e = new CustomEvent('mozbrowseropenwindow', {
-      bubbles: true, detail: {url: input }
-    });
-    this.input.dispatchEvent(e);
+    WindowManager.openNewSheet(input);
   },
 
   /**
@@ -439,8 +433,5 @@ window.addEventListener('load', function rocketbar_onLoad() {
 
   history.type; //certified, privileged, hosted, remote
 
-  var evt = new CustomEvent('mozbrowseropenwindow', {
-    bubbles: true, detail: {url: your_url }
-  });
-  this.input.dispatchEvent(evt);
+  WindowManager.openNewSheet(your_url);
 });*/

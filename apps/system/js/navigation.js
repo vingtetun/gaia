@@ -113,6 +113,29 @@ var WindowManager = (function() {
       var iframe = this.getCurrent().iframe;
       iframe.style.height = height + 'px';
       iframe.style.width = width + 'px';
+    },
+
+    openNewSheet: function(origin, manifestURL) {
+      debug("open " + origin + " for " + manifestURL + "\n");
+
+      // If the link will target a different domain let's open it a a normal remote link
+      if (manifestURL) {
+        var urlHelper = document.createElement('a');
+        urlHelper.href = origin;
+
+        var urlHelper2 = document.createElement('a');
+        urlHelper2.href = manifestURL;
+
+        if (urlHelper.host != urlHelper2.host || urlHelper.protocol != urlHelper2.protocol) {
+          manifestURL = '';
+        }
+      }
+
+      if (manifestURL) {
+        openApp(manifestURL, origin);
+      } else {
+        openOrigin(origin);
+      }
     }
   }
 

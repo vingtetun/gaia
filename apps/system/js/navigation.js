@@ -76,12 +76,12 @@ var WindowManager = (function() {
     },
     goBack: function(partial) {
       current--;
-      dispatchHistoryEvent(navigate[current], false, partial);
+      declareSheetAsCurrent(navigate[current], false, partial);
     },
 
     goNext: function(partial) {
       current++;
-      dispatchHistoryEvent(navigate[current], true, partial);
+      declareSheetAsCurrent(navigate[current], true, partial);
     },
 
     getPrevious: function() {
@@ -111,7 +111,7 @@ var WindowManager = (function() {
   var navigate = [];
   var current = 0;
 
-  function openApp(manifestURL, origin) {
+  function openApp(manifestURL, origin, iframe) {
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
       return;
@@ -128,11 +128,18 @@ var WindowManager = (function() {
 
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
-    createIframe(navigate[current], app.manifestURL);
-    dispatchHistoryEvent(navigate[current], true);
+
+    if (iframe) {
+      appendIframe(iframe);
+      navigate[current].attach(iframe);
+    } else {
+      createIframe(navigate[current], app.manifestURL);
+    }
+
+    declareSheetAsCurrent(navigate[current], true);
   }
 
-  function openOrigin(origin) {
+  function openOrigin(origin, iframe) {
     if (navigate[current]) {
       navigate[current].free();
       for (var i = navigate.length - 1; i > current; i--) {
@@ -144,8 +151,15 @@ var WindowManager = (function() {
     current++;
 
     navigate[current] = new History(origin, 'remote');
-    createIframe(navigate[current]);
-    dispatchHistoryEvent(navigate[current], true);
+
+    if (iframe) {
+      appendIframe(iframe);
+      navigate[current].attach(iframe);
+    } else {
+      createIframe(navigate[current]);
+    }
+
+    declareSheetAsCurrent(navigate[current], true);
   }
 
   function openHomescreen() {
@@ -154,6 +168,7 @@ var WindowManager = (function() {
 
   function createIframe(history, manifestURL) {
     var iframe = document.createElement('iframe');
+
     iframe.setAttribute('mozbrowser', 'true');
     // XXX Disabled on desktop
     iframe.setAttribute('remote', 'true');
@@ -167,35 +182,24 @@ var WindowManager = (function() {
       iframe.setAttribute('mozasyncpanzoom', 'true');
     }
 
-    var windows = document.getElementById('windows');
-    windows.appendChild(iframe);
+    appendIframe(iframe);
     iframe.src = history.location;
     history.attach(iframe);
+  }
+
+  function appendIframe(iframe) {
+    var windows = document.getElementById('windows');
+    windows.appendChild(iframe);
   }
 
   window.addEventListener('mozbrowseropenwindow', function onWindowOpen(e) {
     var origin = e.detail.url;
 
-    // If the link will target a different domain let's open it a a normal remote link
-    var manifestURL = '';
-    if (e.target.hasAttribute('mozapp')) {
-      manifestURL = e.target.getAttribute('mozapp');
-
-      var urlHelper = document.createElement('a');
-      urlHelper.href = origin;
-
-      var urlHelper2 = document.createElement('a');
-      urlHelper2.href = manifestURL;
-
-      if (urlHelper.host != urlHelper2.host || urlHelper.protocol != urlHelper2.protocol) {
-        manifestURL = '';
-      }
-    }
-
-    if (manifestURL) {
-      openApp(manifestURL, origin);
+    var frame = e.detail.frameElement;
+    if (frame.hasAttribute('mozapp')) {
+      openApp(frame.getAttribute('mozapp'), origin, frame);
     } else {
-      openOrigin(origin);
+      openOrigin(origin, frame);
     }
     e.preventDefault();
   });
@@ -233,7 +237,7 @@ var WindowManager = (function() {
   return obj;
 })();
 
-function dispatchHistoryEvent(history, forward, partial) {
+function declareSheetAsCurrent(history, forward, partial) {
   var evt = new CustomEvent('historychange', {
     bubbles: true,
     detail: {
@@ -242,6 +246,11 @@ function dispatchHistoryEvent(history, forward, partial) {
       partial: !!partial
     }
   });
+
+  var iframe = history.iframe;
+  if ('setVisible' in iframe) {
+    iframe.setVisible(true);
+  }
   window.dispatchEvent(evt);
 }
 
@@ -391,6 +400,15 @@ History.prototype = {
     this.onstatuschange = null;
     this.oncangoback = null;
     this.oncangoforward = null;
+
+    // This is dirty but Etienne wants me to clean up little crap and so I
+    // decide to put it under the carpet.
+    var iframe = this.iframe;
+    if ('setVisible' in iframe) {
+      setTimeout(function() {
+        iframe.setVisible(false);
+      }, 1000);
+    }
   },
 
   ontitlechange: null,

@@ -19,21 +19,21 @@
 
     <!-- Shared resources
     <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
-    <link rel="resource" type="application/json" href="/shared/resources/media/ringtones/"/>
-    <link rel="resource" type="application/json" href="/shared/resources/media/notifications/"/>
     -->
 
     <!-- Localization -->
     <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
     <script defer src="/shared/js/l10n.js"></script>
 
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+    <script defer src="/js/sound.js"></script>
   </head>
   <body class="skin-organic">
     <section role="region" id="sound" class="current">
       <header>
         <h1 data-l10n-id="sound"> Sound </h1>
       </header>
-
       <div>
         <ul>
           <li>
@@ -119,34 +119,5 @@
         </ul>
       </div>
     </section>
-    <!-- Personalization :: Sound :: Sound Selection -->
-    <section role="region" id="sound-selection">
-      <header>
-        <button type="reset">
-          <span data-l10n-id="back" class="icon icon-back">Back</span>
-        </button>
-        <menu type="toolbar">
-          <button data-l10n-id="done" type="submit">Done</button>
-        </menu>
-        <h1 data-l10n-id="select-tone"> Select a Tone </h1>
-      </header>
-
-      <div>
-        <header>
-          <h2 data-l10n-id="ring-tones">Ringtones</h2>
-        </header>
-        <ul id="ringtones-list">
-        </ul>
-
-        <header>
-          <h2 data-l10n-id="alert-tones">Alert Tones</h2>
-        </header>
-        <ul id="notifications-list">
-        </ul>
-
-        <audio style="display: none;" src=""></audio>
-      </div>
-    </section>
-    <script src="/js/sound.js"></script>
   </body>
 </html>

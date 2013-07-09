@@ -62,7 +62,7 @@
   background-repeat: no-repeat;
   background-position: center center;
   pointer-events: none;
-  opacity: 1;
+  opacity: 0.99;
   transition: opacity 0.2s linear;
 
   visibility: hidden;

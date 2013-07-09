@@ -609,3 +609,109 @@ var Language = {
   }
 
 };
+
+var Keyboard = {
+
+  layoutEl: document.getElementById('keyboard-layouts'),
+  languageEl: document.getElementById('language-keyboard'),
+  label: document.querySelector('#language-keyboard a'),
+  small: document.querySelector('#language-keyboard small'),
+
+  init: function() {
+    Keyboard.enable();
+    window.addEventListener('localized', this.update.bind(this));
+  },
+
+  update: function() {
+    var prev = this.layoutEl.querySelector('li[hidden]');
+    if (prev) {
+      prev.hidden = false;
+    }
+    this.updateLabelAndSmall();
+  },
+
+  updateLabelAndSmall: function() {
+    this.supported(this.labelAndSmall.bind(this));
+  },
+
+  // update the enabled keyboards list with the language associated keyboard
+  enable: function() {
+    this.supported(function(keyboards) {
+      var newKb = keyboards.layout[navigator.mozL10n.language.code];
+      var settingNewKeyboard = {};
+      var settingNewKeyboardLayout = {};
+      settingNewKeyboard['keyboard.current'] = navigator.mozL10n.language.code;
+      settingNewKeyboardLayout['keyboard.layouts.' + newKb] = true;
+
+      var settings = navigator.mozSettings;
+      try {
+        var lock = settings.createLock();
+        // Enable the language specific keyboard layout group
+        lock.set(settingNewKeyboardLayout);
+        // Activate the language associated keyboard, everything.me also uses
+        // this setting to improve searches
+        lock.set(settingNewKeyboard);
+      } catch (ex) {
+        console.warn('Exception in mozSettings.createLock():', ex);
+      }
+    })
+  },
+
+  labelAndSmall: function(keyboards) {
+    // // Get pointers to the top list entry and its labels which are used to
+    // // pin the language associated keyboard at the top of the keyboards list
+    // var pinnedKbLabel = ;
+    // var pinnedKbSubLabel = pinnedKb.querySelector('small');
+    this.small.textContent = '';
+
+    // Get the current language and its associate keyboard layout
+    var currentLang = document.documentElement.lang;
+    var langKeyboard = keyboards.layout[currentLang];
+
+    var kbSelector = 'input[name="keyboard.layouts.' + langKeyboard + '"]';
+    var kbListQuery = this.layoutEl.querySelector(kbSelector);
+
+    if (kbListQuery) {
+      // Remove the entry from the list since it will be pinned on top
+      // of the Keyboard Layouts list
+      var kbListEntry = kbListQuery.parentNode.parentNode;
+      kbListEntry.hidden = true;
+
+      var label = kbListEntry.querySelector('a');
+      var small = kbListEntry.querySelector('small');
+      this.label.dataset.l10nId = label.dataset.l10nId;
+      this.label.textContent = label.textContent;
+      if (small) {
+        this.small.dataset.l10nId = sub.dataset.l10nId;
+        this.small.textContent = small.textContent;
+      }
+    } else {
+      // If the current language does not have an associated keyboard,
+      // fallback to the default keyboard: 'en'
+      // XXX update this if the list order in index.html changes
+      var englishEntry = this.layoutEl.children[1];
+      englishEntry.hidden = true;
+      this.label.dataset.l10nId = 'english';
+      this.small.textContent = '';
+    }
+  },
+
+  supported: function(callback) {
+    if (!callback)
+      return;
+
+    if (this._kbLayoutList) {
+      callback(this._kbLayoutList);
+    } else {
+      var self = this;
+      var KEYBOARDS = '/shared/resources/keyboard_layouts.json';
+      loadJSON(KEYBOARDS, function loadKeyboardLayouts(data) {
+        if (data) {
+          self._kbLayoutList = data;
+          callback(self._kbLayoutList);
+        }
+      });
+    }
+  }
+
+};

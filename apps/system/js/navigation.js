@@ -401,8 +401,13 @@ History.prototype = {
     this.oncangoback = null;
     this.oncangoforward = null;
 
-    if ('setVisible' in this.iframe) {
-      this.iframe.setVisible(false);
+    // This is dirty but Etienne wants me to clean up little crap and so I
+    // decide to put it under the carpet.
+    var iframe = this.iframe;
+    if ('setVisible' in iframe) {
+      setTimeout(function() {
+        iframe.setVisible(false);
+      }, 1000);
     }
   },
 

@@ -883,4 +883,10 @@ window.addEventListener('load', function() {
     window.open('sound.html');
     e.preventDefault();
   });
+
+  document.getElementById('menuItem-display').addEventListener('click', function(e) {
+    window.open('display.html');
+    e.preventDefault();
+  });
+
 });

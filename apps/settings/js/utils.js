@@ -440,3 +440,82 @@ var getBluetooth = function() {
     getDefaultAdapter: function() {}
   };
 };
+
+// Need to be renamed
+var Accessor = {
+  sync: function(key, cb){
+    navigator.mozSettings.addObserver(key, function(event) {
+      cb(event.settingValue);
+    });
+  },
+  set: function(keys, cb) {
+    var request = navigator.mozSettings.createLock().set(keys);
+    request.onsuccess = cb;
+    request.onerror = function errorGetCurrentSound() {
+      debug('Error set', keys);
+    };
+  },
+  get: function(key, cb) {
+    var request = navigator.mozSettings.createLock().get(key);
+    request.onsuccess = function() {
+      if (request.result[key] != undefined) {
+        cb(request.result[key]);
+      }
+    };
+    request.onerror = function errorGetCurrentSound() {
+      debug('Error get', key);
+    };
+  }
+};
+
+var initSettingsCheckbox = function() {
+  // preset all checkboxes
+  var rule = 'input[type="checkbox"]:not([data-ignore])';
+  var checkboxes = document.querySelectorAll(rule);
+  for (var i = 0; i < checkboxes.length; i++) {
+    var key = checkboxes[i].name;
+    (function(j) {
+      Accessor.get(key, function(value) {
+        checkboxes[j].checked = !!value;
+      });
+    })(i);
+  }
+}
+
+var fakeSelector = function() {
+  // use a <button> instead of the <select> element
+
+  var Select = function(select) {
+    var parent = select.parentElement;
+    var button = select.previousElementSibling;
+    // link the button with the select element
+    var index = select.selectedIndex;
+    if (index >= 0) {
+      var selection = select.options[index];
+      button.textContent = selection.textContent;
+      button.dataset.l10nId = selection.dataset.l10nId;
+    }
+    if (parent.classList.contains('fake-select')) {
+      select.addEventListener('change', function() {
+        var newSelection = select.options[select.selectedIndex];
+        button.textContent = newSelection.textContent;
+        button.dataset.l10nId = newSelection.dataset.l10nId;
+      });
+    }
+  };
+
+  // preset all select
+  var selects = document.querySelectorAll('select');
+  for (var i = 0, count = selects.length; i < count; i++) {
+    var select = selects[i];
+    var key = select.name;
+    Accessor.get(key, function(value) {
+      var option = 'option[value="' + value + '"]';
+      var selectOption = select.querySelector(option);
+      if (selectOption) {
+        selectOption.selected = true;
+      }
+      Select(select);
+    });
+  }
+}

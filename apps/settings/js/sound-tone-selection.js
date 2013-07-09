@@ -5,13 +5,6 @@
 
   'use strict';
 
-  var Settings = {
-    set: function(keys, cb) {
-      var request = navigator.mozSettings.createLock().set(keys);
-      request.onsuccess = cb;
-    }
-  };
-
   var lists = {
     'ringtones': {
       settingName: 'dialer.ringtone',
@@ -115,11 +108,8 @@
 
   function activateCurrentElementFor(list) {
     debug('activating current selected sound for ' + list.settingName);
-
     var key = list.settingName + '.name';
-    var request = navigator.mozSettings.createLock().get(key);
-    request.onsuccess = function successGetCurrentSound() {
-      var settingValue = request.result[key];
+    Accessor.get(key, function(settingValue) {
       debug('success get current sound: ' + key + ' = ' + settingValue);
 
       var children = list.element.children;
@@ -131,11 +121,7 @@
           break;
         }
       }
-    };
-
-    request.onerror = function errorGetCurrentSound() {
-      debug('error get current sound: ' + key);
-    };
+    });
   }
 
   function generateSoundsLists() {
@@ -172,7 +158,7 @@
       var sound = {};
       sound[settingName] = data ? 'data:audio/ogg;base64,' + data : '';
       sound[settingName + '.name'] = value;
-      Settings.set(sound, cb);
+      Accessor.set(sound, cb);
     }
     if (value == 'none')
       setSound();

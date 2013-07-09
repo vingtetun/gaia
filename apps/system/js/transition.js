@@ -252,3 +252,18 @@ var PanelSwitcher = {
 };
 
 PanelSwitcher.init();
+
+var KeyboardHandler = {
+  init: function kh_init() {
+    window.addEventListener('keyboardchange', this);
+    window.addEventListener('keyboardhide', this);
+  },
+
+  handleEvent: function kh_handleEvent(e) {
+    var keyboardHeight = KeyboardManager.getHeight();
+    WindowManager.resizeCurrentSheet(window.innerWidth,
+                                     window.innerHeight - keyboardHeight);
+  }
+};
+
+KeyboardHandler.init();

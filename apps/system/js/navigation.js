@@ -103,6 +103,14 @@ var WindowManager = (function() {
           break;
         }
       }
+    },
+
+    resizeCurrentSheet: function(width, height) {
+      debug('resizing current: ' + width + ' x ' + height + '\n');
+
+      var iframe = this.getCurrent().iframe;
+      iframe.style.height = height + 'px';
+      iframe.style.width = width + 'px';
     }
   }
 

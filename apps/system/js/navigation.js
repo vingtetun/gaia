@@ -76,12 +76,12 @@ var WindowManager = (function() {
     },
     goBack: function(partial) {
       current--;
-      dispatchHistoryEvent(navigate[current], false, partial);
+      declareSheetAsCurrent(navigate[current], false, partial);
     },
 
     goNext: function(partial) {
       current++;
-      dispatchHistoryEvent(navigate[current], true, partial);
+      declareSheetAsCurrent(navigate[current], true, partial);
     },
 
     getPrevious: function() {
@@ -135,7 +135,8 @@ var WindowManager = (function() {
     } else {
       createIframe(navigate[current], app.manifestURL);
     }
-    dispatchHistoryEvent(navigate[current], true);
+
+    declareSheetAsCurrent(navigate[current], true);
   }
 
   function openOrigin(origin, iframe) {
@@ -158,7 +159,7 @@ var WindowManager = (function() {
       createIframe(navigate[current]);
     }
 
-    dispatchHistoryEvent(navigate[current], true);
+    declareSheetAsCurrent(navigate[current], true);
   }
 
   function openHomescreen() {
@@ -189,9 +190,6 @@ var WindowManager = (function() {
   function appendIframe(iframe) {
     var windows = document.getElementById('windows');
     windows.appendChild(iframe);
-    if ('setVisible' in iframe) {
-      iframe.setVisible(true);
-    }
   }
 
   window.addEventListener('mozbrowseropenwindow', function onWindowOpen(e) {
@@ -239,7 +237,7 @@ var WindowManager = (function() {
   return obj;
 })();
 
-function dispatchHistoryEvent(history, forward, partial) {
+function declareSheetAsCurrent(history, forward, partial) {
   var evt = new CustomEvent('historychange', {
     bubbles: true,
     detail: {
@@ -248,6 +246,11 @@ function dispatchHistoryEvent(history, forward, partial) {
       partial: !!partial
     }
   });
+
+  var iframe = history.iframe;
+  if ('setVisible' in iframe) {
+    iframe.setVisible(true);
+  }
   window.dispatchEvent(evt);
 }
 
@@ -397,6 +400,10 @@ History.prototype = {
     this.onstatuschange = null;
     this.oncangoback = null;
     this.oncangoforward = null;
+
+    if ('setVisible' in this.iframe) {
+      this.iframe.setVisible(false);
+    }
   },
 
   ontitlechange: null,

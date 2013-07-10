@@ -741,3 +741,44 @@ body {
   background-position: center center;
   background-clip: padding-box;
 }
+
+.window-wrapper button.back,
+.window-wrapper button.forward {
+  position: absolute;
+  bottom: 20px;
+  width: 4rem;
+  height: 4rem;
+
+  color: white;
+  font-size: 3rem;
+  line-height: 4rem;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.6);
+
+  border: 0;
+  border-radius: 50%;
+  pointer-events: none;
+
+  transition: opacity 0.3s linear;
+  opacity: 0;
+}
+
+.window-wrapper button.back:active,
+.window-wrapper button.forward:active {
+  background: rgba(0, 0, 0);
+  color: gray;
+}
+
+.window-wrapper button.back {
+  left: 20px;
+}
+
+.window-wrapper button.forward {
+  right: 20px;
+}
+
+.window-wrapper.canGoBack button.back,
+.window-wrapper.canGoForward button.forward {
+  pointer-events: auto;
+  opacity: 1;
+}

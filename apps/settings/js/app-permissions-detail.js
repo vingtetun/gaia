@@ -65,7 +65,6 @@ var ApplicationsList = {
   },
 
   loadApps: function al_loadApps() {
-    console.log('loadApps');
     var self = this;
     var table = this._permissionsTable;
     var mozPerms = navigator.mozPermissionSettings;

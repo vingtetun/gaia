@@ -720,57 +720,26 @@ window.addEventListener('localized', function updateLocalized() {
 // possible in startup.
 Settings.preInit();
 
-
 window.addEventListener('load', function() {
-
-  document.getElementById('menuItem-wifi').addEventListener('click', function(e) {
-    window.open('wifi.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-help').addEventListener('click', function(e) {
-    window.open('help.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-deviceInfo').addEventListener('click', function(e) {
-    window.open('informations.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-sound').addEventListener('click', function(e) {
-    window.open('sound.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-display').addEventListener('click', function(e) {
-    window.open('display.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-notifications').addEventListener('click', function(e) {
-    window.open('notifications.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-dateAndTime').addEventListener('click', function(e) {
-    window.open('date_time.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-languageAndRegion').addEventListener('click', function(e) {
-    window.open('language.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-keyboard').addEventListener('click', function(e) {
-    window.open('keyboard.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-doNotTrack').addEventListener('click', function(e) {
-    window.open('do-not-track.html');
-    e.preventDefault();
-  });
-
+  var buttons = {
+    'menuItem-wifi': 'wifi.html',
+    'menuItem-help': 'help.html',
+    'menuItem-deviceInfo': 'informations.html',
+    'menuItem-sound': 'sound.html',
+    'menuItem-display': 'display.html',
+    'menuItem-notifications': 'notifications.html',
+    'menuItem-dateAndTime': 'date_time.html',
+    'menuItem-languageAndRegion': 'language.html',
+    'menuItem-keyboard': 'keyboard.html',
+    'menuItem-doNotTrack': 'do-not-track.html',
+    'menuItem-appPermissions': 'app-permissions.html'
+  }
+  for (id in buttons) {
+    (function(_id, href) {
+      document.getElementById(_id).addEventListener('click', function(e) {
+        window.open(href);
+        e.preventDefault();
+      });
+    })(id, buttons[id]);
+  }
 });

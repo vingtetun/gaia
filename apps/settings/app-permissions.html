@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/switches.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <link rel="resource" type="application/l10n" href="shared/locales/permissions.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+
+    <script defer src="/shared/js/manifest_helper.js"></script>
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+
+    <script defer src="/js/hiddenapps.js"></script>
+    <script defer src="/js/apps.js"></script>
+  </head>
+  <body class="skin-organic">
+    <section role="region" id="appPermissions" class="current">
+      <header>
+        <h1 data-l10n-id="appPermissions">
+          App permissions
+        </h1>
+      </header>
+
+      <div>
+        <ul></ul>
+
+        <ul>
+          <li>
+            <button id="clear-bookmarks-app" class="icon icon-dialog"
+                    style="visibility: hidden"
+                    data-l10n-id="clearBookmarkAppsData">
+              Clear bookmarks data
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <form role="dialog" data-type="confirm" hidden class="cb-alert">
+        <section>
+          <h1 data-l10n-id="confirmClearBookmarkAppsDataTitle">Clear private data from bookmarks</h1>
+          <p>
+            <strong data-l10n-id="confirmClearBookmarkAppsDataDesc">This clear private data from bookmarks that have been added to the home screen. This cannot be undone.</strong>
+          </p>
+        </section>
+        <menu>
+          <button class="cb-alert-cancel" data-l10n-id="cancel">Cancel</button>
+          <button class="cb-alert-clear recommend danger" data-l10n-id="clear">Clear</button>
+        </menu>
+      </form>
+    </section>
+  </body>
+</html>

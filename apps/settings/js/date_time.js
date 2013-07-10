@@ -3,6 +3,12 @@
 
 'use strict';
 
+(function() {
+  initSettingsCheckbox();
+  fakeSelector();
+  bug344618_polyfill();
+})();
+
 var SetTime = (function SetTime() {
   var _mozTime = null;
 
@@ -199,6 +205,7 @@ navigator.mozL10n.ready(function SettingsDateAndTime() {
     var d = new Date();
     var f = new navigator.mozL10n.DateTimeFormat();
     var format = _('shortTimeFormat');
+    console.log('#localized!', f);
     gDate.textContent = f.localeFormat(d, '%x');
     gTime.textContent = f.localeFormat(d, format);
   });

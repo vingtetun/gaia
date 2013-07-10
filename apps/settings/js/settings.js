@@ -734,6 +734,7 @@ window.addEventListener('load', function() {
     'menuItem-doNotTrack': 'do-not-track.html',
     'menuItem-appPermissions': 'app-permissions.html'
   }
+  var id;
   for (id in buttons) {
     (function(_id, href) {
       document.getElementById(_id).addEventListener('click', function(e) {

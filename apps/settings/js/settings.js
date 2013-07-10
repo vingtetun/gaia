@@ -768,4 +768,9 @@ window.addEventListener('load', function() {
     e.preventDefault();
   });
 
+  document.getElementById('menuItem-doNotTrack').addEventListener('click', function(e) {
+    window.open('do-not-track.html');
+    e.preventDefault();
+  });
+
 });

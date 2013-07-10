@@ -168,7 +168,7 @@ var Rocketbar = {
     // Clean up the query and display blank results if blank
     var query = this.input.value.toLowerCase().trim();
     if (query.length == 0) {
-      this.showResults(results);
+      this.showAppResults(results);
       return;
     }
 
@@ -176,15 +176,14 @@ var Rocketbar = {
     var installedApps = Applications.installedApps;
     var manifestURLs = Object.keys(installedApps);
     manifestURLs.forEach(function(manifestURL) {
-      if (this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
-      }
       var appName = installedApps[manifestURL].manifest.name.toLowerCase();
       if (appName.indexOf(query) != -1 &&
           this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
         results.push(manifestURL);
       }
     }, this);
-    this.showResults(results);
+    this.showAppResults(results);
+    Places.getTopSites(20, query, this.showSiteResults.bind(this));
   },
 
   /**
@@ -195,9 +194,17 @@ var Rocketbar = {
   handleClick: function rocketbar_handleClick(evt) {
     this.close(true);
 
+    // If app, launch app
     var manifestURL = evt.target.getAttribute('data-manifest-url');
-    if (Applications.installedApps[manifestURL])
+    if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
+      return;
+    }
+    // If site, open site in new sheet
+    var siteURL = evt.target.getAttribute('data-site-url');
+    if (siteURL) {
+      WindowManager.openNewSheet(siteURL);
+    }
   },
 
   /**
@@ -223,10 +230,7 @@ var Rocketbar = {
       input = 'http://' + input;
     }
 
-    var e = new CustomEvent('mozbrowseropenwindow', {
-      bubbles: true, detail: {url: input }
-    });
-    this.input.dispatchEvent(e);
+    WindowManager.openNewSheet(input);
   },
 
   /**
@@ -234,7 +238,7 @@ var Rocketbar = {
    *
    * @param {Array} results An array of app manifest URLs.
    */
-  showResults: function rocketbar_showResults(results) {
+  showAppResults: function rocketbar_showAppResults(results) {
     this.results.innerHTML = '';
     if (results.length == 0)
       return;
@@ -245,6 +249,19 @@ var Rocketbar = {
       li.setAttribute('data-manifest-url', manifestURL);
       li.style.backgroundImage = 'url(' + app.origin +
         app.manifest.icons['60'] + ')';
+      this.results.appendChild(li);
+    }, this);
+  },
+
+  /**
+   *  Show rocketbar results for a list of places.
+   */
+  showSiteResults: function rocketbar_showSiteResults(results) {
+    console.log(JSON.stringify(results));
+    results.forEach(function(result) {
+      var li = document.createElement('li');
+      li.innerHTML = result.title + '<br />' + result.uri;
+      li.setAttribute('data-site-url', result.uri);
       this.results.appendChild(li);
     }, this);
   },
@@ -288,7 +305,7 @@ var Rocketbar = {
   /**
    * Set rocketbar location.
    *
-   * @param {string} URL.
+   * @param {string} location URL.
    */
   setLocation: function rocketbar_setLocation(location) {
     this.currentTitle = '';
@@ -416,8 +433,5 @@ window.addEventListener('load', function rocketbar_onLoad() {
 
   history.type; //certified, privileged, hosted, remote
 
-  var evt = new CustomEvent('mozbrowseropenwindow', {
-    bubbles: true, detail: {url: your_url }
-  });
-  this.input.dispatchEvent(evt);
+  WindowManager.openNewSheet(your_url);
 });*/

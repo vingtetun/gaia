@@ -26,10 +26,7 @@ var ContextMenu = {
 
     var iframe = evt.target;
     var onsuccess = function(action) {
-      var evt = new CustomEvent('mozbrowseropenwindow', {
-        bubbles: true, detail: { url: action }
-      });
-      iframe.dispatchEvent(evt);
+      WindowManager.openNewSheet(action, evt.target.getAttribute('mozapp'));
     };
 
     ListMenu.request(items, '', onsuccess);

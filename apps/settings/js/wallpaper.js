@@ -13,6 +13,7 @@ var Wallpaper = {
     this.bindEvent();
 
     initSettingsCheckbox();
+    initSettingsRange();
     fakeSelector();
     bug344618_polyfill();
   },

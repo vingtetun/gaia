@@ -12,6 +12,7 @@
   });
 
   initSettingsCheckbox();
+  initSettingsRange();
   bug344618_polyfill();
 
 })();

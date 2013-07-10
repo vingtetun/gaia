@@ -488,18 +488,19 @@ var initSettingsRange = function() {
   var ranges = document.querySelectorAll(rule);
   for (i = 0; i < ranges.length; i++) {
     var key = ranges[i].name;
-    if (key && result[key] != undefined) {
-      ranges[i].value = parseFloat(result[key]);
-      if (ranges[i].refresh) {
-        ranges[i].refresh(); // XXX to be removed when bug344618 lands
-      }
-    }
+    (function(j) {
+      Accessor.get(key, function(value) {
+        ranges[j].value = parseFloat(value);
+        if (ranges[j].refresh) {
+          ranges[j].refresh(); // XXX to be removed when bug344618 lands
+        }
+      });
+    })(i);
   }
 }
 
 var fakeSelector = function() {
   // use a <button> instead of the <select> element
-
   var Select = function(select) {
     var parent = select.parentElement;
     var button = select.previousElementSibling;

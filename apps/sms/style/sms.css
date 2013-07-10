@@ -183,7 +183,7 @@ form[data-type="action"] img[src=""] {
   width: 100%;
   height: 100%;
 
-  transition: transform .4s ease;
+/*  transition: transform .4s ease;*/
 }
 
 #main-wrapper.peek .panel {

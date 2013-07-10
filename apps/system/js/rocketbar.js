@@ -1,12 +1,19 @@
 'use strict';
 
 var Rocketbar = {
+
+  /**
+   * DOM elements.
+   */
   zone: document.getElementById('top-panel'),
   progress: document.getElementById('progress'),
   bar: document.getElementById('rocketbar'),
   input: document.getElementById('rocketbar-input'),
   results: document.getElementById('rocketbar-results'),
 
+  /**
+   * Initialise Rocketbar.
+   */
   init: function rocketbar_init() {
     this.input.addEventListener('focus', this.handleFocus.bind(this));
     this.input.addEventListener('blur', function() {
@@ -27,15 +34,21 @@ var Rocketbar = {
     ['touchstart', 'touchmove', 'touchend'].forEach(function(e) {
       this.zone.addEventListener(e, this);
     }, this);
+
+    Places.init(function(firstRun) {});
   },
 
   lastY: 0,
   startY: 0,
-  handleEvent: function rb_handleEvent(e) {
+
+  /**
+   * Handle touch events.
+   */
+  handleEvent: function rocketbar_handleEvent(e) {
     var diffY = this.lastY - this.startY;
     var progress = Math.abs(diffY / (window.innerHeight / 5));
 
-    switch(e.type) {
+    switch (e.type) {
       case 'touchstart':
         this.lastY = this.startY = e.touches[0].pageY;
         this.lastDate = Date.now();
@@ -58,7 +71,8 @@ var Rocketbar = {
           this.open(true);
         } else {
           var durationLeft = 0.3 - (1 - progress) * 0.3;
-          this.bar.style.MozTransition = 'transform ' + durationLeft + 's linear';
+          this.bar.style.MozTransition = 'transform ' + durationLeft +
+            's linear';
           this.close();
         }
 
@@ -68,7 +82,12 @@ var Rocketbar = {
     }
   },
 
-  open: function rb_open(focus) {
+  /**
+   * Open the rocketbar.
+   *
+   * @param {boolean} focus Set focus on rocketbar after opening.
+   */
+  open: function rocketbar_open(focus) {
     this.results.innerHTML = '';
     this.bar.classList.add('open');
 
@@ -76,9 +95,15 @@ var Rocketbar = {
       this.input.focus();
       this.results.classList.add('open');
     }
+
   },
 
-  close: function rb_close(evenIfFocused) {
+  /**
+   * Close the rocketbar.
+   *
+   * @param {boolean} evenIfFocused Close rocketbar even when focussed if true.
+   */
+  close: function rocketbar_close(evenIfFocused) {
     var focus = (this.input == document.activeElement);
     if (!focus || evenIfFocused) {
       this.bar.classList.remove('open');
@@ -90,18 +115,23 @@ var Rocketbar = {
   currentTitle: null,
   currentLocation: null,
 
-  get currentlyOnApp() {
-    return (this.currentLocation.indexOf('app://') == -1);
+  /**
+   * Does the current sheet belong to a packaged app?
+   *
+   * @return {boolean} True for yes, false for no.
+   */
+  get currentlyOnPackagedApp() {
+    return (this.currentLocation.indexOf('app://') != -1);
   },
 
   /**
    * Handle rocketbar focus.
    *
-   * @param Event evt The focus event.
+   * @param {Event} evt The focus event.
    */
   handleFocus: function rocketbar_handleFocus(evt) {
     // Don't show app:// URLs of packaged apps
-    if (this.currentlyOnApp) {
+    if (!this.currentlyOnPackagedApp) {
       this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
@@ -115,12 +145,12 @@ var Rocketbar = {
   /**
    * Handle rocketbar blur.
    *
-   * @param Event evt Blur event
+   * @param {Event} evt Blur event.
    */
   handleBlur: function rocketbar_handleBlur(evt) {
     if (this.currentTitle) {
       this.input.value = this.currentTitle;
-    } else if (this.currentlyOnApp) {
+    } else if (this.currentlyPackagedOnApp) {
       this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
@@ -130,7 +160,7 @@ var Rocketbar = {
   /**
    * Handle rocketbar key presses.
    *
-   * @param Event evt The keyup event
+   * @param {Event} evt The keyup event.
    */
   handleKeyUp: function rocketbar_handleKeyUp(evt) {
     var results = [];
@@ -138,7 +168,7 @@ var Rocketbar = {
     // Clean up the query and display blank results if blank
     var query = this.input.value.toLowerCase().trim();
     if (query.length == 0) {
-      this.showResults(results);
+      this.showAppResults(results);
       return;
     }
 
@@ -146,34 +176,41 @@ var Rocketbar = {
     var installedApps = Applications.installedApps;
     var manifestURLs = Object.keys(installedApps);
     manifestURLs.forEach(function(manifestURL) {
-      if (this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
-      }
       var appName = installedApps[manifestURL].manifest.name.toLowerCase();
       if (appName.indexOf(query) != -1 &&
           this.HIDDEN_APPS.indexOf(manifestURL) == -1) {
         results.push(manifestURL);
       }
     }, this);
-    this.showResults(results);
+    this.showAppResults(results);
+    Places.getTopSites(20, query, this.showSiteResults.bind(this));
   },
 
   /**
    * Handle clicks on rocketbar results.
    *
-   * @param Event evt Click event
+   * @param {Event} evt Click event.
    */
   handleClick: function rocketbar_handleClick(evt) {
     this.close(true);
 
+    // If app, launch app
     var manifestURL = evt.target.getAttribute('data-manifest-url');
-    if (Applications.installedApps[manifestURL])
+    if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
+      return;
+    }
+    // If site, open site in new sheet
+    var siteURL = evt.target.getAttribute('data-site-url');
+    if (siteURL) {
+      WindowManager.openNewSheet(siteURL);
+    }
   },
 
   /**
    * Handle submitting the rocketbar.
    *
-   * @param Event evt The submit event
+   * @param {Event} evt The submit event.
    */
   handleSubmit: function rocketbar_handleSubmit(evt) {
     evt.preventDefault();
@@ -193,16 +230,15 @@ var Rocketbar = {
       input = 'http://' + input;
     }
 
-    var e = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: input }});
-    this.input.dispatchEvent(e);
+    WindowManager.openNewSheet(input);
   },
 
   /**
    * Show rocketbar results for a list of app manifest URLs.
    *
-   * @param Array results An array of app manifest URLs
+   * @param {Array} results An array of app manifest URLs.
    */
-  showResults: function rocketbar_showResults(results) {
+  showAppResults: function rocketbar_showAppResults(results) {
     this.results.innerHTML = '';
     if (results.length == 0)
       return;
@@ -212,7 +248,20 @@ var Rocketbar = {
       li.textContent = app.manifest.name;
       li.setAttribute('data-manifest-url', manifestURL);
       li.style.backgroundImage = 'url(' + app.origin +
-        app.manifest.icons['60'] + ')'; 
+        app.manifest.icons['60'] + ')';
+      this.results.appendChild(li);
+    }, this);
+  },
+
+  /**
+   *  Show rocketbar results for a list of places.
+   */
+  showSiteResults: function rocketbar_showSiteResults(results) {
+    console.log(JSON.stringify(results));
+    results.forEach(function(result) {
+      var li = document.createElement('li');
+      li.innerHTML = result.title + '<br />' + result.uri;
+      li.setAttribute('data-site-url', result.uri);
       this.results.appendChild(li);
     }, this);
   },
@@ -220,7 +269,7 @@ var Rocketbar = {
   /**
    * Handle window history change event.
    *
-   * @param Event evt Window history change event.
+   * @param {Event} evt Window history change event.
    */
   handleWindowChange: function rocketbar_handleWindowChange(evt) {
     var history = evt.detail.current;
@@ -242,27 +291,37 @@ var Rocketbar = {
   /**
    * Set rocketbar title.
    *
-   * @param String title Page title
+   * @param {string} title Page title.
    */
   setTitle: function rocketbar_setTitle(title) {
     this.currentTitle = title;
     if (!this.input.hasFocus) {
       this.input.value = title;
     }
+    if (!this.currentlyOnPackagedApp)
+      Places.setPageTitle(this.currentLocation, title);
   },
 
   /**
    * Set rocketbar location.
    *
-   * @param String URL
+   * @param {string} location URL.
    */
   setLocation: function rocketbar_setLocation(location) {
     this.currentTitle = '';
     this.currentLocation = location;
     this.input.value = location;
+    if (!this.currentlyOnPackagedApp)
+      Places.addVisit(location);
   },
 
   _earlyHideID: null,
+
+  /**
+   * Turn loading throbber on and off.
+   *
+   * @param {boolean} status True for on, false for off.
+   */
   setLoading: function rocketbar_setLoading(status) {
     this._clearEarlyHide();
 
@@ -270,7 +329,7 @@ var Rocketbar = {
       this.progress.classList.add('loading');
 
 
-      if (this.currentlyOnApp) {
+      if (!this.currentlyOnPackagedApp) {
         this.open(false);
         this._earlyHideID = setTimeout((function() {
           this.close(false);
@@ -289,6 +348,12 @@ var Rocketbar = {
     }
   },
 
+  /**
+   * Test whether string is a URL.
+   *
+   * @param {String} input Text to be tested.
+   * @return {boolean} True for non-URL, false for URL.
+   */
   isNotURL: function rocketbar_isNotURL(input) {
     // NOTE: NotFound is equal to the upper bound of Uint32 (2^32-1)
     var dLoc = input.indexOf('.') >>> 0;
@@ -325,15 +390,29 @@ var Rocketbar = {
     return false;
   },
 
-  HIDDEN_APPS: ["app://keyboard.gaiamobile.org/manifest.webapp","app://wallpaper.gaiamobile.org/manifest.webapp","app://bluetooth.gaiamobile.org/manifest.webapp","app://pdfjs.gaiamobile.org/manifest.webapp","app://homescreen.gaiamobile.org/manifest.webapp","app://system.gaiamobile.org/manifest.webapp","app://image-uploader.gaiamobile.org/manifest.webapp","http://keyboard.gaiamobile.org:8080/manifest.webapp","http://wallpaper.gaiamobile.org:8080/manifest.webapp","http://bluetooth.gaiamobile.org:8080/manifest.webapp","http://pdfjs.gaiamobile.org:8080/manifest.webapp","http://homescreen.gaiamobile.org:8080/manifest.webapp","http://system.gaiamobile.org:8080/manifest.webapp","http://image-uploader.gaiamobile.org/manifest.webapp"]
-}
+  HIDDEN_APPS: ['app://keyboard.gaiamobile.org/manifest.webapp',
+    'app://wallpaper.gaiamobile.org/manifest.webapp',
+    'app://bluetooth.gaiamobile.org/manifest.webapp',
+    'app://pdfjs.gaiamobile.org/manifest.webapp',
+    'app://homescreen.gaiamobile.org/manifest.webapp',
+    'app://system.gaiamobile.org/manifest.webapp',
+    'app://image-uploader.gaiamobile.org/manifest.webapp',
+    'http://keyboard.gaiamobile.org:8080/manifest.webapp',
+    'http://wallpaper.gaiamobile.org:8080/manifest.webapp',
+    'http://bluetooth.gaiamobile.org:8080/manifest.webapp',
+    'http://pdfjs.gaiamobile.org:8080/manifest.webapp',
+    'http://homescreen.gaiamobile.org:8080/manifest.webapp',
+    'http://system.gaiamobile.org:8080/manifest.webapp',
+    'http://image-uploader.gaiamobile.org/manifest.webapp']
+};
 
 window.addEventListener('load', function rocketbar_onLoad() {
   window.removeEventListener('load', rocketbar_onLoad);
   Rocketbar.init();
 });
 
-/*window.addEventListener('historychange', function rocketbar_onHistoryChange(e) {
+/*window.addEventListener('historychange',
+  function rocketbar_onHistoryChange(e) {
   var history = e.detail.current;
 
   history.title;
@@ -354,6 +433,5 @@ window.addEventListener('load', function rocketbar_onLoad() {
 
   history.type; //certified, privileged, hosted, remote
 
-  var evt = new CustomEvent('mozbrowseropenwindow', { bubbles: true, detail: {url: your_url }});
-  this.input.dispatchEvent(evt);
+  WindowManager.openNewSheet(your_url);
 });*/

@@ -31,7 +31,7 @@ var ThreadListUI = {
     this.mainWrapper = document.getElementById('main-wrapper');
 
     this.delNumList = [];
-    this.fullHeight = this.container.offsetHeight;
+//    this.fullHeight = this.container.offsetHeight;
 
     this.checkAllButton.addEventListener(
       'click', this.toggleCheckedAll.bind(this, true)
@@ -132,6 +132,12 @@ var ThreadListUI = {
   },
 
   handleEvent: function thlui_handleEvent(evt) {
+    if (evt.target.dataset.threadId) {
+      window.open('thread.html#' + evt.target.dataset.threadId);
+    } else if (evt.target.parentNode.dataset.threadId) {
+      window.open('thread.html#' + evt.target.parentNode.dataset.threadId);
+    }
+
     switch (evt.type) {
       case 'click':
         // Duck type determination; if the click event occurred on

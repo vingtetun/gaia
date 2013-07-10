@@ -45,7 +45,7 @@ window.addEventListener('localized', function showBody() {
   document.documentElement.dir = navigator.mozL10n.language.direction;
 });
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function() {  
   function initUIApp() {
     ActivityHandler.init();
     // Init UI Managers
@@ -71,6 +71,10 @@ window.addEventListener('load', function() {
         return;
       }
       MessageManager.init(initUIApp);
+ 
+      // HAIDA PROTO
+      startupFunction();
+      
     });
   });
 });

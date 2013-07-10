@@ -17,7 +17,7 @@ var WindowManager = (function() {
 
     reload: function() {
       debug('Someone call reload: ' + arguments);
-    }, 
+    },
 
     getDisplayedApp: function() {
       debug('Someone call getDisplayedApp: ' + arguments);
@@ -74,14 +74,16 @@ var WindowManager = (function() {
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
     },
-    goBack: function(partial) {
+    goBack: function() {
+      navigate[current].free();
       current--;
-      dispatchHistoryEvent(navigate[current], false, partial);
+      declareSheetAsCurrent(navigate[current], false);
     },
 
-    goNext: function(partial) {
+    goNext: function() {
+      navigate[current].free();
       current++;
-      dispatchHistoryEvent(navigate[current], true, partial);
+      declareSheetAsCurrent(navigate[current], true);
     },
 
     getPrevious: function() {
@@ -98,10 +100,41 @@ var WindowManager = (function() {
 
     evictEntry: function(history) {
       for (var i in navigate) {
-        if (navigate[i].iframe == this.iframe) {
+        if (navigate[i].wrapper == this.wrapper) {
           navigate = navigate.slice(i, i + 1);
           break;
         }
+      }
+    },
+
+    resizeCurrentSheet: function(width, height) {
+      debug('resizing current: ' + width + ' x ' + height + '\n');
+
+      var iframe = this.getCurrent().iframe;
+      iframe.style.height = height + 'px';
+      iframe.style.width = width + 'px';
+    },
+
+    openNewSheet: function(origin, manifestURL) {
+      debug("open " + origin + " for " + manifestURL + "\n");
+
+      // If the link will target a different domain let's open it a a normal remote link
+      if (manifestURL) {
+        var urlHelper = document.createElement('a');
+        urlHelper.href = origin;
+
+        var urlHelper2 = document.createElement('a');
+        urlHelper2.href = manifestURL;
+
+        if (urlHelper.host != urlHelper2.host || urlHelper.protocol != urlHelper2.protocol) {
+          manifestURL = '';
+        }
+      }
+
+      if (manifestURL) {
+        openApp(manifestURL, origin);
+      } else {
+        openOrigin(origin);
       }
     }
   }
@@ -111,7 +144,7 @@ var WindowManager = (function() {
   var navigate = [];
   var current = 0;
 
-  function openApp(manifestURL, origin) {
+  function openApp(manifestURL, origin, iframe) {
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
       return;
@@ -120,7 +153,7 @@ var WindowManager = (function() {
       navigate[current].free();
       for (var i = navigate.length - 1; i > current; i--) {
         var next = navigate.pop();
-        next.iframe.parentNode.removeChild(next.iframe);
+        next.wrapper.parentNode.removeChild(next.wrapper);
         next.close();
       }
     }
@@ -128,32 +161,45 @@ var WindowManager = (function() {
 
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
-    createIframe(navigate[current], app.manifestURL);
-    dispatchHistoryEvent(navigate[current], true);
+
+    if (iframe) {
+      appendIframe(iframe, navigate[current]);
+    } else {
+      createWindow(navigate[current], app.manifestURL);
+    }
+
+    declareSheetAsCurrent(navigate[current], true);
   }
 
-  function openOrigin(origin) {
+  function openOrigin(origin, iframe) {
     if (navigate[current]) {
       navigate[current].free();
       for (var i = navigate.length - 1; i > current; i--) {
         var next = navigate.pop();
-        next.iframe.parentNode.removeChild(next.iframe);
+        next.wrapper.parentNode.removeChild(next.wrapper);
         next.close();
       }
     }
     current++;
 
     navigate[current] = new History(origin, 'remote');
-    createIframe(navigate[current]);
-    dispatchHistoryEvent(navigate[current], true);
+
+    if (iframe) {
+      appendIframe(iframe, navigate[current]);
+    } else {
+      createWindow(navigate[current]);
+    }
+
+    declareSheetAsCurrent(navigate[current], true);
   }
 
   function openHomescreen() {
     openApp(Applications.getByManifestURL(homescreenManifestURL));
   }
 
-  function createIframe(history, manifestURL) {
+  function createWindow(history, manifestURL) {
     var iframe = document.createElement('iframe');
+
     iframe.setAttribute('mozbrowser', 'true');
     // XXX Disabled on desktop
     iframe.setAttribute('remote', 'true');
@@ -167,35 +213,44 @@ var WindowManager = (function() {
       iframe.setAttribute('mozasyncpanzoom', 'true');
     }
 
-    var windows = document.getElementById('windows');
-    windows.appendChild(iframe);
+    var wrapper = wrap(iframe)
+    appendWindow(wrapper);
+
     iframe.src = history.location;
-    history.attach(iframe);
+    history.attach(wrapper, iframe);
+  }
+
+  function wrap(iframe) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'window-wrapper';
+
+    wrapper.appendChild(iframe);
+
+    var cover = document.createElement('div');
+    cover.className = 'cover';
+    wrapper.appendChild(cover);
+    return wrapper;
+  }
+
+  function appendIframe(iframe, history) {
+    var wrapper = wrap(iframe);
+    appendWindow(wrapper);
+    history.attach(wrapper, iframe);
+  }
+
+  function appendWindow(wrapper) {
+    var windows = document.getElementById('windows');
+    windows.appendChild(wrapper);
   }
 
   window.addEventListener('mozbrowseropenwindow', function onWindowOpen(e) {
     var origin = e.detail.url;
 
-    // If the link will target a different domain let's open it a a normal remote link
-    var manifestURL = '';
-    if (e.target.hasAttribute('mozapp')) {
-      manifestURL = e.target.getAttribute('mozapp');
-
-      var urlHelper = document.createElement('a');
-      urlHelper.href = origin;
-
-      var urlHelper2 = document.createElement('a');
-      urlHelper2.href = manifestURL;
-
-      if (urlHelper.host != urlHelper2.host || urlHelper.protocol != urlHelper2.protocol) {
-        manifestURL = '';
-      }
-    }
-
-    if (manifestURL) {
-      openApp(manifestURL, origin);
+    var frame = e.detail.frameElement;
+    if (frame.hasAttribute('mozapp')) {
+      openApp(frame.getAttribute('mozapp'), origin, frame);
     } else {
-      openOrigin(origin);
+      openOrigin(origin, frame);
     }
     e.preventDefault();
   });
@@ -233,15 +288,17 @@ var WindowManager = (function() {
   return obj;
 })();
 
-function dispatchHistoryEvent(history, forward, partial) {
+function declareSheetAsCurrent(history, forward) {
   var evt = new CustomEvent('historychange', {
     bubbles: true,
     detail: {
       current: history,
-      forward: forward,
-      partial: !!partial
+      forward: forward
     }
   });
+
+  history.wakeUp();
+
   window.dispatchEvent(evt);
 }
 
@@ -254,13 +311,16 @@ function History(origin, type) {
   this.location = origin;
   this.loading = true;
   this.canGoBack = false;
+  this.canGoForward = false;
   this.type = type;
 
+  this.wrapper = null;
   this.iframe = null;
 }
 
 History.prototype = {
-  attach: function history_attach(iframe) {
+  attach: function history_attach(wrapper, iframe) {
+    this.wrapper = wrapper;
     this.iframe = iframe;
 
     iframe.addEventListener('mozbrowsertitlechange', this);
@@ -279,6 +339,7 @@ History.prototype = {
     iframe.removeEventListener('mozbrowserclose', this);
     iframe.removeEventListener('mozbrowsererror', this);
 
+    this.wrapper = null;
     this.iframe = null;
   },
 
@@ -306,6 +367,14 @@ History.prototype = {
             this.oncangoback(this.canGoBack);
           }
         }).bind(this);
+
+        this.iframe.getCanGoForward().onsuccess = (function(e) {
+          this.canGoForward = e.target.result;
+
+          if (this.oncangoforward) {
+            this.oncangoforward(this.canGoForward);
+          }
+        }).bind(this);
         break;
 
       case 'loadstart':
@@ -327,11 +396,11 @@ History.prototype = {
       case 'close':
       case 'error':
         // XXX This is a bit rude with error but that's ok for now
-        if (this.iframe.dataset.current) {
+        if (this.wrapper.dataset.current) {
           WindowManager.goBack();
         }
         WindowManager.evictEntry(this);
-        this.iframe.parentNode.removeChild(this.iframe);
+        this.wrapper.parentNode.removeChild(this.wrapper);
         this.close();
         break;
     }
@@ -352,7 +421,14 @@ History.prototype = {
     if (!this.iframe)
       return;
 
-    this.iframe.goBack(str);
+    this.iframe.goBack();
+  },
+
+  goForward: function history_goForward() {
+    if (!this.iframe)
+      return;
+
+    this.iframe.goForward();
   },
 
   reload: function history_reload() {
@@ -360,6 +436,10 @@ History.prototype = {
       return;
 
     this.iframe.reload();
+  },
+
+  getScreenshot: function history_getScreenshot(width, height) {
+    return this.iframe.getScreenshot(width, height);
   },
 
   stop: function history_stop() {
@@ -374,11 +454,35 @@ History.prototype = {
     this.onlocationchange = null;
     this.onstatuschange = null;
     this.oncangoback = null;
+    this.oncangoforward = null;
+
+    // This is dirty but Etienne wants me to clean up little crap and so I
+    // decide to put it under the carpet.
+    var iframe = this.iframe;
+    if ('setVisible' in iframe) {
+      this._freeTimeoutID = setTimeout((function() {
+        this._freeTimeoutID = null;
+        iframe.setVisible(false);
+      }).bind(this), 500);
+    }
+  },
+
+  wakeUp: function history_wakeUp() {
+    if (this._freeTimeoutID) {
+      clearTimeout(this._freeTimeoutID);
+      this._freeTimeoutID = null;
+    }
+
+    var iframe = this.iframe;
+    if ('setVisible' in iframe) {
+      iframe.setVisible(true);
+    }
   },
 
   ontitlechange: null,
   onlocationchange: null,
   onstatuschange: null,
-  oncangoback: null
+  oncangoback: null,
+  oncangoforward: null
 };
 

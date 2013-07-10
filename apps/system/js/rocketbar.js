@@ -284,7 +284,6 @@ var Rocketbar = {
 
     this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
-    history.onlocationchange = this.setLocation.bind(this);
     history.onstatuschange = this.setLoading.bind(this);
   },
 

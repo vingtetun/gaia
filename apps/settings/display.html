@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/switches.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+    <script defer src="/js/wallpaper.js"></script>
+  </head>
+  <body class="skin-organic">
+    <section role="region" id="display" class="current">
+      <header>
+        <h1 data-l10n-id="display"> Display </h1>
+      </header>
+      <div>
+        <header id="wallpaper-header">
+          <h2 data-l10n-id="wallpaper">Wallpaper</h2>
+        </header>
+        <div id="wallpaper">
+          <img id="wallpaper-preview" alt="wallpaper preview"/>
+          <button id="wallpaper-button"></button>
+        </div>
+        <header>
+          <h2 data-l10n-id="brightness">Brightness</h2>
+        </header>
+        <ul>
+          <li id="brightness-auto">
+            <label>
+              <input type="checkbox" name="screen.automatic-brightness" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="brightness-autoAdjust">Adjust Automatically</a>
+          </li>
+          <li id="brightness-manual">
+            <label>
+              <input type="range" name="screen.brightness" min="0.1" value="0.5" max="1" />
+              <span class="range-icons brightness"></span>
+            </label>
+          </li>
+          <li id="screen-timeout">
+            <p data-l10n-id="screen-timeout">Screen Timeout</p>
+            <p class="fake-select">
+              <button class="icon icon-dialog">empty</button>
+              <select name="screen.timeout" data-value-type="integer">
+                <option value="60"  data-l10n-id="one-minute" selected>1 minute</option>
+                <option value="120" data-l10n-id="two-minutes"> 2 minutes</option>
+                <option value="300" data-l10n-id="five-minutes">5 minutes</option>
+                <option value="600" data-l10n-id="ten-minutes">10 minutes</option>
+                <option value="0"   data-l10n-id="never">Never</option>
+              </select>
+            </p>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </body>
+</html>

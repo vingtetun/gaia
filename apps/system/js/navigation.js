@@ -227,6 +227,17 @@ var WindowManager = (function() {
     var cover = document.createElement('div');
     cover.className = 'cover';
     wrapper.appendChild(cover);
+
+    var backButton = document.createElement('button');
+    backButton.classList.add('back');
+    backButton.textContent = '←';
+    wrapper.appendChild(backButton);
+
+    var forwardButton = document.createElement('button');
+    forwardButton.classList.add('forward');
+    forwardButton.textContent = '→';
+    wrapper.appendChild(forwardButton);
+
     return wrapper;
   }
 

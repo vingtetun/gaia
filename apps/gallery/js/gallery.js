@@ -161,8 +161,17 @@ function init() {
   // If we were not invoked by an activity, then start off in thumbnail
   // list mode, and fire up the MediaDB object.
   if (!navigator.mozHasPendingMessage('activity')) {
-    initDB();
-    setView(thumbnailListView);
+    if (typeof haida_script !== 'function') {
+      initDB();
+      setView(thumbnailListView);
+    } else {
+      console.log('ACTIVATE! show: ', parseInt(window.location.hash.substr(1)));
+      setView(fullscreenView);
+      files = window.opener.files;
+      console.log('fajls: ', files.length);
+      showFile(parseInt(window.location.hash.substr(1)));
+    }
+     
   }
 
   // Register a handler for activities. This will take care of the rest
@@ -373,7 +382,6 @@ function initThumbnails() {
   //    experimentation.  (Provides 10 rows' worth loading zone.)
   var visibilityMargin = 5060;
   var minimumScrollDelta = 4000;
-
   visibilityMonitor =
     monitorChildVisibility(thumbnails,
                            visibilityMargin,    // extra space top and bottom
@@ -416,7 +424,7 @@ function initThumbnails() {
   }
 
   function thumb(fileinfo) {
-    files.push(fileinfo);              // remember the file
+    files.push(fileinfo);              // remember the file    
     var thumbnail = createThumbnail(files.length - 1); // create its thumbnail
     thumbnails.appendChild(thumbnail); // display the thumbnail
   }
@@ -865,16 +873,17 @@ function thumbnailClickHandler(evt) {
   if (!target || !target.classList.contains('thumbnail'))
     return;
 
-  if (currentView === thumbnailListView || currentView === fullscreenView) {
-    loader.load('js/frame_scripts.js', function() {
-      showFile(parseInt(target.dataset.index));
-    });
-  }
   else if (currentView === thumbnailSelectView) {
     updateSelection(target);
+    return;
   }
   else if (currentView === pickView) {
     cropPickedImage(files[parseInt(target.dataset.index)]);
+    return;
+  }
+  
+  if (currentView === thumbnailListView || currentView === fullscreenView) {
+    window.open('fullscreen.html#' + target.dataset.index);
   }
 }
 

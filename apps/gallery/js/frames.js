@@ -1,3 +1,55 @@
+MediaFrame.prototype.pan = function(dx, dy) {
+  // We can only pan images, so return the entire dx amount
+  if (!this.displayingImage) {
+    return dy;
+  }
+
+  // Handle panning in the y direction first, since it is easier.
+  // Don't pan in the y direction if we alreadx fit on the screen
+  if (this.fit.width > this.viewportWidth) {
+    this.fit.left += dx;
+
+    // Don't let the left of the photo be below the left of the screen
+    if (this.fit.left > 0)
+      this.fit.left = 0;
+
+    // bottom of photo shouldn't be above the bottom of screen
+    if (this.fit.left + this.fit.width < this.viewportWidth)
+      this.fit.left = this.viewportWidth - this.fit.width;
+  }
+
+  // Now handle the X dimension. If we've already panned as far as we can
+  // within the image (or if it isn't zoomed in) then return the "extra"
+  // unused dy amount to the caller so that the caller can use them to
+  // shift the frame top or right.
+  var extra = 0;
+
+  if (this.fit.height <= this.viewportHeight) {
+    // In this case, the photo isn't zoomed in, so it is all extra
+    extra = dy;
+  }
+  else {
+    this.fit.top += dy;
+
+    // If this would take the top edge of the photo past the
+    // top edge of the screen, then some of the motion is extra
+    if (this.fit.top > 0) {
+      extra = this.fit.top;
+      this.fit.top = 0;
+    }
+
+    // Or, if this would take the right edge of the photo past the
+    // right edge of the screen, then we've got extra.
+    if (this.fit.top + this.fit.height < this.viewportHeight) {
+      extra = this.fit.top + this.fit.height - this.viewportHeight;
+      this.fit.top = this.viewportHeight - this.fit.height;
+    }
+  }
+
+  this.setPosition();
+  return extra;
+};
+
 // This file contains Gallery code related to the fullscreen view
 
 'use strict';
@@ -21,9 +73,6 @@ var nextFrame = new MediaFrame($('frame3'));
 // When this variable is set to true, we ignore any user gestures
 // so we don't try to pan or zoom during a frame transition.
 var transitioning = false;
-
-// Clicking on the back button goes back to the thumbnail view
-$('fullscreen-back-button').onclick = setView.bind(null, thumbnailListView);
 
 // Clicking the delete button while viewing a single item deletes that item
 $('fullscreen-delete-button').onclick = deleteSingleItem;
@@ -186,15 +235,15 @@ function panHandler(event) {
   // if dx is in the opposite direction but isn't big enough to bring
   // the frames back to the center, just adjust the frame positions.
   // There is no need to pan the content of the frame in this case.
-  if ((frameOffset > 0 && dx > 0) ||
-      (frameOffset < 0 && dx < 0) ||
-      (frameOffset !== 0 && frameOffset > -dx)) {
-    frameOffset += dx;
+  if ((frameOffset > 0 && dy > 0) ||
+      (frameOffset < 0 && dy < 0) ||
+      (frameOffset !== 0 && frameOffset > -dy)) {
+    frameOffset += dy;
   }
   else {
     // If the frame is shifted, this dx brings it back to center
     if (frameOffset !== 0) {
-      dx += frameOffset;
+      dy += frameOffset;
       frameOffset = 0;
     }
 
@@ -225,14 +274,14 @@ function swipeHandler(event) {
   var direction = (frameOffset < 0) ? 1 : -1;
 
   // If we're in a right-to-left locale, reverse those directions
-  if (languageDirection === 'rtl')
-    direction *= -1;
+  // if (languageDirection === 'rtl')
+  //   direction *= -1;
 
   // Did we pan far enough or swipe fast enough to transition to
   // a different item?
   var farenough =
-    Math.abs(frameOffset) > window.innerWidth * TRANSITION_FRACTION;
-  var velocity = event.detail.vx;
+    Math.abs(frameOffset) > window.innerHeight * TRANSITION_FRACTION;
+  var velocity = event.detail.vy;
   var fastenough = Math.abs(velocity) > TRANSITION_SPEED;
 
   // Make sure that that the speed and pan amount are in the same direction
@@ -250,7 +299,7 @@ function swipeHandler(event) {
 
     // Compute how long the transition should take based on the velocity
     var speed = Math.max(Math.abs(velocity), TRANSITION_SPEED);
-    var time = (window.innerWidth - Math.abs(frameOffset)) / speed;
+    var time = (window.innerHeight - Math.abs(frameOffset)) / speed;
 
     // Transition frames in the appropriate direction
     if (direction === 1)
@@ -313,7 +362,7 @@ function setupFrameContent(n, frame) {
   // Remember what file we're going to display
   frame.filename = fileinfo.name;
 
-  photodb.getFile(fileinfo.name, function(imagefile) {
+  window.opener.photodb.getFile(fileinfo.name, function(imagefile) {
     if (fileinfo.metadata.video) {
       // If this is a video, then the file we just got is the poster image
       // and we still have to fetch the actual video
@@ -335,17 +384,19 @@ function setupFrameContent(n, frame) {
 }
 
 var FRAME_BORDER_WIDTH = 3;
+var FRAME_BORDER_HEIGHT = 3;
 var frameOffset = 0; // how far are the frames swiped side-to-side?
 
 function setFramesPosition() {
   // XXX for RTL languages we should swap next and previous sides
-  var width = window.innerWidth + FRAME_BORDER_WIDTH;
+  //var width = window.innerWidth + FRAME_BORDER_WIDTH;
+  var height = window.innerHeight + FRAME_BORDER_HEIGHT;
   currentFrame.container.style.transform =
-    'translateX(' + frameOffset + 'px)';
+    'translateY(' + frameOffset + 'px)';
   nextFrame.container.style.transform =
-    'translateX(' + (frameOffset + width) + 'px)';
+    'translateY(' + (frameOffset + height) + 'px)';
   previousFrame.container.style.transform =
-    'translateX(' + (frameOffset - width) + 'px)';
+    'translateY(' + (frameOffset - height) + 'px)';
 }
 
 function resetFramesPosition() {

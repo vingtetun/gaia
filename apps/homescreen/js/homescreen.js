@@ -8,6 +8,7 @@ const Homescreen = (function() {
   var groupsPage = document.getElementById('groups-page');
   var iconList = document.getElementById('icon-list');
   var groupList = document.getElementById('group-list');
+  var searchbar = document.getElementById('searchbar');
   var HVGA = document.documentElement.clientWidth < 480;
   var mainColor = {r:255, g:255, b:255};
   var currentPossition;
@@ -50,7 +51,16 @@ const Homescreen = (function() {
         { name: 'Calendar' }
       ]
     }
-  ]
+  ];
+
+  grid.addEventListener('click', function(e) {
+    if (e.target.classList.contains('searchbar')) {
+      navigator.mozSettings.createLock().set({
+         'rocketbar.show': Math.random()
+       });
+    }
+  });
+  
   var gd = new GestureDetector(grid);
   gd.startDetecting();
   
@@ -170,7 +180,7 @@ const Homescreen = (function() {
     currentGroup.appendChild(iconGroupImage);
     
     tile.appendChild(iconImage);
-    tile.innerHTML += name;
+    //tile.innerHTML += name;
     tile.addEventListener('tap', (function(application, entry) {
       return function(){ 
         application.launch(entry ? entry : null);

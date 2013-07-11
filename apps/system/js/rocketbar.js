@@ -36,6 +36,10 @@ var Rocketbar = {
     }, this);
 
     Places.init(function(firstRun) {});
+    
+    navigator.mozSettings.addObserver('rocketbar.show', function(event) {
+      this.open(true);
+    }.bind(this));
   },
 
   lastY: 0,

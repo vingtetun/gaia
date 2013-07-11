@@ -6,6 +6,11 @@
 *~
 manifest.appcache
 
+profile-debug/
+test_apps/music2/
+apps/system/resources/icc.json
+.gitignore
+
 /apps/calendar/js/presets.js
 /apps/homescreen/js/init.json
 /apps/homescreen/js/hiddenapps.js

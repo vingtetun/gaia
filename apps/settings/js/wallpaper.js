@@ -4,64 +4,59 @@
 'use strict';
 
 var Wallpaper = {
-  getAllElements: function wallpaper_getAllElements() {
-    this.preview = document.getElementById('wallpaper-preview');
-    this.button = document.getElementById('wallpaper-button');
-  },
+
+  button: document.getElementById('wallpaper-button'),
+  preview: document.getElementById('wallpaper-preview'),
 
   init: function wallpaper_init() {
-    this.getAllElements();
     this.loadCurrentWallpaper();
     this.bindEvent();
+
+    initSettingsCheckbox();
+    initSettingsRange();
+    fakeSelector();
+    bug344618_polyfill();
+  },
+
+  setWallpaper: function wallpaper_setWallpaper(wallpaper_path) {
+    this.preview.src = wallpaper_path;
   },
 
   loadCurrentWallpaper: function wallpaper_loadCurrentWallpaper() {
+    Accessor.sync('wallpaper.image', this.setWallpaper.bind(this));
+    Accessor.get('wallpaper.image', this.setWallpaper.bind(this));
+  },
+
+  onWallpaperClick: function wallpaper_onWallpaperClick() {
     var self = this;
-    var settings = navigator.mozSettings;
-    settings.addObserver('wallpaper.image',
-      function onHomescreenChange(event) {
-        self.preview.src = event.settingValue;
+    var a = new MozActivity({
+      name: 'pick',
+      data: {
+        type: 'image/jpeg',
+        width: 320,
+        height: 480
+      }
     });
 
-    var lock = settings.createLock();
-    var reqWallpaper = lock.get('wallpaper.image');
-    reqWallpaper.onsuccess = function wallpaper_getWallpaperSuccess() {
-      self.preview.src = reqWallpaper.result['wallpaper.image'];
+    a.onsuccess = function onPickSuccess() {
+      if (!a.result.blob)
+        return;
+
+      var reader = new FileReader();
+      reader.readAsDataURL(a.result.blob);
+      reader.onload = function() {
+        self.setWallpaper(reader.result);
+        Accessor.set({ 'wallpaper.image': reader.result });
+      };
+    };
+    a.onerror = function onPickError() {
+      console.warn('pick failed!');
     };
   },
 
   bindEvent: function wallpaper_bindEvent() {
-    var self = this;
-    var settings = navigator.mozSettings;
-    var onWallpaperClick = function wallpaper_onWallpaperClick() {
-      var a = new MozActivity({
-        name: 'pick',
-        data: {
-          type: 'image/jpeg',
-          width: 320,
-          height: 480
-        }
-      });
-
-      a.onsuccess = function onPickSuccess() {
-        if (!a.result.blob)
-          return;
-
-        var reader = new FileReader();
-        reader.readAsDataURL(a.result.blob);
-        reader.onload = function() {
-          self.preview.src = reader.result;
-          navigator.mozSettings.createLock().set({
-            'wallpaper.image': reader.result
-          });
-        };
-      };
-      a.onerror = function onPickError() {
-        console.warn('pick failed!');
-      };
-    };
-    this.preview.addEventListener('click', onWallpaperClick);
-    this.button.addEventListener('click', onWallpaperClick);
+    this.preview.addEventListener('click', this.onWallpaperClick.bind(this));
+    this.button.addEventListener('click', this.onWallpaperClick.bind(this));
   }
 };
 

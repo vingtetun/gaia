@@ -440,3 +440,279 @@ var getBluetooth = function() {
     getDefaultAdapter: function() {}
   };
 };
+
+// Need to be renamed
+var Accessor = {
+  sync: function(key, cb){
+    navigator.mozSettings.addObserver(key, function(event) {
+      cb(event.settingValue);
+    });
+  },
+  set: function(keys, cb) {
+    var request = navigator.mozSettings.createLock().set(keys);
+    request.onsuccess = cb;
+    request.onerror = function errorGetCurrentSound() {
+      debug('Error set', keys);
+    };
+  },
+  get: function(key, cb) {
+    var request = navigator.mozSettings.createLock().get(key);
+    request.onsuccess = function() {
+      if (request.result[key] != undefined) {
+        cb(request.result[key]);
+      }
+    };
+    request.onerror = function errorGetCurrentSound() {
+      debug('Error get', key);
+    };
+  }
+};
+
+var initSettingsCheckbox = function() {
+  // preset all checkboxes
+  var rule = 'input[type="checkbox"]:not([data-ignore])';
+  var checkboxes = document.querySelectorAll(rule);
+  for (var i = 0; i < checkboxes.length; i++) {
+    var key = checkboxes[i].name;
+    (function(j) {
+      Accessor.get(key, function(value) {
+        checkboxes[j].checked = !!value;
+      });
+    })(i);
+  }
+}
+
+var initSettingsRange = function() {
+  // preset all range inputs
+  rule = 'input[type="range"]:not([data-ignore])';
+  var ranges = document.querySelectorAll(rule);
+  for (i = 0; i < ranges.length; i++) {
+    var key = ranges[i].name;
+    (function(j) {
+      Accessor.get(key, function(value) {
+        ranges[j].value = parseFloat(value);
+        if (ranges[j].refresh) {
+          ranges[j].refresh(); // XXX to be removed when bug344618 lands
+        }
+      });
+    })(i);
+  }
+}
+
+var fakeSelector = function() {
+  // use a <button> instead of the <select> element
+  var Select = function(select) {
+    var parent = select.parentElement;
+    var button = select.previousElementSibling;
+    // link the button with the select element
+    var index = select.selectedIndex;
+    if (index >= 0) {
+      var selection = select.options[index];
+      button.textContent = selection.textContent;
+      button.dataset.l10nId = selection.dataset.l10nId;
+    }
+    if (parent.classList.contains('fake-select')) {
+      select.addEventListener('change', function() {
+        var newSelection = select.options[select.selectedIndex];
+        button.textContent = newSelection.textContent;
+        button.dataset.l10nId = newSelection.dataset.l10nId;
+      });
+    }
+  };
+
+  // preset all select
+  var selects = document.querySelectorAll('select');
+  for (var i = 0, count = selects.length; i < count; i++) {
+    var select = selects[i];
+    var key = select.name;
+    Accessor.get(key, function(value) {
+      var option = 'option[value="' + value + '"]';
+      var selectOption = select.querySelector(option);
+      if (selectOption) {
+        selectOption.selected = true;
+      }
+      Select(select);
+    });
+  }
+}
+
+var Language = {
+
+  selectEl: document.querySelector('select[name="language.current"]'),
+  smallEl: document.getElementById('language-desc'),
+  dateEl: document.getElementById('region-date'),
+  timeEl: document.getElementById('region-time'),
+
+  init: function() {
+    // Fill select
+    this.supported(this.fill.bind(this));
+    // Update infos
+    window.addEventListener('localized', this.update.bind(this));
+  },
+
+  update: function() {
+    var d = new Date();
+    var f = new navigator.mozL10n.DateTimeFormat();
+    var _ = navigator.mozL10n.get;
+    this.dateEl.textContent = f.localeFormat(d, _('longDateFormat'));
+    this.timeEl.textContent = f.localeFormat(d, _('shortTimeFormat'));
+  },
+
+  // Use from index.html to update the small
+  updateSmall: function() {
+    this.supported(this.small.bind(this));
+  },
+
+  small: function(languages) {
+    this.smallEl.textContent = languages[navigator.mozL10n.language.code];
+  },
+
+  fill: function(languages) {
+    this.selectEl.innerHTML = '';
+    for (var lang in languages) {
+      var option = document.createElement('option');
+      option.value = lang;
+      // Right-to-Left (RTL) languages:
+      // (http://www.w3.org/International/questions/qa-scripts)
+      // Arabic, Hebrew, Farsi, Pashto, Urdu
+      var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
+      // Use script direction control-characters to wrap the text labels
+      // since markup (i.e. <bdo>) does not work inside <option> tags
+      // http://www.w3.org/International/tutorials/bidi-xhtml/#nomarkup
+      var lEmbedBegin =
+          (rtlList.indexOf(lang) >= 0) ? '&#x202B;' : '&#x202A;';
+      var lEmbedEnd = '&#x202C;';
+      // The control-characters enforce the language-specific script
+      // direction to correctly display the text label (Bug #851457)
+      option.innerHTML = lEmbedBegin + languages[lang] + lEmbedEnd;
+      option.selected = (lang == document.documentElement.lang);
+      this.selectEl.appendChild(option);
+    }
+  },
+
+  // old getSupportedLanguages
+  supported: function(callback) {
+    if (!callback)
+      return;
+
+    if (this._languages) {
+      callback(this._languages);
+    } else {
+      var self = this;
+      var LANGUAGES = '/shared/resources/languages.json';
+      loadJSON(LANGUAGES, function loadLanguages(data) {
+        if (data) {
+          self._languages = data;
+          callback(self._languages);
+        }
+      });
+    }
+  }
+
+};
+
+var Keyboard = {
+
+  layoutEl: document.getElementById('keyboard-layouts'),
+  languageEl: document.getElementById('language-keyboard'),
+  label: document.querySelector('#language-keyboard a'),
+  small: document.querySelector('#language-keyboard small'),
+
+  init: function() {
+    Keyboard.enable();
+    window.addEventListener('localized', this.update.bind(this));
+  },
+
+  update: function() {
+    var prev = this.layoutEl.querySelector('li[hidden]');
+    if (prev) {
+      prev.hidden = false;
+    }
+    this.updateLabelAndSmall();
+  },
+
+  updateLabelAndSmall: function() {
+    this.supported(this.labelAndSmall.bind(this));
+  },
+
+  // update the enabled keyboards list with the language associated keyboard
+  enable: function() {
+    this.supported(function(keyboards) {
+      var newKb = keyboards.layout[navigator.mozL10n.language.code];
+      var settingNewKeyboard = {};
+      var settingNewKeyboardLayout = {};
+      settingNewKeyboard['keyboard.current'] = navigator.mozL10n.language.code;
+      settingNewKeyboardLayout['keyboard.layouts.' + newKb] = true;
+
+      var settings = navigator.mozSettings;
+      try {
+        var lock = settings.createLock();
+        // Enable the language specific keyboard layout group
+        lock.set(settingNewKeyboardLayout);
+        // Activate the language associated keyboard, everything.me also uses
+        // this setting to improve searches
+        lock.set(settingNewKeyboard);
+      } catch (ex) {
+        console.warn('Exception in mozSettings.createLock():', ex);
+      }
+    })
+  },
+
+  labelAndSmall: function(keyboards) {
+    // // Get pointers to the top list entry and its labels which are used to
+    // // pin the language associated keyboard at the top of the keyboards list
+    // var pinnedKbLabel = ;
+    // var pinnedKbSubLabel = pinnedKb.querySelector('small');
+    this.small.textContent = '';
+
+    // Get the current language and its associate keyboard layout
+    var currentLang = document.documentElement.lang;
+    var langKeyboard = keyboards.layout[currentLang];
+
+    var kbSelector = 'input[name="keyboard.layouts.' + langKeyboard + '"]';
+    var kbListQuery = this.layoutEl.querySelector(kbSelector);
+
+    if (kbListQuery) {
+      // Remove the entry from the list since it will be pinned on top
+      // of the Keyboard Layouts list
+      var kbListEntry = kbListQuery.parentNode.parentNode;
+      kbListEntry.hidden = true;
+
+      var label = kbListEntry.querySelector('a');
+      var small = kbListEntry.querySelector('small');
+      this.label.dataset.l10nId = label.dataset.l10nId;
+      this.label.textContent = label.textContent;
+      if (small) {
+        this.small.dataset.l10nId = sub.dataset.l10nId;
+        this.small.textContent = small.textContent;
+      }
+    } else {
+      // If the current language does not have an associated keyboard,
+      // fallback to the default keyboard: 'en'
+      // XXX update this if the list order in index.html changes
+      var englishEntry = this.layoutEl.children[1];
+      englishEntry.hidden = true;
+      this.label.dataset.l10nId = 'english';
+      this.small.textContent = '';
+    }
+  },
+
+  supported: function(callback) {
+    if (!callback)
+      return;
+
+    if (this._kbLayoutList) {
+      callback(this._kbLayoutList);
+    } else {
+      var self = this;
+      var KEYBOARDS = '/shared/resources/keyboard_layouts.json';
+      loadJSON(KEYBOARDS, function loadKeyboardLayouts(data) {
+        if (data) {
+          self._kbLayoutList = data;
+          callback(self._kbLayoutList);
+        }
+      });
+    }
+  }
+
+};

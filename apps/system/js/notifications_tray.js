@@ -27,7 +27,6 @@ var NotificationsTray = {
 
     window.addEventListener('screenchange', this);
     window.addEventListener('emergencyalert', this);
-    window.addEventListener('home', this);
     window.addEventListener('attentionscreenshow', this);
 
     this.overlay.addEventListener('transitionend', this);
@@ -36,7 +35,6 @@ var NotificationsTray = {
   handleEvent: function ut_handleEvent(evt) {
     switch (evt.type) {
       case 'attentionscreenshow':
-      case 'home':
       case 'emergencyalert':
         if (this.shown) {
           this.hide();
@@ -115,16 +113,10 @@ var NotificationsTray = {
     var alreadyHidden = !this.shown;
     var style = this.overlay.style;
     style.MozTransition = instant ? '' : '-moz-transform 0.2s linear';
-    style.MozTransform = 'translateY(0)';
+    style.MozTransform = 'translateY(100%)';
     this.shown = false;
     this.lastY = undefined;
     this.startY = undefined;
-
-    // If the transition has not started yet there won't be any transitionend
-    // event so let's not wait in order to remove the notifications-tray class.
-    if (instant || style.MozTransform == 'translateY(0px)') {
-      this.screen.classList.remove('notifications-tray');
-    }
 
     if (!alreadyHidden) {
       var evt = document.createEvent('CustomEvent');

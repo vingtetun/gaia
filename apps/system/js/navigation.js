@@ -65,8 +65,8 @@ var WindowManager = (function() {
       var setting = lock.get('homescreen.manifestURL');
 
       setting.onsuccess = function successRetrievingHomescreenURL() {
-        homescreenManifestURL = this.result['homescreen.manifestURL'];
-        openApp(homescreenManifestURL);
+        setHomescreen(this.result['homescreen.manifestURL']);
+        openHomescreen();
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
 
@@ -140,7 +140,6 @@ var WindowManager = (function() {
   }
 
   /* XXX */
-  var homescreenManifestURL = null;
   var navigate = [];
   var current = 0;
 
@@ -168,6 +167,7 @@ var WindowManager = (function() {
       createWindow(navigate[current], app.manifestURL);
     }
 
+    hideHomescreen();
     declareSheetAsCurrent(navigate[current], true);
   }
 
@@ -190,11 +190,8 @@ var WindowManager = (function() {
       createWindow(navigate[current]);
     }
 
+    hideHomescreen();
     declareSheetAsCurrent(navigate[current], true);
-  }
-
-  function openHomescreen() {
-    openApp(Applications.getByManifestURL(homescreenManifestURL));
   }
 
   function createWindow(history, manifestURL) {
@@ -206,7 +203,8 @@ var WindowManager = (function() {
 
     if (manifestURL) {
       iframe.setAttribute('mozapp', manifestURL);
-      if (manifestURL == homescreenManifestURL) {
+
+      if (isHomescreen(manifestURL)) {
         iframe.setAttribute('mozapptype', 'homescreen');
       }
     } else {
@@ -289,12 +287,54 @@ var WindowManager = (function() {
     e.preventDefault();
   });
 
-  window.addEventListener('home', function onHomeButton(e) {
-    if (navigate[current].iframe.getAttribute('mozapp') == homescreenManifestURL)
+
+  /* Homescreen */
+  var homescreenManifestURL = null;
+
+  function setHomescreen(manifestURL) {
+    homescreenManifestURL = manifestURL;
+  }
+
+  function isHomescreen(manifestURL) {
+    return manifestURL == homescreenManifestURL;
+  }
+
+  function openHomescreen() {
+    var app = Applications.getByManifestURL(homescreenManifestURL);
+    if (!app)
       return;
-    openApp(homescreenManifestURL);
+
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.setAttribute('remote', 'true');
+    iframe.setAttribute('mozapp', homescreenManifestURL);
+    iframe.setAttribute('mozapptype', 'homescreen');
+
+    document.getElementById('notifications-tray').appendChild(iframe);
+    iframe.src = app.origin + app.manifest.launch_path;
+  }
+
+  function showHomescreen() {
+    NotificationsTray.show();
+  }
+
+  function hideHomescreen() {
+    NotificationsTray.hide();
+  }
+
+  function toggleHomescreen() {
+    if (NotificationsTray.shown) {
+      hideHomescreen();
+    } else {
+      showHomescreen();
+    }
+  }
+
+
+  window.addEventListener('home', function onHomeButton(e) {
+    toggleHomescreen();
     e.preventDefault();
-  });
+  }, true);
 
   return obj;
 })();

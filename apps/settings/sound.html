@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/switches.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+    <script defer src="/js/sound.js"></script>
+  </head>
+  <body class="skin-organic">
+    <section role="region" id="sound" class="current">
+      <header>
+        <h1 data-l10n-id="sound"> Sound </h1>
+      </header>
+      <div>
+        <ul>
+          <li>
+            <label>
+              <input type="checkbox" data-type="switch" name="vibration.enabled" checked class="uninit"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="vibrate">Vibrate</a>
+          </li>
+        </ul>
+
+        <header>
+          <h2 data-l10n-id="volume">Volume</h2>
+        </header>
+        <ul>
+          <li class="sound-setting">
+            <p data-l10n-id="ringer-and-notification-sound">Ringer & Notifications</p>
+            <label>
+              <input type="range" name="audio.volume.notification" step="1" min="0" value="15" max="15">
+              <span class="range-icons volume"></span>
+            </label>
+          </li>
+          <li class="sound-setting">
+            <p data-l10n-id="alarm-sound">Alarm</p>
+            <label>
+              <input type="range" name="audio.volume.alarm" step="1" min="0" value="15" max="15">
+              <span class="range-icons volume"></span>
+            </label>
+          </li>
+        </ul>
+
+        <header>
+          <h2 data-l10n-id="tones">Tones</h2>
+        </header>
+        <ul>
+          <li>
+            <p data-l10n-id="ringer">Ringer</p>
+            <p class="fake-select">
+              <button id="call-tone-selection" class="icon icon-view" data-l10n-id="change"></button>
+            </p>
+          </li>
+        </ul>
+
+        <header>
+          <h2 data-l10n-id="other-sounds">Other Sounds</h2>
+        </header>
+        <ul>
+          <li>
+            <label>
+              <input type="checkbox" name="phone.ring.keypad" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="keypad">Keypad</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="camera.shutter.enabled" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="camera-shutter">Camera Shutter</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="mail.sent-sound.enabled" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="sent-mail">Sent Mail</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="message.sent-sound.enabled" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="sent-message">Sent Message</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="lockscreen.unlock-sound.enabled" checked />
+              <span></span>
+            </label>
+            <a data-l10n-id="unlock-screen">Unlock Screen</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </body>
+</html>

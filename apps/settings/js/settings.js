@@ -188,38 +188,6 @@ var Settings = {
         bug344618_polyfill();     // XXX to be removed when bug344618 is fixed
         this.updateDisplayPanel();
         break;
-      case 'sound':               // <input type="range">
-        bug344618_polyfill();     // XXX to be removed when bug344618 is fixed
-        break;
-      case 'languages':           // fill language selector
-        var langSel = document.querySelector('select[name="language.current"]');
-        langSel.innerHTML = '';
-        Settings.getSupportedLanguages(function fillLanguageList(languages) {
-          for (var lang in languages) {
-            var option = document.createElement('option');
-            option.value = lang;
-            // Right-to-Left (RTL) languages:
-            // (http://www.w3.org/International/questions/qa-scripts)
-            // Arabic, Hebrew, Farsi, Pashto, Urdu
-            var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
-            // Use script direction control-characters to wrap the text labels
-            // since markup (i.e. <bdo>) does not work inside <option> tags
-            // http://www.w3.org/International/tutorials/bidi-xhtml/#nomarkup
-            var lEmbedBegin =
-                (rtlList.indexOf(lang) >= 0) ? '&#x202B;' : '&#x202A;';
-            var lEmbedEnd = '&#x202C;';
-            // The control-characters enforce the language-specific script
-            // direction to correctly display the text label (Bug #851457)
-            option.innerHTML = lEmbedBegin + languages[lang] + lEmbedEnd;
-            option.selected = (lang == document.documentElement.lang);
-            langSel.appendChild(option);
-          }
-        });
-        setTimeout(this.updateLanguagePanel);
-        break;
-      case 'keyboard':
-        Settings.updateKeyboardPanel();
-        break;
       case 'battery':             // full battery status
         Battery.update();
         break;
@@ -580,24 +548,6 @@ var Settings = {
     openDialog(dialogID, submit);
   },
 
-  getSupportedLanguages: function settings_getLanguages(callback) {
-    if (!callback)
-      return;
-
-    if (this._languages) {
-      callback(this._languages);
-    } else {
-      var self = this;
-      var LANGUAGES = '/shared/resources/languages.json';
-      loadJSON(LANGUAGES, function loadLanguages(data) {
-        if (data) {
-          self._languages = data;
-          callback(self._languages);
-        }
-      });
-    }
-  },
-
   getSupportedKbLayouts: function settings_getSupportedKbLayouts(callback) {
     if (!callback)
       return;
@@ -649,19 +599,6 @@ var Settings = {
     });
   },
 
-  updateLanguagePanel: function settings_updateLanguagePanel() {
-    var panel = document.getElementById('languages');
-    if (panel) { // update the date and time samples in the 'languages' panel
-      var d = new Date();
-      var f = new navigator.mozL10n.DateTimeFormat();
-      var _ = navigator.mozL10n.get;
-      panel.querySelector('#region-date').textContent =
-          f.localeFormat(d, _('longDateFormat'));
-      panel.querySelector('#region-time').textContent =
-          f.localeFormat(d, _('shortTimeFormat'));
-    }
-  },
-
   loadPanelStylesheetsIfNeeded: function settings_loadPanelStylesheetsIN() {
     var self = this;
     if (self._panelStylesheetsLoaded) {
@@ -681,53 +618,6 @@ var Settings = {
       self._panelStylesheetsLoaded = true;
     });
   },
-
-  updateKeyboardPanel: function settings_updateKeyboardPanel() {
-    var panel = document.getElementById('keyboard');
-    // Update the keyboard layouts list from the Keyboard panel
-    if (panel) {
-      this.getSupportedKbLayouts(function updateKbList(keyboards) {
-        var kbLayoutsList = document.getElementById('keyboard-layouts');
-        // Get pointers to the top list entry and its labels which are used to
-        // pin the language associated keyboard at the top of the keyboards list
-        var pinnedKb = document.getElementById('language-keyboard');
-        var pinnedKbLabel = pinnedKb.querySelector('a');
-        var pinnedKbSubLabel = pinnedKb.querySelector('small');
-        pinnedKbSubLabel.textContent = '';
-
-        // Get the current language and its associate keyboard layout
-        var currentLang = document.documentElement.lang;
-        var langKeyboard = keyboards.layout[currentLang];
-
-        var kbSelector = 'input[name="keyboard.layouts.' + langKeyboard + '"]';
-        var kbListQuery = kbLayoutsList.querySelector(kbSelector);
-
-        if (kbListQuery) {
-          // Remove the entry from the list since it will be pinned on top
-          // of the Keyboard Layouts list
-          var kbListEntry = kbListQuery.parentNode.parentNode;
-          kbListEntry.hidden = true;
-
-          var label = kbListEntry.querySelector('a');
-          var sub = kbListEntry.querySelector('small');
-          pinnedKbLabel.dataset.l10nId = label.dataset.l10nId;
-          pinnedKbLabel.textContent = label.textContent;
-          if (sub) {
-            pinnedKbSubLabel.dataset.l10nId = sub.dataset.l10nId;
-            pinnedKbSubLabel.textContent = sub.textContent;
-          }
-        } else {
-          // If the current language does not have an associated keyboard,
-          // fallback to the default keyboard: 'en'
-          // XXX update this if the list order in index.html changes
-          var englishEntry = kbLayoutsList.children[1];
-          englishEntry.hidden = true;
-          pinnedKbLabel.dataset.l10nId = 'english';
-          pinnedKbSubLabel.textContent = '';
-        }
-      });
-    }
-  }
 };
 
 // apply user changes to 'Settings' + panel navigation
@@ -820,62 +710,37 @@ window.addEventListener('localized', function updateLocalized() {
   document.documentElement.dir = navigator.mozL10n.language.direction;
 
   // display the current locale in the main panel
-  Settings.getSupportedLanguages(function displayLang(languages) {
-    document.getElementById('language-desc').textContent =
-        languages[navigator.mozL10n.language.code];
-  });
-  Settings.updateLanguagePanel();
+  Language.updateSmall();
 
   // update the enabled keyboards list with the language associated keyboard
-  Settings.getSupportedKbLayouts(function updateEnabledKb(keyboards) {
-    var newKb = keyboards.layout[navigator.mozL10n.language.code];
-    var settingNewKeyboard = {};
-    var settingNewKeyboardLayout = {};
-    settingNewKeyboard['keyboard.current'] = navigator.mozL10n.language.code;
-    settingNewKeyboardLayout['keyboard.layouts.' + newKb] = true;
-
-    var settings = navigator.mozSettings;
-    try {
-      var lock = settings.createLock();
-      // Enable the language specific keyboard layout group
-      lock.set(settingNewKeyboardLayout);
-      // Activate the language associated keyboard, everything.me also uses
-      // this setting to improve searches
-      lock.set(settingNewKeyboard);
-    } catch (ex) {
-      console.warn('Exception in mozSettings.createLock():', ex);
-    }
-  });
-
-  // update the keyboard layouts list by resetting the top pinned element,
-  // since it displays the previous language setting
-  var kbLayoutsList = document.getElementById('keyboard-layouts');
-  if (kbLayoutsList) {
-    var prevKbLayout = kbLayoutsList.querySelector('li[hidden]');
-    prevKbLayout.hidden = false;
-
-    Settings.updateKeyboardPanel();
-  }
+  Keyboard.enable();
 });
 
 // Do initialization work that doesn't depend on the DOM, as early as
 // possible in startup.
 Settings.preInit();
 
-
 window.addEventListener('load', function() {
-  document.getElementById('menuItem-wifi').addEventListener('click', function(e) {
-    window.open('wifi.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-help').addEventListener('click', function(e) {
-    window.open('help.html');
-    e.preventDefault();
-  });
-
-  document.getElementById('menuItem-deviceInfo').addEventListener('click', function(e) {
-    window.open('informations.html');
-    e.preventDefault();
-  });
+  var buttons = {
+    'menuItem-wifi': 'wifi.html',
+    'menuItem-help': 'help.html',
+    'menuItem-deviceInfo': 'informations.html',
+    'menuItem-sound': 'sound.html',
+    'menuItem-display': 'display.html',
+    'menuItem-notifications': 'notifications.html',
+    'menuItem-dateAndTime': 'date_time.html',
+    'menuItem-languageAndRegion': 'language.html',
+    'menuItem-keyboard': 'keyboard.html',
+    'menuItem-doNotTrack': 'do-not-track.html',
+    'menuItem-appPermissions': 'app-permissions.html'
+  }
+  var id;
+  for (id in buttons) {
+    (function(_id, href) {
+      document.getElementById(_id).addEventListener('click', function(e) {
+        window.open(href);
+        e.preventDefault();
+      });
+    })(id, buttons[id]);
+  }
 });

@@ -680,7 +680,6 @@ var LockScreen = {
         this.dispatchEvent('unlock', detail);
         this.writeSetting(false);
 
-        NotificationsTray.show();
         if (instant)
           return;
 
@@ -688,8 +687,6 @@ var LockScreen = {
           var unlockAudio = new Audio('./resources/sounds/unlock.ogg');
           unlockAudio.play();
         }
-      } else {
-        NotificationsTray.show();
       }
     }).bind(this);
 
@@ -735,7 +732,6 @@ var LockScreen = {
       this.dispatchEvent('lock');
       this.writeSetting(true);
     }
-    NotificationsTray.hide();
   },
 
   loadPanel: function ls_loadPanel(panel, callback) {

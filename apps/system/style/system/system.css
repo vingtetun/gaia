@@ -765,7 +765,7 @@ body {
 
 .window-wrapper button.back:active,
 .window-wrapper button.forward:active {
-  background: rgba(0, 0, 0);
+  background: rgb(0, 0, 0);
   color: gray;
 }
 

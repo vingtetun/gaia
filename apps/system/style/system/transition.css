@@ -17,10 +17,16 @@
 }
 
 .window-wrapper {
+  z-index: 500;
+}
+
+.window-wrapper:not([data-type=homescreen]) {
   transform: translateX(-20%) scale(0.9);
   opacity: 0.3;
+}
 
-  z-index: 500;
+.window-wrapper:not([data-current]) {
+  pointer-events: none;
 }
 
 .window-wrapper.shadow {
@@ -47,6 +53,22 @@
 
 .window-wrapper[data-current="true"] ~ .window-wrapper.shadow {
   transform: translateX(calc(100% - 8px));
+}
+
+.window-wrapper[data-type="homescreen"][data-current="true"] ~ .window-wrapper {
+  opacity: 0;
+}
+
+.window-wrapper[data-type="homescreen"] {
+  transform: translateX(100%);
+}
+
+.window-wrapper[data-type="homescreen"][data-current] {
+  transform: translateX(0);
+}
+
+.window-wrapper[data-type="homescreen"]:not([data-current="true"]) {
+  opacity: 0;
 }
 
 .window-wrapper .cover {

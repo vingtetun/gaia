@@ -67,6 +67,7 @@ var WindowManager = (function() {
       setting.onsuccess = function successRetrievingHomescreenURL() {
         setHomescreen(this.result['homescreen.manifestURL']);
         openHomescreen();
+        showHomescreen();
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
 
@@ -156,7 +157,9 @@ var WindowManager = (function() {
         next.close();
       }
     }
-    current++;
+
+    if (navigate[current].isHomescreen == false)
+      current++;
 
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
@@ -167,7 +170,6 @@ var WindowManager = (function() {
       createWindow(navigate[current], app.manifestURL);
     }
 
-    hideHomescreen();
     declareSheetAsCurrent(navigate[current], true);
   }
 
@@ -180,7 +182,8 @@ var WindowManager = (function() {
         next.close();
       }
     }
-    current++;
+    if (navigate[current].isHomescreen == false)
+      current++;
 
     navigate[current] = new History(origin, 'remote');
 
@@ -190,7 +193,6 @@ var WindowManager = (function() {
       createWindow(navigate[current]);
     }
 
-    hideHomescreen();
     declareSheetAsCurrent(navigate[current], true);
   }
 
@@ -203,10 +205,6 @@ var WindowManager = (function() {
 
     if (manifestURL) {
       iframe.setAttribute('mozapp', manifestURL);
-
-      if (isHomescreen(manifestURL)) {
-        iframe.setAttribute('mozapptype', 'homescreen');
-      }
     } else {
       iframe.setAttribute('mozasyncpanzoom', 'true');
     }
@@ -249,7 +247,7 @@ var WindowManager = (function() {
 
   function appendWindow(wrapper) {
     var windows = document.getElementById('windows');
-    windows.appendChild(wrapper);
+    windows.insertBefore(wrapper, null); //document.querySelector('[mozapptype=homescreen]'));
   }
 
   window.addEventListener('mozbrowseropenwindow', function onWindowOpen(e) {
@@ -299,6 +297,7 @@ var WindowManager = (function() {
     return manifestURL == homescreenManifestURL;
   }
 
+  var homescreenHistory = null;
   function openHomescreen() {
     var app = Applications.getByManifestURL(homescreenManifestURL);
     if (!app)
@@ -310,29 +309,41 @@ var WindowManager = (function() {
     iframe.setAttribute('mozapp', homescreenManifestURL);
     iframe.setAttribute('mozapptype', 'homescreen');
 
-    document.getElementById('notifications-tray').appendChild(iframe);
-    iframe.src = app.origin + app.manifest.launch_path;
+    homescreenHistory = new History(app.origin + app.manifest.launch_path,
+                                    app.manifest.type);
+    homescreenHistory.isHomescreen = true;
+
+    var wrapper = wrap(iframe);
+    wrapper.dataset.type = 'homescreen';
+
+    document.body.appendChild(wrapper);
+    iframe.src = homescreenHistory.location;
+    homescreenHistory.attach(wrapper, iframe);
   }
 
   function showHomescreen() {
-    NotificationsTray.show();
-  }
+    if (navigate[current] == homescreenHistory)
+      return;
 
-  function hideHomescreen() {
-    NotificationsTray.hide();
-  }
+    if (navigate[current]) {
+      navigate[current].free();
+      for (var i = navigate.length - 1; i > current; i--) {
+        var next = navigate.pop();
 
-  function toggleHomescreen() {
-    if (NotificationsTray.shown) {
-      hideHomescreen();
-    } else {
-      showHomescreen();
+        if (next.isHomescreen)
+          continue;
+        next.wrapper.parentNode.removeChild(next.wrapper);
+        next.close();
+      }
     }
-  }
 
+    current++;
+    navigate[current] = homescreenHistory;
+    declareSheetAsCurrent(homescreenHistory, true);
+  }
 
   window.addEventListener('home', function onHomeButton(e) {
-    toggleHomescreen();
+    showHomescreen();
     e.preventDefault();
   }, true);
 
@@ -364,6 +375,7 @@ function History(origin, type) {
   this.canGoBack = false;
   this.canGoForward = false;
   this.type = type;
+  this.isHomescreen = false;
 
   this.wrapper = null;
   this.iframe = null;

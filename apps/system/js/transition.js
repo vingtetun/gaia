@@ -57,18 +57,30 @@ var TransitionManager = (function() {
       // Making sure we transition for the right position
       setTimeout(function nextTick() {
         if (prevWrapper) {
-          prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
+          if (previous.isHomescreen) {
+            prevWrapper.style.MozTransition = 'opacity 0.2s linear';
+          } else {
+            prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
+          }
           delete prevWrapper.dataset.current;
         }
-        curWrapper.style.MozTransition = 'transform 0.4s linear';
+
+        if (previous && previous.isHomescreen) {
+          curWrapper.style.MozTransition = 'opacity 0.4s linear';
+        } else {
+          curWrapper.style.MozTransition = 'transform 0.4s linear';
+        }
         curWrapper.dataset.current = true;
       });
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {
-      if (e.propertyName != 'transform') {
+      if (curWrapper.isHomescreen && e.propertyName != 'transform') {
+        return;
+      } else if (!curWrapper.isHomescreen && e.propertyName != 'opacity') {
         return;
       }
+
       curWrapper.removeEventListener('transitionend', animWait);
 
       setTimeout(function nextTick() {

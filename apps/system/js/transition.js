@@ -38,33 +38,6 @@ var TransitionManager = (function() {
 
       curWrapper.classList.remove('transitioning');
       curWrapper.style.zIndex = '';
-
-      if (previous) {
-        var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
-        request.onsuccess = function(e) {
-          if (e.target.result) {
-            var cover = prevWrapper.querySelector('.cover');
-            cover.style.visibility = 'visible';
-            cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
-          }
-        };
-
-        request.onerror = function(e) {
-        }
-      }
-
-      var cover = curWrapper.querySelector('.cover');
-      cover.style.opacity = 0.5;
-
-      cover.addEventListener('transitionend', function trWait() {
-        cover.removeEventListener('transitionend', trWait);
-
-        cover.style.visibility = 'hidden';
-        cover.style.backgroundImage = '';
-
-        cover.style.MozTransition = '';
-        cover.style.opacity = '';
-      });
     }
 
     var partial = !!curWrapper.style.MozTransition;

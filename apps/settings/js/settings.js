@@ -732,10 +732,10 @@ window.addEventListener('load', function() {
     'menuItem-languageAndRegion': 'language.html',
     'menuItem-keyboard': 'keyboard.html',
     'menuItem-doNotTrack': 'do-not-track.html',
-    'menuItem-appPermissions': 'app-permissions.html'
+    'menuItem-appPermissions': 'app-permissions.html',
+    'menuItem-phoneLock': 'phone-lock.html'
   }
-  var id;
-  for (id in buttons) {
+  for (var id in buttons) {
     (function(_id, href) {
       document.getElementById(_id).addEventListener('click', function(e) {
         window.open(href);

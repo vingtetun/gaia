@@ -451,7 +451,7 @@ var Accessor = {
   set: function(keys, cb) {
     var request = navigator.mozSettings.createLock().set(keys);
     request.onsuccess = cb;
-    request.onerror = function errorGetCurrentSound() {
+    request.onerror = function errorOnSetAccessor() {
       debug('Error set', keys);
     };
   },
@@ -462,7 +462,7 @@ var Accessor = {
         cb(request.result[key]);
       }
     };
-    request.onerror = function errorGetCurrentSound() {
+    request.onerror = function errorOnGetAccessor() {
       debug('Error get', key);
     };
   }
@@ -484,7 +484,7 @@ var initSettingsCheckbox = function() {
 
 var initSettingsRange = function() {
   // preset all range inputs
-  rule = 'input[type="range"]:not([data-ignore])';
+  var rule = 'input[type="range"]:not([data-ignore])';
   var ranges = document.querySelectorAll(rule);
   for (i = 0; i < ranges.length; i++) {
     var key = ranges[i].name;

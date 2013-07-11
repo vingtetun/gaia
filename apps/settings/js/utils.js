@@ -486,7 +486,7 @@ var initSettingsRange = function() {
   // preset all range inputs
   var rule = 'input[type="range"]:not([data-ignore])';
   var ranges = document.querySelectorAll(rule);
-  for (i = 0; i < ranges.length; i++) {
+  for (var i = 0; i < ranges.length; i++) {
     var key = ranges[i].name;
     (function(j) {
       Accessor.get(key, function(value) {
@@ -495,6 +495,50 @@ var initSettingsRange = function() {
           ranges[j].refresh(); // XXX to be removed when bug344618 lands
         }
       });
+    })(i);
+  }
+}
+
+var initDataName = function() {
+  // preset all span with data-name fields
+  var rule = '[data-name]:not([data-ignore])';
+  var spanFields = document.querySelectorAll(rule);
+  for (var i = 0; i < spanFields.length; i++) {
+    (function(j){
+      var key = spanFields[j].dataset.name;
+      console.log('Key', key);
+      switch (key) {
+        //XXX bug 816899 will also provide 'deviceinfo.software' from Gecko
+        //  which is {os name + os version}
+        case 'deviceinfo.software':
+          Accessor.get('deviceinfo.os', function(value) {
+            console.log('Value', value);
+            var _ = navigator.mozL10n.get;
+            var text = _('brandShortName') + ' ' + value;
+            spanFields[j].textContent = text;
+          });
+          break;
+        //XXX workaround request from bug 808892 comment 22
+        //  hide this field if it's undefined/empty.
+        case 'deviceinfo.firmware_revision':
+          spanFields[j].parentNode.hidden = true;
+          break;
+        default:
+          Accessor.get(key, function(value) {
+            console.log('Value', value);
+            // check whether this setting comes from a select option
+            // (it may be in a different panel, so query the whole document)
+            rule = '[data-setting="' + key + '"] ' +
+              '[value="' + value + '"]';
+            var option = document.querySelector(rule);
+            if (option) {
+              spanFields[j].dataset.l10nId = option.dataset.l10nId;
+              spanFields[j].textContent = option.textContent;
+            } else {
+              spanFields[j].textContent = value;
+            }
+          });
+      }
     })(i);
   }
 }

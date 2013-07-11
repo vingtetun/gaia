@@ -367,6 +367,8 @@ function History(origin, type) {
 
   this.wrapper = null;
   this.iframe = null;
+
+  this._awake = true;
 }
 
 History.prototype = {
@@ -489,10 +491,6 @@ History.prototype = {
     this.iframe.reload();
   },
 
-  getScreenshot: function history_getScreenshot(width, height) {
-    return this.iframe.getScreenshot(width, height);
-  },
-
   stop: function history_stop() {
     if (!this.iframe)
       return;
@@ -507,27 +505,67 @@ History.prototype = {
     this.oncangoback = null;
     this.oncangoforward = null;
 
-    // This is dirty but Etienne wants me to clean up little crap and so I
-    // decide to put it under the carpet.
+    this._awake = false;
     var iframe = this.iframe;
-    if ('setVisible' in iframe) {
-      this._freeTimeoutID = setTimeout((function() {
-        this._freeTimeoutID = null;
-        iframe.setVisible(false);
-      }).bind(this), 500);
+    var cover = this.wrapper.querySelector('.cover');
+
+    var screenshotAndHide = (function() {
+      var req = iframe.getScreenshot(window.innerWidth, window.innerHeight);
+      var afterScreenshot = (function(e) {
+        if (e.target.result) {
+          cover.style.display = 'block';
+          cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+        }
+
+        if ('setVisible' in iframe) {
+          iframe.setVisible(false);
+        }
+
+        // Wow, the window was awaken while we were screenshoting
+        if (this._awake) {
+          this.wakeUp();
+        }
+      }).bind(this);
+
+      req.onsuccess = afterScreenshot;
+      req.onerror = afterScreenshot;
+    }).bind(this);
+
+    // Making sure we don't let the iframe in a keyboard state
+    // while screenshoting
+    if (iframe.style.height) {
+      iframe.style.height = '';
+      iframe.addNextPaintListener(function paintWait() {
+        iframe.removeNextPaintListener(paintWait);
+        screenshotAndHide();
+      });
+      return;
     }
+
+    screenshotAndHide();
   },
 
   wakeUp: function history_wakeUp() {
-    if (this._freeTimeoutID) {
-      clearTimeout(this._freeTimeoutID);
-      this._freeTimeoutID = null;
-    }
+    this._awake = true;
 
     var iframe = this.iframe;
     if ('setVisible' in iframe) {
       iframe.setVisible(true);
     }
+
+    if (!('addNextPaintListener' in iframe)) {
+      return;
+    }
+
+    var cover = this.wrapper.querySelector('.cover');
+    iframe.addNextPaintListener(function paintWait() {
+      iframe.removeNextPaintListener(paintWait);
+
+      setTimeout(function bitLater() {
+        cover.style.display = '';
+        cover.style.backgroundImage = '';
+      }, 250);
+    });
   },
 
   ontitlechange: null,

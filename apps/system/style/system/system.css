@@ -726,7 +726,7 @@ body {
 }
 
 .window-wrapper {
-  display: block;
+  display: none;
   position: fixed;
   border: 0;
   margin: 0;

@@ -111,6 +111,11 @@ var Rocketbar = {
     }
   },
 
+  hide: function rb_hide() {
+    this.progress.classList.remove('loading');
+    this.close(false);
+  },
+
   currentWindow: null,
   currentTitle: null,
   currentLocation: null,
@@ -282,6 +287,9 @@ var Rocketbar = {
       this.input.value = this.currentLocation;
     }
 
+    if (!history.loading) {
+      this.hide();
+    }
     this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
     history.onstatuschange = this.setLoading.bind(this);
@@ -322,21 +330,22 @@ var Rocketbar = {
    * @param {boolean} status True for on, false for off.
    */
   setLoading: function rocketbar_setLoading(status) {
+    // Just for network activity
+    if (this.currentlyOnPackagedApp) {
+      return;
+    }
+
     this._clearEarlyHide();
 
     if (status) {
       this.progress.classList.add('loading');
 
-
-      if (!this.currentlyOnPackagedApp) {
-        this.open(false);
-        this._earlyHideID = setTimeout((function() {
-          this.close(false);
-        }).bind(this), 5000);
-      }
+      this.open(false);
+      this._earlyHideID = setTimeout((function() {
+        this.close(false);
+      }).bind(this), 5000);
     } else {
-      this.progress.classList.remove('loading');
-      this.close(false);
+      this.hide();
     }
   },
 
@@ -409,28 +418,3 @@ window.addEventListener('load', function rocketbar_onLoad() {
   window.removeEventListener('load', rocketbar_onLoad);
   Rocketbar.init();
 });
-
-/*window.addEventListener('historychange',
-  function rocketbar_onHistoryChange(e) {
-  var history = e.detail.current;
-
-  history.title;
-  history.ontitlechange = function(title) {
-  };
-
-  history.location;
-  history.onlocationchange = function(location) {
-  };
-
-  history.loading;
-  history.onstatuschange = function(loading) {
-  };
-
-  history.canGoBack;
-  history.oncangoback = function(canGoBack) {
-  }
-
-  history.type; //certified, privileged, hosted, remote
-
-  WindowManager.openNewSheet(your_url);
-});*/

@@ -62,23 +62,18 @@
   background-repeat: no-repeat;
   background-position: center center;
   pointer-events: none;
-  opacity: 0.99;
-  transition: opacity 0.2s linear;
 
-  visibility: hidden;
+  display: none;
 
   /*outline: 10px solid red;*/
   /*outline-offset: -10px;*/
 }
 
-.window-wrapper:not(.transitioning) {
-  display: none;
-}
-
 .window-wrapper.transitioning {
   display: block;
 }
-.window-wrapper[data-current="true"]:not(.transitioning) {
+
+.window-wrapper[data-current="true"] {
   display: block;
   z-index: 1000;
 }

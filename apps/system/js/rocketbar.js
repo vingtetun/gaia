@@ -198,15 +198,18 @@ var Rocketbar = {
    */
   handleClick: function rocketbar_handleClick(evt) {
     this.close(true);
+    var target = evt.target;
+    if (target.parentNode.nodeName == 'LI')
+      target = target.parentNode;
 
     // If app, launch app
-    var manifestURL = evt.target.getAttribute('data-manifest-url');
+    var manifestURL = target.getAttribute('data-manifest-url');
     if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
       return;
     }
     // If site, open site in new sheet
-    var siteURL = evt.target.getAttribute('data-site-url');
+    var siteURL = target.getAttribute('data-site-url');
     if (siteURL) {
       WindowManager.openNewSheet(siteURL);
     }
@@ -264,10 +267,15 @@ var Rocketbar = {
   showSiteResults: function rocketbar_showSiteResults(results) {
     console.log(JSON.stringify(results));
     results.forEach(function(result) {
-      var li = document.createElement('li');
-      li.innerHTML = result.title + '<br />' + result.uri;
-      li.setAttribute('data-site-url', result.uri);
-      this.results.appendChild(li);
+      var resultItem = document.createElement('li');
+      var resultTitle = document.createElement('h3');
+      var resultURL = document.createElement('small');
+      resultTitle.textContent = result.title;
+      resultURL.textContent = result.uri;
+      resultItem.setAttribute('data-site-url', result.uri);
+      resultItem.appendChild(resultTitle);
+      resultItem.appendChild(resultURL);
+      this.results.appendChild(resultItem);
     }, this);
   },
 

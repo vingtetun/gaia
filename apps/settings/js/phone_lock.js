@@ -39,7 +39,6 @@ var PhoneLock = {
       self.passcodeEnable.checked = enable;
     });
     Accessor.sync('lockscreen.passcode-lock.enabled', function(isEnabled) {
-      console.log('Sync lockscreen.passcode-lock.enabled', isEnabled);
       self.settings.passcodeEnable = isEnabled;
       self.phonelockPanel.dataset.passcodeEnabled = isEnabled;
       self.passcodeEnable.checked = isEnabled;

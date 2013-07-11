@@ -37,8 +37,6 @@ var PhoneLockPasscode = {
   },
 
   init: function pl_init() {
-    console.log('Mode', this.MODE);
-
     this.getAllElements();
     this.passcodeInput.addEventListener('keypress', this);
     this.createPasscodeButton.addEventListener('click', this);

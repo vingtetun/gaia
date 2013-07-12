@@ -73,7 +73,7 @@ var TransitionManager = (function() {
           curWrapper.style.MozTransition = 'transform 0.4s linear';
         }
         curWrapper.dataset.current = true;
-      });
+      }, 100);
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {

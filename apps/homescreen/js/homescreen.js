@@ -173,13 +173,27 @@ const Homescreen = (function() {
       window.location.host + '/style/icons/' + application.name.replace(' ', '') + '.png';
 
     var tile = document.createElement('li');
+    tile.dataset.isIcon = true;
+    tile.classList.add('icon');
+    
     var iconImage = new Image();
     var iconGroupImage = new Image();
     
     iconImage.src = iconGroupImage.src = icon;
+    iconImage.width = iconImage.height = 64;
+    iconImage.style.visibility = 'visible';
+    
+    var labelWr = document.createElement('span');
+    labelWr.classList.add('labelWrapper');
+    labelWr.innerHTML = '<span>' + name + '</span>';
+    
+    var wr = document.createElement('div');
+    wr.appendChild(iconImage);
+    wr.appendChild(labelWr);
+    
     currentGroup.appendChild(iconGroupImage);
     
-    tile.appendChild(iconImage);
+    tile.appendChild(wr);
     //tile.innerHTML += name;
     tile.addEventListener('tap', (function(application, entry) {
       return function(){ 

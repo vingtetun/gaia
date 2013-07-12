@@ -24,7 +24,7 @@
   });
 
   function updateControlsDisplay() {
-    this.wrapper.classList.toggle('canGoBack', this.canGoBack);
-    this.wrapper.classList.toggle('canGoForward', this.canGoForward);
+    this.wrapper.classList[this.canGoBack ? 'add' : 'remove']('canGoBack');
+    this.wrapper.classList[this.canGoForward ? 'add' : 'remove']('canGoForward');
   }
 })();

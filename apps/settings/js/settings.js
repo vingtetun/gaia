@@ -548,24 +548,6 @@ var Settings = {
     openDialog(dialogID, submit);
   },
 
-  getSupportedKbLayouts: function settings_getSupportedKbLayouts(callback) {
-    if (!callback)
-      return;
-
-    if (this._kbLayoutList) {
-      callback(this._kbLayoutList);
-    } else {
-      var self = this;
-      var KEYBOARDS = '/shared/resources/keyboard_layouts.json';
-      loadJSON(KEYBOARDS, function loadKeyboardLayouts(data) {
-        if (data) {
-          self._kbLayoutList = data;
-          callback(self._kbLayoutList);
-        }
-      });
-    }
-  },
-
   updateDisplayPanel: function settings_updateDisplayPanel() {
     var panel = document.getElementById('display');
     var settings = Settings.mozSettings;
@@ -724,7 +706,6 @@ window.addEventListener('load', function() {
   var buttons = {
     'menuItem-wifi': 'wifi.html',
     'menuItem-help': 'help.html',
-    'menuItem-deviceInfo': 'informations.html',
     'menuItem-sound': 'sound.html',
     'menuItem-display': 'display.html',
     'menuItem-notifications': 'notifications.html',
@@ -732,10 +713,11 @@ window.addEventListener('load', function() {
     'menuItem-languageAndRegion': 'language.html',
     'menuItem-keyboard': 'keyboard.html',
     'menuItem-doNotTrack': 'do-not-track.html',
-    'menuItem-appPermissions': 'app-permissions.html'
+    'menuItem-appPermissions': 'app-permissions.html',
+    'menuItem-phoneLock': 'phone-lock.html',
+    'menuItem-deviceInfo': 'device-information.html'
   }
-  var id;
-  for (id in buttons) {
+  for (var id in buttons) {
     (function(_id, href) {
       document.getElementById(_id).addEventListener('click', function(e) {
         window.open(href);

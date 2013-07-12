@@ -26,6 +26,13 @@ var Security = {
       phonelockDesc.dataset.l10nId = enable ? 'enabled' : 'disabled';
     };
 
+    settings.addObserver('lockscreen.enabled',
+      function onLockscreenEnabledChange(event) {
+        var enable = event.settingValue;
+        phonelockDesc.textContent = enable ? _('enabled') : _('disabled');
+        phonelockDesc.dataset.l10nId = enable ? 'enabled' : 'disabled';
+    });
+
     var mobileConnection = navigator.mozMobileConnection;
     if (!mobileConnection)
       return;

@@ -5,6 +5,7 @@
 
 // handle Wi-Fi settings
 navigator.mozL10n.ready(function wifiSettings() {
+
   var _ = navigator.mozL10n.get;
 
   var settings = window.navigator.mozSettings;
@@ -496,9 +497,9 @@ navigator.mozL10n.ready(function wifiSettings() {
   };
 
   // join hidden network
-  document.getElementById('joinHidden').onclick = function joinHiddenNetwork() {
-    toggleNetwork();
-  };
+  // document.getElementById('joinHidden').onclick = function joinHiddenNetwork() {
+  //   toggleNetwork();
+  // };
 
   function isConnected(network) {
     /**
@@ -576,6 +577,12 @@ navigator.mozL10n.ready(function wifiSettings() {
     // generic wifi property dialog
     function wifiDialog(dialogID, callback, key) {
       var dialog = document.getElementById(dialogID);
+      if (!dialog) {
+        var url = dialogID + '.html#'+JSON.stringify(network);
+        window.open(url);
+        return;
+      }
+      
 
       // authentication fields
       var identity, password, showPassword;
@@ -746,7 +753,6 @@ navigator.mozL10n.ready(function wifiSettings() {
   settings.addObserver('wifi.enabled', function(event) {
     if (lastMozSettingValue == event.settingValue)
       return;
-
     lastMozSettingValue = event.settingValue;
     setMozSettingsEnabled(event.settingValue);
   });

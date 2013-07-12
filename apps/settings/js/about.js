@@ -5,11 +5,16 @@
 
 var About = {
   init: function about_init() {
+    initDataName();
+    fakeSelector();
     document.getElementById('check-update-now').onclick = this.checkForUpdates;
-    document.getElementById('ftuLauncher').onclick = this.launchFTU;
     this.loadHardwareInfo();
-    this.loadGaiaCommit();
+    // this.loadGaiaCommit();
     this.loadLastUpdated();
+    document.getElementById('more').addEventListener('click', function(e) {
+      window.open('device-information-more.html');
+      e.preventDefault();
+    });
   },
 
   loadGaiaCommit: function about_loadGaiaCommit() {
@@ -58,40 +63,26 @@ var About = {
   },
 
   loadLastUpdated: function about_loadLastUpdated() {
-    var settings = Settings.mozSettings;
-    if (!settings)
-      return;
-
-    var lastUpdateDate = document.getElementById('last-update-date');
-    var lock = settings.createLock();
-    var key = 'deviceinfo.last_updated';
-    var request = lock.get(key);
-    request.onsuccess = function() {
-      var lastUpdated = request.result[key];
-      if (!lastUpdated) {
-        return;
-      }
-
+    Accessor.get('deviceinfo.last_updated', function(lastUpdate) {
+      var lastUpdateDate = document.getElementById('last-update-date');
       var f = new navigator.mozL10n.DateTimeFormat();
       var _ = navigator.mozL10n.get;
       lastUpdateDate.textContent =
           f.localeFormat(new Date(lastUpdated), _('shortDateTimeFormat'));
-    };
+    });
   },
 
   loadHardwareInfo: function about_loadHardwareInfo() {
     var mobileConnection = getMobileConnection();
     if (!mobileConnection)
       return;
-
     var info = mobileConnection.iccInfo;
-    document.getElementById('deviceInfo-iccid').textContent = info.iccid;
+    // document.getElementById('deviceInfo-iccid').textContent = info.iccid;
     document.getElementById('deviceInfo-msisdn').textContent = info.msisdn ||
       navigator.mozL10n.get('unknown-phoneNumber');
-
     var req = mobileConnection.sendMMI('*#06#');
     req.onsuccess = function getIMEI() {
-      document.getElementById('deviceInfo-imei').textContent = req.result;
+      // document.getElementById('deviceInfo-imei').textContent = req.result;
     };
   },
 

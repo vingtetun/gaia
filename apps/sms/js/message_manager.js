@@ -196,7 +196,87 @@ var MessageManager = {
     });
   },
 
-  onHashChange: function mm_onHashChange(e) {},
+  onHashChange: function mm_onHashChange(e) {
+    var mainWrapper = document.getElementById('main-wrapper');
+    var threadMessages = document.getElementById('thread-messages');
+    var recipient;
+
+    // Group Participants should never persist any hash changes
+    ThreadUI.groupView.reset();
+
+    // Leave the edit mode before transitioning to another panel. This is safe
+    // to do even if we're not in edit mode as it's essentially a no-op then.
+    ThreadUI.cancelEdit();
+    ThreadListUI.cancelEdit();
+
+    switch (window.location.hash) {
+      case '#thread-list':
+        ThreadUI.inThread = false;
+
+        //Keep the  visible button the :last-child
+        var editButton = document.getElementById('messages-edit-icon');
+        editButton.parentNode.appendChild(editButton);
+        if (threadMessages.classList.contains('new')) {
+          MessageManager.slide('right', function() {
+            threadMessages.classList.remove('new');
+          });
+        } else {
+          // Clear it before sliding.
+          ThreadUI.container.textContent = '';
+
+          MessageManager.slide('right', function() {
+            if (MessageManager.activity.threadId) {
+              window.location.hash =
+                '#thread=' + MessageManager.activity.threadId;
+              MessageManager.activity.threadId = null;
+              MessageManager.activity.isLocked = false;
+            }
+          });
+        }
+        break;
+      case '#group-view':
+        ThreadUI.groupView();
+        break;
+      default:
+        var threadId = Threads.currentId;
+        var filter;
+
+        if (threadId) {
+          filter = new MozSmsFilter();
+          filter.threadId = threadId;
+
+          if (threadMessages.classList.contains('new')) {
+            // After a message is sent...
+            //
+            threadMessages.classList.remove('new');
+
+            ThreadUI.updateHeaderData(function() {
+              ThreadUI.renderMessages(filter);
+            });
+          } else {
+            // Viewing received messages...
+            //
+            ThreadListUI.mark(threadId, 'read');
+
+            // Update Header
+            ThreadUI.updateHeaderData(function updateHeader() {
+              MessageManager.slide('left', function slideEnd() {
+                // hashchanges from #group-view back to #thread=n
+                // are considered "in thread" and should not
+                // trigger a complete re-rendering of the messages
+                // in the thread.
+                if (!ThreadUI.inThread) {
+                  ThreadUI.inThread = true;
+                  ThreadUI.renderMessages(filter);
+                }
+              });
+            });
+          }
+        }
+      break;
+    }
+
+  },
 
   getThreads: function mm_getThreads(callback, extraArg) {
     var cursor = this._mozMobileMessage.getThreads(),

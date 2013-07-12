@@ -112,6 +112,7 @@ var Rocketbar = {
     if (!focus || evenIfFocused) {
       this.bar.classList.remove('open');
       this.results.classList.remove('open');
+      this.input.blur();
     }
   },
 

@@ -508,17 +508,12 @@ navigator.mozL10n.ready(function wifiSettings() {
      * Until this is properly implemented, we just compare SSIDs to tell wether
      * the network is already connected or not.
      */
-    console.log('isConnected 1');
     var currentNetwork = gWifiManager.connection.network;
-    console.log('isConnected 2', currentNetwork);
     if (!currentNetwork)
       return false;
-    console.log('isConnected 3');
     var key = network.ssid + '+' + network.capabilities.join('+');
-    console.log('isConnected 4', key);
     var curkey = currentNetwork.ssid + '+' +
         currentNetwork.capabilities.join('+');
-    console.log('isConnected 5', curkey);
     return (key == curkey);
   }
 

@@ -5,21 +5,13 @@
 
 var About = {
   init: function about_init() {
-    console.log('1');
     initDataName();
-    console.log('2');
     fakeSelector();
-    console.log('3');
     document.getElementById('check-update-now').onclick = this.checkForUpdates;
-    console.log('4');
     this.loadHardwareInfo();
-    console.log('5');
     // this.loadGaiaCommit();
-    console.log('6');
     this.loadLastUpdated();
-    console.log('Ready to Click');
     document.getElementById('more').addEventListener('click', function(e) {
-      console.log('Click');
       window.open('device-information-more.html');
       e.preventDefault();
     });
@@ -71,39 +63,25 @@ var About = {
   },
 
   loadLastUpdated: function about_loadLastUpdated() {
-    console.log('loadLastUpdated');
     Accessor.get('deviceinfo.last_updated', function(lastUpdate) {
-      console.log('loadLastUpdated 1');
       var lastUpdateDate = document.getElementById('last-update-date');
-      console.log('loadLastUpdated 2');
       var f = new navigator.mozL10n.DateTimeFormat();
-      console.log('loadLastUpdated 3');
       var _ = navigator.mozL10n.get;
-      console.log('loadLastUpdated 4');
       lastUpdateDate.textContent =
           f.localeFormat(new Date(lastUpdated), _('shortDateTimeFormat'));
-      console.log('loadLastUpdated 5');
     });
   },
 
   loadHardwareInfo: function about_loadHardwareInfo() {
-    console.log('loadHardwareInfo');
     var mobileConnection = getMobileConnection();
-    console.log('loadHardwareInfo 1');
     if (!mobileConnection)
       return;
-    console.log('loadHardwareInfo 2');
     var info = mobileConnection.iccInfo;
-    console.log('loadHardwareInfo 3');
     // document.getElementById('deviceInfo-iccid').textContent = info.iccid;
-    console.log('loadHardwareInfo 4');
     document.getElementById('deviceInfo-msisdn').textContent = info.msisdn ||
       navigator.mozL10n.get('unknown-phoneNumber');
-    console.log('loadHardwareInfo 5');
     var req = mobileConnection.sendMMI('*#06#');
-    console.log('loadHardwareInfo 6');
     req.onsuccess = function getIMEI() {
-      console.log('loadHardwareInfo 7');
       // document.getElementById('deviceInfo-imei').textContent = req.result;
     };
   },

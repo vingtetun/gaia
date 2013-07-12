@@ -63,11 +63,11 @@
   transform: translateX(100%);
 }
 
-.window-wrapper[data-type="homescreen"][data-current] {
+.window-wrapper[data-type="homescreen"][data-current="true"] {
   transform: translateX(0);
 }
 
-.window-wrapper[data-type="homescreen"][data-current].shadow {
+.window-wrapper[data-type="homescreen"][data-current="true"].shadow {
   transform: translateX(-8px);
 }
 

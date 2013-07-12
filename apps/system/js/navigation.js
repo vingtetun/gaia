@@ -395,6 +395,7 @@ function History(origin, type) {
   this.canGoForward = false;
   this.type = type;
   this.isHomescreen = false;
+  this.isApp = (origin.indexOf('app://') != -1);
 
   this.wrapper = null;
   this.iframe = null;
@@ -459,6 +460,7 @@ History.prototype = {
             this.oncangoforward(this.canGoForward);
           }
         }).bind(this);
+
         break;
 
       case 'loadstart':

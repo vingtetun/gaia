@@ -176,10 +176,10 @@ var PanelSwitcher = {
 
     if (wrapper === this.out) {
       wrapper.style.zIndex = forward ? 500 : 1000;
-      wrapper.classList.toggle('shadow', !forward);
+      wrapper.classList[!forward ? 'add' : 'remove']('shadow');
     } else {
       wrapper.style.zIndex = forward ? 1000 : 500;
-      wrapper.classList.toggle('shadow', forward);
+      wrapper.classList[forward ? 'add' : 'remove']('shadow');
     }
 
     wrapper.style.MozTransition = 'transform, opacity';

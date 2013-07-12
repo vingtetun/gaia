@@ -1,7 +1,7 @@
 /*
  * There are 2 transition related definitions to keep in sync:
    * the transforms in system.css use to snap in place
-   * the as-you-go transforms in te _movingStyles method
+   * the as-you-go transforms in the _generateMovingStyles method
  * */
 var TransitionManager = (function() {
   'use strict';
@@ -109,8 +109,7 @@ var PanelSwitcher = {
   lastProgress: 0,
   out: null,
   in: null,
-  _inMovingStyles: null,
-  _outMovingStyles: null,
+  overflowing: false,
   handleEvent: function navigation_handleEvent(e) {
     var forward = (e.target == this.next);
     var diffX = this.lastX - this.startX;
@@ -123,48 +122,30 @@ var PanelSwitcher = {
 
         var history = (forward ? WindowManager.getNext() :
                                  WindowManager.getPrevious());
-        if (!history) {
-          return;
-        }
 
-        var wrapper = history.wrapper;
+        this.overflowing = !history;
 
-        this.in = wrapper;
+        this.in = history ? history.wrapper : null;
         this.out = WindowManager.getCurrent().wrapper;
 
-        this.in.classList.add('transitioning');
-        this.out.classList.add('transitioning');
+        this.prepareForManipulation(this.in, forward, this.overflowing);
+        this.prepareForManipulation(this.out, forward, this.overflowing);
 
-        this._setStyles.apply(null, this._initialStyles(this.out, forward));
-        this._setStyles.apply(null, this._initialStyles(this.in, forward));
-
-        this._inMovingStyles = this._generateMovingStyles(this.out, forward);
-        this._outMovingStyles = this._generateMovingStyles(this.in, forward);
-
-        this.out.style.MozTransition = 'transform, opacity';
-        this.in.style.MozTransition = 'transform, opacity';
         break;
       case 'touchmove':
-        if (!this.in)
-          return;
-
         this.lastX = e.touches[0].pageX;
         this.lastProgress = progress;
         this.lastDate = Date.now();
 
-        this._setStyles.apply(null, this._inMovingStyles(progress));
-        this._setStyles.apply(null, this._outMovingStyles(progress));
+        this.move(progress);
         break;
       case 'touchend':
-        if (!this.in)
-          return;
-
         var deltaT = Date.now() - this.lastDate;
         var deltaP = Math.abs(progress - this.lastProgress);
         var inertia = (deltaP / deltaT) * 100;
 
         var snapBack = true;
-        if ((progress + inertia) >= 0.32) {
+        if (!this.overflowing && (progress + inertia) >= 0.32) {
           forward ? WindowManager.goNext() : WindowManager.goBack();
           snapBack = false;
         }
@@ -172,31 +153,69 @@ var PanelSwitcher = {
         var progressToAnimate = snapBack ? progress : (1 - progress);
         var durationLeft = Math.min((progressToAnimate / deltaP) * deltaT, progressToAnimate * 500);
 
-        this.out.style.MozTransition = this.in.style.MozTransition =
-          'transform ' + durationLeft + 'ms linear, opacity ' + durationLeft + 'ms linear';
+        // Snaping faster when overflowing
+        if (this.overflowing) {
+          durationLeft /= 2;
+        }
 
-        this._clearStyles(this.out);
-        this._clearStyles(this.in);
+        this.snapInPlace(this.in, durationLeft);
+        this.snapInPlace(this.out, durationLeft);
 
         this.out = this.in = null;
         break;
     }
   },
 
-  _initialStyles: function t_initialStyles(wrapper, forward) {
-    var zIndex, shadow;
-    if (wrapper === this.out) {
-      zIndex = forward ? 500 : 1000;
-      shadow = forward ? false : true;
-    } else {
-      zIndex = forward ? 1000 : 500;
-      shadow = forward ? true : false;
+  _movingStyles: [],
+  prepareForManipulation: function t_prepareForTransition(wrapper, forward, overflowing) {
+    if (!wrapper) {
+      return;
     }
 
-    return [wrapper, null, null, null, zIndex, shadow];
+    wrapper.classList.add('transitioning');
+
+    if (wrapper === this.out) {
+      wrapper.style.zIndex = forward ? 500 : 1000;
+      wrapper.classList.toggle('shadow', !forward);
+    } else {
+      wrapper.style.zIndex = forward ? 1000 : 500;
+      wrapper.classList.toggle('shadow', forward);
+    }
+
+    wrapper.style.MozTransition = 'transform, opacity';
+
+    this._movingStyles.push(this._generateMovingStyles(wrapper, forward, overflowing));
   },
 
-  _generateMovingStyles: function t_movingStyles(wrapper, forward) {
+  move: function t_move(progress) {
+    for (var i = 0; i < this._movingStyles.length; i++) {
+      this._setStyles.apply(null, this._movingStyles[i](progress));
+    }
+  },
+
+  snapInPlace: function t_snapInPlace(wrapper, durationLeft) {
+    if (!wrapper) {
+      return;
+    }
+
+    wrapper.style.MozTransition =
+      'transform ' + durationLeft + 'ms linear, opacity ' + durationLeft + 'ms linear';
+
+    this._clearStyles(wrapper);
+    this._movingStyles = [];
+  },
+
+  _generateMovingStyles: function t_movingStyles(wrapper, forward, overflowing) {
+    if (!wrapper) {
+      return function noSheet(progress) {
+        return [null];
+      };
+    }
+
+    var leftToRight = ((wrapper == this.out && !forward) ||
+                       (wrapper !== this.out && forward));
+    var backToFront = !leftToRight && !overflowing;
+
     return function(progress) {
       var translate = 0, scale = 1, opacity = 1;
       var remainingFactor = forward ? ((progress - 0.5) / 0.5) :
@@ -204,29 +223,36 @@ var PanelSwitcher = {
       var progressFactor = forward ? (100 - progress * 100) :
                                      (progress * 100);
 
-      // back-to-front and front-to-back keyframes
-      if ((wrapper == this.out && forward && progress >= 0.5) ||
-          (wrapper !== this.out && !forward && progress <= 0.5)) {
-
+      if (backToFront && (forward && progress >= 0.5 ||
+                          !forward && progress <= 0.5)) {
         translate = (-20 * remainingFactor) + '%';
         opacity = 1 - 0.7 * remainingFactor;
         scale = 1 - 0.1 * remainingFactor;
-
-        return [wrapper, translate, scale, opacity];
       }
 
-      // left-to-right and right-to-left keyframes
-      if ((wrapper == this.out && !forward) ||
-          (wrapper !== this.out && forward)) {
-
+      if (leftToRight) {
         translate = 'calc(' + progressFactor + '% - 8px)';
+      }
+
+      if (overflowing) {
+        var overflowFactor = (progress * 100) * (1 - (progress * 0.7));
+
+        if (forward) {
+          overflowFactor *= -1;
+        }
+
+        translate = 'calc(' + overflowFactor + '% - 8px)';
       }
 
       return [wrapper, translate, scale, opacity];
     }
   },
 
-  _setStyles: function t_setStyles(wrapper, translate, scale, opacity, zIndex, shadow) {
+  _setStyles: function t_setStyles(wrapper, translate, scale, opacity) {
+    if (!wrapper) {
+      return;
+    }
+
     if (translate && scale) {
       var transform = 'translateX(' + translate + ') scale(' + scale + ')';
       wrapper.style.MozTransform = transform;
@@ -234,19 +260,12 @@ var PanelSwitcher = {
     if (opacity) {
       wrapper.style.opacity = opacity;
     }
-    if (zIndex) {
-      wrapper.style.zIndex = zIndex;
-    }
-    if (typeof shadow == "boolean") {
-      if (shadow) {
-        wrapper.classList.add('shadow');
-      } else {
-        wrapper.classList.remove('shadow');
-      }
-    }
   },
 
   _clearStyles: function t_clearStyles(wrapper) {
+    if (!wrapper) {
+      return;
+    }
     wrapper.style.MozTransform = '';
     wrapper.style.opacity = '';
   }

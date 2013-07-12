@@ -76,6 +76,7 @@ navigator.mozL10n.ready(function wifiSettings() {
   dialog.querySelector('[data-security]').textContent =
       security || _('securityNone');
   dialog.dataset.security = security;
+
   // OK|Cancel buttons
   button.addEventListener('click', function(e) {
     console.log('Click');

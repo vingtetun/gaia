@@ -9,6 +9,7 @@ import os
 import sys
 
 settings = {
+ "rocketbar.show": 0,
  "accessibility.invert": False,
  "accessibility.screenreader": False,
  "alarm.enabled": False,

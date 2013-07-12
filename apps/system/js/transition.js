@@ -24,6 +24,8 @@ var TransitionManager = (function() {
     }
     curWrapper.classList.add('transitioning');
 
+    document.getElementById('screen').classList.remove('utility-tray');
+
     function afterTransition() {
       if (prevWrapper) {
         prevWrapper.classList.remove('transitioning');
@@ -38,33 +40,6 @@ var TransitionManager = (function() {
 
       curWrapper.classList.remove('transitioning');
       curWrapper.style.zIndex = '';
-
-      if (previous) {
-        var request = previous.getScreenshot(window.innerWidth, window.innerHeight);
-        request.onsuccess = function(e) {
-          if (e.target.result) {
-            var cover = prevWrapper.querySelector('.cover');
-            cover.style.visibility = 'visible';
-            cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
-          }
-        };
-
-        request.onerror = function(e) {
-        }
-      }
-
-      var cover = curWrapper.querySelector('.cover');
-      cover.style.opacity = 0.5;
-
-      cover.addEventListener('transitionend', function trWait() {
-        cover.removeEventListener('transitionend', trWait);
-
-        cover.style.visibility = 'hidden';
-        cover.style.backgroundImage = '';
-
-        cover.style.MozTransition = '';
-        cover.style.opacity = '';
-      });
     }
 
     var partial = !!curWrapper.style.MozTransition;
@@ -84,19 +59,32 @@ var TransitionManager = (function() {
       // Making sure we transition for the right position
       setTimeout(function nextTick() {
         if (prevWrapper) {
-          prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
+          if (previous && previous.isHomescreen && forward) {
+            prevWrapper.style.MozTransition = 'opacity 0.2s linear';
+          } else {
+            prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
+          }
           delete prevWrapper.dataset.current;
         }
-        curWrapper.style.MozTransition = 'transform 0.4s linear';
+
+        if (previous && previous.isHomescreen && forward) {
+          curWrapper.style.MozTransition = 'opacity 0.4s linear';
+        } else {
+          curWrapper.style.MozTransition = 'transform 0.4s linear';
+        }
         curWrapper.dataset.current = true;
-      });
+      }, 100);
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {
-      if (e.propertyName != 'transform') {
+      if ((previous && !previous.isHomescreen) && e.propertyName != 'transform') {
         return;
       }
       curWrapper.removeEventListener('transitionend', animWait);
+
+      if (current.isHomescreen) {
+        document.getElementById('screen').classList.add('utility-tray');
+      }
 
       setTimeout(function nextTick() {
         afterTransition();

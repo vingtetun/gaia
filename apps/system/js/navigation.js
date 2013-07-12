@@ -149,8 +149,26 @@ var WindowManager = (function() {
     if (!app)
       return;
 
-    if (navigate[current]) {
-      navigate[current].free();
+    var currentHistory = navigate[current];
+    if (currentHistory) {
+      // If someone try to open the application but it is already opened lets
+      // not do it and close the homescreen.
+      if (!origin) {
+        if (currentHistory.isHomescreen) {
+          var previousHistory = navigate[current - 1];
+          if (previousHistory && previousHistory.iframe.getAttribute('mozapp') == manifestURL) {
+            current--;
+            declareSheetAsCurrent(previousHistory, false);
+            return;
+          }
+        } else {
+          if (currentHistory && currentHistory.iframe.getAttribute('mozapp') == manifestURL) {
+            return;
+          }
+        }
+      }
+
+      currentHistory.free();
       for (var i = navigate.length - 1; i > current; i--) {
         var next = navigate.pop();
         next.wrapper.parentNode.removeChild(next.wrapper);
@@ -158,7 +176,7 @@ var WindowManager = (function() {
       }
     }
 
-    if (navigate[current].isHomescreen == false)
+    if (currentHistory.isHomescreen == false)
       current++;
 
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,

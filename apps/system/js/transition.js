@@ -59,7 +59,7 @@ var TransitionManager = (function() {
       // Making sure we transition for the right position
       setTimeout(function nextTick() {
         if (prevWrapper) {
-          if (previous.isHomescreen) {
+          if (previous.isHomescreen && forward) {
             prevWrapper.style.MozTransition = 'opacity 0.2s linear';
           } else {
             prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
@@ -67,7 +67,7 @@ var TransitionManager = (function() {
           delete prevWrapper.dataset.current;
         }
 
-        if (previous && previous.isHomescreen) {
+        if (previous && previous.isHomescreen && forward) {
           curWrapper.style.MozTransition = 'opacity 0.4s linear';
         } else {
           curWrapper.style.MozTransition = 'transform 0.4s linear';

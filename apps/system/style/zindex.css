@@ -71,6 +71,11 @@
 }
 
 /* Level 5: Statusbar, Utility-Tray */
+
+#screen > [data-z-index-level="rocketbar"] {
+  z-index: 4097;
+}
+
 #screen > [data-z-index-level="statusbar"] {
   z-index: 4096;
 }
@@ -80,7 +85,6 @@
 }
 
 #screen > [data-z-index-level="utility-tray"],
-#screen > [data-z-index-level="rocketbar"],
 #screen > [data-z-index-level="notifications-tray"] {
   z-index: 4095;
 }

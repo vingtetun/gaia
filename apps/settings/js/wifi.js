@@ -5,6 +5,7 @@
 
 // handle Wi-Fi settings
 navigator.mozL10n.ready(function wifiSettings() {
+
   var _ = navigator.mozL10n.get;
 
   var settings = window.navigator.mozSettings;
@@ -496,9 +497,9 @@ navigator.mozL10n.ready(function wifiSettings() {
   };
 
   // join hidden network
-  document.getElementById('joinHidden').onclick = function joinHiddenNetwork() {
-    toggleNetwork();
-  };
+  // document.getElementById('joinHidden').onclick = function joinHiddenNetwork() {
+  //   toggleNetwork();
+  // };
 
   function isConnected(network) {
     /**
@@ -507,12 +508,17 @@ navigator.mozL10n.ready(function wifiSettings() {
      * Until this is properly implemented, we just compare SSIDs to tell wether
      * the network is already connected or not.
      */
+    console.log('isConnected 1');
     var currentNetwork = gWifiManager.connection.network;
+    console.log('isConnected 2', currentNetwork);
     if (!currentNetwork)
       return false;
+    console.log('isConnected 3');
     var key = network.ssid + '+' + network.capabilities.join('+');
+    console.log('isConnected 4', key);
     var curkey = currentNetwork.ssid + '+' +
         currentNetwork.capabilities.join('+');
+    console.log('isConnected 5', curkey);
     return (key == curkey);
   }
 
@@ -576,6 +582,12 @@ navigator.mozL10n.ready(function wifiSettings() {
     // generic wifi property dialog
     function wifiDialog(dialogID, callback, key) {
       var dialog = document.getElementById(dialogID);
+      if (!dialog) {
+        var url = dialogID + '.html#'+JSON.stringify(network);
+        window.open(url);
+        return;
+      }
+      
 
       // authentication fields
       var identity, password, showPassword;
@@ -746,7 +758,6 @@ navigator.mozL10n.ready(function wifiSettings() {
   settings.addObserver('wifi.enabled', function(event) {
     if (lastMozSettingValue == event.settingValue)
       return;
-
     lastMozSettingValue = event.settingValue;
     setMozSettingsEnabled(event.settingValue);
   });

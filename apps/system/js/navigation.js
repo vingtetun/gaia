@@ -361,8 +361,9 @@ var WindowManager = (function() {
   }
 
   window.addEventListener('home', function onHomeButton(e) {
-    showHomescreen();
     e.preventDefault();
+    showHomescreen();
+    Rocketbar.close(true);
   }, true);
 
   return obj;

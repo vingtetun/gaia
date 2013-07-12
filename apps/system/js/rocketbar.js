@@ -201,7 +201,6 @@ var Rocketbar = {
    * @param {Event} evt Click event.
    */
   handleClick: function rocketbar_handleClick(evt) {
-    this.close(true);
     var target = evt.target;
     if (target.parentNode.nodeName == 'LI')
       target = target.parentNode;
@@ -210,12 +209,14 @@ var Rocketbar = {
     var manifestURL = target.getAttribute('data-manifest-url');
     if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
+      this.close(true);
       return;
     }
     // If site, open site in new sheet
     var siteURL = target.getAttribute('data-site-url');
     if (siteURL) {
       WindowManager.openNewSheet(siteURL);
+      this.close(true);
     }
   },
 

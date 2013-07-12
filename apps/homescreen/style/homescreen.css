@@ -40,8 +40,7 @@ html, body {
   pointer-events: none;
 }
 
-#group-list li,
-#icon-list li {
+#group-list li {
   color: #FFFFFF;
   list-style-type: none;
   width: 90%;
@@ -56,13 +55,14 @@ html, body {
   height: auto;
 }
 
-#group-list li.title,
-#icon-list li.title {
+#group-list li.title {
   font-size: 15px;
 }
 
-#icon-list li.title {
-  margin-top:15px;
+#icon-list li {
+  float: left;
+  margin-left: 13px;
+  list-style-type: none;
 }
 
 #group-list li.title img,
@@ -70,8 +70,7 @@ html, body {
   width: -moz-calc(100% - 25px);
 }
 
-#group-list li.title div,
-#icon-list li.title div {
+#group-list li.title div {
   margin-top: 15px;
 }
 
@@ -80,8 +79,7 @@ img.searchbar {
   margin: 25px 0px 20px 25px;
 }
 
-#group-list li:not(.title) img,
-#icon-list li:not(.title) img {
+#group-list li:not(.title) img {
   margin: 0 3px 3px 0;
   width: 50px;
   height: 50px;

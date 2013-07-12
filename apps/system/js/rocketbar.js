@@ -36,6 +36,10 @@ var Rocketbar = {
     }, this);
 
     Places.init(function(firstRun) {});
+    
+    navigator.mozSettings.addObserver('rocketbar.show', function(event) {
+      this.open(true);
+    }.bind(this));
   },
 
   lastY: 0,
@@ -109,6 +113,11 @@ var Rocketbar = {
       this.bar.classList.remove('open');
       this.results.classList.remove('open');
     }
+  },
+
+  hide: function rb_hide() {
+    this.progress.classList.remove('loading');
+    this.close(false);
   },
 
   currentWindow: null,
@@ -193,15 +202,18 @@ var Rocketbar = {
    */
   handleClick: function rocketbar_handleClick(evt) {
     this.close(true);
+    var target = evt.target;
+    if (target.parentNode.nodeName == 'LI')
+      target = target.parentNode;
 
     // If app, launch app
-    var manifestURL = evt.target.getAttribute('data-manifest-url');
+    var manifestURL = target.getAttribute('data-manifest-url');
     if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
       return;
     }
     // If site, open site in new sheet
-    var siteURL = evt.target.getAttribute('data-site-url');
+    var siteURL = target.getAttribute('data-site-url');
     if (siteURL) {
       WindowManager.openNewSheet(siteURL);
     }
@@ -259,10 +271,15 @@ var Rocketbar = {
   showSiteResults: function rocketbar_showSiteResults(results) {
     console.log(JSON.stringify(results));
     results.forEach(function(result) {
-      var li = document.createElement('li');
-      li.innerHTML = result.title + '<br />' + result.uri;
-      li.setAttribute('data-site-url', result.uri);
-      this.results.appendChild(li);
+      var resultItem = document.createElement('li');
+      var resultTitle = document.createElement('h3');
+      var resultURL = document.createElement('small');
+      resultTitle.textContent = result.title;
+      resultURL.textContent = result.uri;
+      resultItem.setAttribute('data-site-url', result.uri);
+      resultItem.appendChild(resultTitle);
+      resultItem.appendChild(resultURL);
+      this.results.appendChild(resultItem);
     }, this);
   },
 
@@ -282,6 +299,9 @@ var Rocketbar = {
       this.input.value = this.currentLocation;
     }
 
+    if (!history.loading) {
+      this.hide();
+    }
     this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
     history.onstatuschange = this.setLoading.bind(this);
@@ -322,21 +342,22 @@ var Rocketbar = {
    * @param {boolean} status True for on, false for off.
    */
   setLoading: function rocketbar_setLoading(status) {
+    // Just for network activity
+    if (this.currentlyOnPackagedApp) {
+      return;
+    }
+
     this._clearEarlyHide();
 
     if (status) {
       this.progress.classList.add('loading');
 
-
-      if (!this.currentlyOnPackagedApp) {
-        this.open(false);
-        this._earlyHideID = setTimeout((function() {
-          this.close(false);
-        }).bind(this), 5000);
-      }
+      this.open(false);
+      this._earlyHideID = setTimeout((function() {
+        this.close(false);
+      }).bind(this), 5000);
     } else {
-      this.progress.classList.remove('loading');
-      this.close(false);
+      this.hide();
     }
   },
 
@@ -409,28 +430,3 @@ window.addEventListener('load', function rocketbar_onLoad() {
   window.removeEventListener('load', rocketbar_onLoad);
   Rocketbar.init();
 });
-
-/*window.addEventListener('historychange',
-  function rocketbar_onHistoryChange(e) {
-  var history = e.detail.current;
-
-  history.title;
-  history.ontitlechange = function(title) {
-  };
-
-  history.location;
-  history.onlocationchange = function(location) {
-  };
-
-  history.loading;
-  history.onstatuschange = function(loading) {
-  };
-
-  history.canGoBack;
-  history.oncangoback = function(canGoBack) {
-  }
-
-  history.type; //certified, privileged, hosted, remote
-
-  WindowManager.openNewSheet(your_url);
-});*/

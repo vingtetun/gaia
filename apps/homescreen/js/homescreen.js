@@ -8,6 +8,7 @@ const Homescreen = (function() {
   var groupsPage = document.getElementById('groups-page');
   var iconList = document.getElementById('icon-list');
   var groupList = document.getElementById('group-list');
+  var searchbar = document.getElementById('searchbar');
   var HVGA = document.documentElement.clientWidth < 480;
   var mainColor = {r:255, g:255, b:255};
   var currentPossition;
@@ -50,7 +51,16 @@ const Homescreen = (function() {
         { name: 'Calendar' }
       ]
     }
-  ]
+  ];
+
+  grid.addEventListener('click', function(e) {
+    if (e.target.classList.contains('searchbar')) {
+      navigator.mozSettings.createLock().set({
+         'rocketbar.show': Math.random()
+       });
+    }
+  });
+  
   var gd = new GestureDetector(grid);
   gd.startDetecting();
   
@@ -163,14 +173,28 @@ const Homescreen = (function() {
       window.location.host + '/style/icons/' + application.name.replace(' ', '') + '.png';
 
     var tile = document.createElement('li');
+    tile.dataset.isIcon = true;
+    tile.classList.add('icon');
+    
     var iconImage = new Image();
     var iconGroupImage = new Image();
     
     iconImage.src = iconGroupImage.src = icon;
+    iconImage.width = iconImage.height = 64;
+    iconImage.style.visibility = 'visible';
+    
+    var labelWr = document.createElement('span');
+    labelWr.classList.add('labelWrapper');
+    labelWr.innerHTML = '<span>' + name + '</span>';
+    
+    var wr = document.createElement('div');
+    wr.appendChild(iconImage);
+    wr.appendChild(labelWr);
+    
     currentGroup.appendChild(iconGroupImage);
     
-    tile.appendChild(iconImage);
-    tile.innerHTML += name;
+    tile.appendChild(wr);
+    //tile.innerHTML += name;
     tile.addEventListener('tap', (function(application, entry) {
       return function(){ 
         application.launch(entry ? entry : null);

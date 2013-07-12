@@ -36,7 +36,6 @@ var UtilityTray = {
   handleEvent: function ut_handleEvent(evt) {
     switch (evt.type) {
       case 'attentionscreenshow':
-      case 'home':
       case 'emergencyalert':
         if (this.shown) {
           this.hide();

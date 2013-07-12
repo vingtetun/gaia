@@ -15,14 +15,10 @@ body, html {
   height: 2rem;
   top: 0;
   left: 0;
-  background-color: #000;
+  background-color: transparent;
 
   padding: 0.2rem 0;
   -moz-box-sizing: border-box;
-}
-
-#screen.locked:not(.attention) #statusbar{
-  background-color: transparent;
 }
 
 #screen.attention.locked #statusbar-time {

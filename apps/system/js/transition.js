@@ -24,6 +24,8 @@ var TransitionManager = (function() {
     }
     curWrapper.classList.add('transitioning');
 
+    document.getElementById('screen').classList.remove('utility-tray');
+
     function afterTransition() {
       if (prevWrapper) {
         prevWrapper.classList.remove('transitioning');
@@ -75,13 +77,14 @@ var TransitionManager = (function() {
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {
-      if (curWrapper.isHomescreen && e.propertyName != 'transform') {
-        return;
-      } else if (!curWrapper.isHomescreen && e.propertyName != 'opacity') {
+      if (!curWrapper.isHomescreen && e.propertyName != 'transform') {
         return;
       }
-
       curWrapper.removeEventListener('transitionend', animWait);
+
+      if (current.isHomescreen) {
+        document.getElementById('screen').classList.add('utility-tray');
+      }
 
       setTimeout(function nextTick() {
         afterTransition();

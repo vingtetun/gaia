@@ -67,6 +67,10 @@
   transform: translateX(0);
 }
 
+.window-wrapper[data-type="homescreen"][data-current].shadow {
+  transform: translateX(-8px);
+}
+
 .window-wrapper[data-type="homescreen"]:not([data-current="true"]) {
   opacity: 0;
 }

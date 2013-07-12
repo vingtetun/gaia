@@ -59,7 +59,7 @@ var TransitionManager = (function() {
       // Making sure we transition for the right position
       setTimeout(function nextTick() {
         if (prevWrapper) {
-          if (previous.isHomescreen && forward) {
+          if (previous && previous.isHomescreen && forward) {
             prevWrapper.style.MozTransition = 'opacity 0.2s linear';
           } else {
             prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
@@ -77,7 +77,7 @@ var TransitionManager = (function() {
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {
-      if (!curWrapper.isHomescreen && e.propertyName != 'transform') {
+      if ((previous && !previous.isHomescreen) && e.propertyName != 'transform') {
         return;
       }
       curWrapper.removeEventListener('transitionend', animWait);

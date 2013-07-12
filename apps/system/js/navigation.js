@@ -536,6 +536,10 @@ History.prototype = {
     this.oncangoforward = null;
 
     this._awake = false;
+    if (!this.wrapper || !this.iframe) {
+      return;
+    }
+
     var iframe = this.iframe;
     var cover = this.wrapper.querySelector('.cover');
 

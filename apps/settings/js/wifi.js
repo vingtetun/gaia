@@ -16,8 +16,6 @@ navigator.mozL10n.ready(function wifiSettings() {
   var gWifi = document.querySelector('#wifi');
   var gWifiCheckBox = document.querySelector('#wifi-enabled input');
   var gWifiInfoBlock = document.querySelector('#wifi-desc') || {};
-  var gWpsInfoBlock = document.querySelector('#wps-column small');
-  var gWpsPbcLabelBlock = document.querySelector('#wps-column a');
 
   var gCurrentNetwork = gWifiManager.connection.network;
 
@@ -100,121 +98,6 @@ navigator.mozL10n.ready(function wifiSettings() {
     gNetworkList.autoscan = false;
   };
 
-  // Wi-Fi Protected Setup
-  var gWpsInProgress = false;
-  document.getElementById('wps-column').onclick = function() {
-    if (gWpsInProgress) {
-      var req = gWifiManager.wps({
-        method: 'cancel'
-      });
-      req.onsuccess = function() {
-        gWpsInProgress = false;
-        gWpsPbcLabelBlock.textContent = _('wpsMessage');
-        gWpsPbcLabelBlock.dataset.l10nId = 'wpsMessage';
-        gWpsInfoBlock.textContent = _('fullStatus-wps-canceled');
-        gWpsInfoBlock.dataset.l10nId = 'fullStatus-wps-canceled';
-      };
-      req.onerror = function() {
-        gWpsInfoBlock.textContent = _('wpsCancelFailedMessage') +
-          ' [' + req.error.name + ']';
-      };
-    } else {
-      wpsDialog('wifi-wps', wpsCallback);
-    }
-
-    function wpsCallback(method, pin) {
-      var req;
-      if (method === 'pbc') {
-        req = gWifiManager.wps({
-          method: 'pbc'
-        });
-      } else if (method === 'myPin') {
-        req = gWifiManager.wps({
-          method: 'pin'
-        });
-      } else {
-        req = gWifiManager.wps({
-          method: 'pin',
-          pin: pin
-        });
-      }
-      req.onsuccess = function() {
-        if (method === 'myPin') {
-          alert(_('wpsPinInput', { pin: req.result }));
-        }
-        gWpsInProgress = true;
-        gWpsPbcLabelBlock.textContent = _('wpsCancelMessage');
-        gWpsPbcLabelBlock.dataset.l10nId = 'wpsCancelMessage';
-        gWpsInfoBlock.textContent = _('fullStatus-wps-inprogress');
-        gWpsInfoBlock.dataset.l10nId = 'fullStatus-wps-inprogress';
-      };
-      req.onerror = function() {
-        gWpsInfoBlock.textContent = _('fullStatus-wps-failed') +
-          ' [' + req.error.name + ']';
-      };
-    }
-
-    function wpsDialog(dialogID, callback) {
-      var dialog = document.getElementById(dialogID);
-      if (!dialog)
-        return;
-
-      // hide dialog box
-      function pinChecksum(pin) {
-        var accum = 0;
-        while (pin > 0) {
-          accum += 3 * (pin % 10);
-          pin = Math.floor(pin / 10);
-          accum += pin % 10;
-          pin = Math.floor(pin / 10);
-        }
-        return (10 - accum % 10) % 10;
-      }
-
-      function isValidWpsPin(pin) {
-        if (pin.match(/[^0-9]+/))
-          return false;
-        if (pin.length === 4)
-          return true;
-        if (pin.length !== 8)
-          return false;
-        var num = pin - 0;
-        return pinChecksum(Math.floor(num / 10)) === (num % 10);
-      }
-
-      var submitWpsButton = dialog.querySelector('button[type=submit]');
-      var pinItem = document.getElementById('wifi-wps-pin-area');
-      var pinDesc = pinItem.querySelector('p');
-      var pinInput = pinItem.querySelector('input');
-      pinInput.oninput = function() {
-        submitWpsButton.disabled = !isValidWpsPin(pinInput.value);
-      };
-
-      function onWpsMethodChange() {
-        var method =
-          dialog.querySelector("input[type='radio']:checked").value;
-        if (method === 'apPin') {
-          submitWpsButton.disabled = !isValidWpsPin(pinInput.value);
-          pinItem.hidden = false;
-        } else {
-          submitWpsButton.disabled = false;
-          pinItem.hidden = true;
-        }
-      }
-
-      var radios = dialog.querySelectorAll('input[type="radio"]');
-      for (var i = 0; i < radios.length; i++) {
-        radios[i].onchange = onWpsMethodChange;
-      }
-      onWpsMethodChange();
-
-      openDialog(dialogID, function submit() {
-        callback(dialog.querySelector("input[type='radio']:checked").value,
-          pinInput.value);
-      });
-    }
-  };
-
   // create a network list item
   function newListItem(network, callback) {
     /**
@@ -239,7 +122,7 @@ navigator.mozL10n.ready(function wifiSettings() {
 
     // supported authentication methods
     var small = document.createElement('small');
-    var keys = network.capabilities;
+    var keys = WifiHelper.getSecurity(network);
     if (keys && keys.length) {
       small.textContent = _('securedBy', { capabilities: keys.join(', ') });
       icon.classList.add('secured');
@@ -326,7 +209,8 @@ navigator.mozL10n.ready(function wifiSettings() {
         for (var i = 0; i < allNetworks.length; ++i) {
           var network = allNetworks[i];
           // use ssid + capabilities as a composited key
-          var key = network.ssid + '+' + network.capabilities.join('+');
+          var key = network.ssid + '+' +
+            WifiHelper.getSecurity(network).join('+');
           // keep connected network first, or select the highest strength
           if (!networks[key] || network.connected) {
             networks[key] = network;
@@ -391,7 +275,8 @@ navigator.mozL10n.ready(function wifiSettings() {
         return;
       }
 
-      var key = network.ssid + '+' + network.capabilities.join('+');
+      var key = network.ssid + '+' +
+        WifiHelper.getSecurity(network).join('+');
       var listItem = index[key];
       var active = list.querySelector('.active');
       if (active && active != listItem) {
@@ -425,75 +310,10 @@ navigator.mozL10n.ready(function wifiSettings() {
     };
   }) (document.getElementById('wifi-availableNetworks'));
 
-  // saved network list
-  var gKnownNetworkList = (function knownNetworkList(list) {
-    // clear the network list
-    function clear() {
-      while (list.hasChildNodes()) {
-        list.removeChild(list.lastChild);
-      }
-    }
-
-    // propose to forget a network
-    function forgetNetwork(network) {
-      var dialog = document.querySelector('#wifi-manageNetworks form');
-      dialog.hidden = false;
-      dialog.onsubmit = function forget() {
-        gWifiManager.forget(network);
-        scan();
-        dialog.hidden = true;
-        return false;
-      };
-      dialog.onreset = function cancel() {
-        dialog.hidden = true;
-        return false;
-      };
-    }
-
-    // list known networks
-    function scan() {
-      var req = gWifiManager.getKnownNetworks();
-
-      req.onsuccess = function onSuccess() {
-        var allNetworks = req.result;
-        var networks = {};
-        for (var i = 0; i < allNetworks.length; ++i) {
-          var network = allNetworks[i];
-          // use ssid + capabilities as a composited key
-          var key = network.ssid + '+' + network.capabilities.join('+');
-          networks[key] = network;
-        }
-        var networkKeys = Object.getOwnPropertyNames(networks);
-        clear();
-
-        // display network list
-        if (networkKeys.length) {
-          networkKeys.sort();
-          for (var i = 0; i < networkKeys.length; i++) {
-            var aItem = newListItem(networks[networkKeys[i]], forgetNetwork);
-            list.appendChild(aItem);
-          }
-        } else {
-          // display a "no known networks" message if necessary
-          list.appendChild(newExplanationItem('noKnownNetworks'));
-        }
-      };
-
-      req.onerror = function onScanError(error) {
-        console.warn('wifi: could not retrieve any known network. ');
-      };
-    }
-
-    // API
-    return {
-      clear: clear,
-      scan: scan
-    };
-  }) (document.getElementById('wifi-knownNetworks'));
-
   document.getElementById('manageNetworks').onclick = function knownNetworks() {
-    gKnownNetworkList.scan();
-    openDialog('wifi-manageNetworks');
+    window.open('wifi-manage-networks.html');
+    // gKnownNetworkList.scan();
+    // openDialog('wifi-manageNetworks');
   };
 
   // join hidden network
@@ -511,9 +331,10 @@ navigator.mozL10n.ready(function wifiSettings() {
     var currentNetwork = gWifiManager.connection.network;
     if (!currentNetwork)
       return false;
-    var key = network.ssid + '+' + network.capabilities.join('+');
+    var key = network.ssid + '+' +
+      WifiHelper.getSecurity(network).join('+');
     var curkey = currentNetwork.ssid + '+' +
-        currentNetwork.capabilities.join('+');
+      WifiHelper.getSecurity(currentNetwork).join('+');
     return (key == curkey);
   }
 
@@ -522,7 +343,7 @@ navigator.mozL10n.ready(function wifiSettings() {
     if (!network) {
       // offline, hidden SSID
       network = {};
-      wifiDialog('wifi-joinHidden', wifiConnect);
+      wifiDialog('wifi-join-hidden', wifiConnect);
     } else if (isConnected(network)) {
       // online: show status + offer to disconnect
       wifiDialog('wifi-status', wifiDisconnect);
@@ -582,7 +403,6 @@ navigator.mozL10n.ready(function wifiSettings() {
         window.open(url);
         return;
       }
-      
 
       // authentication fields
       var identity, password, showPassword;
@@ -616,47 +436,6 @@ navigator.mozL10n.ready(function wifiSettings() {
         checkPassword();
       }
 
-      // initialisation
-      switch (dialogID) {
-        case 'wifi-status':
-          // we're connected, let's display some connection info
-          var ipAddress = dialog.querySelector('[data-ip]'); // IP address
-          var speed = dialog.querySelector('[data-speed]'); // link speed
-          var updateNetInfo = function() {
-            var info = gWifiManager.connectionInformation;
-            ipAddress.textContent = info.ipAddress || '';
-            speed.textContent =
-                _('linkSpeedMbs', { linkSpeed: info.linkSpeed });
-          };
-          gWifiManager.connectionInfoUpdate = updateNetInfo;
-          updateNetInfo();
-
-        case 'wifi-auth':
-          // network info -- #wifi-status and #wifi-auth
-          var keys = network.capabilities;
-          var security = (keys && keys.length) ? keys.join(', ') : '';
-          var sl = Math.min(Math.floor(network.relSignalStrength / 20), 4);
-          dialog.querySelector('[data-ssid]').textContent = network.ssid;
-          dialog.querySelector('[data-signal]').textContent =
-              _('signalLevel' + sl);
-          dialog.querySelector('[data-security]').textContent =
-              security || _('securityNone');
-          dialog.dataset.security = security;
-          break;
-
-        case 'wifi-joinHidden':
-          var security = dialog.querySelector('select');
-          var onSecurityChange = function() {
-            key = security.selectedIndex ? security.value : '';
-            network.capabilities = [key];
-            dialog.dataset.security = key;
-            checkPassword();
-          };
-          security.onchange = onSecurityChange;
-          onSecurityChange();
-          break;
-      }
-
       // reset dialog box
       function reset() {
         if (speed) {
@@ -679,9 +458,9 @@ navigator.mozL10n.ready(function wifiSettings() {
         }
         if (callback) {
           callback();
-          if (dialogID === 'wifi-joinHidden') {
-            gKnownNetworkList.scan();
-          }
+          // if (dialogID === 'wifi-joinHidden') {
+          //   gKnownNetworkList.scan();
+          // }
         }
         reset();
       };
@@ -710,19 +489,6 @@ navigator.mozL10n.ready(function wifiSettings() {
       gCurrentNetwork = null;
     }
 
-    if (gWpsInProgress) {
-      if (networkStatus !== 'disconnected') {
-        gWpsInfoBlock.textContent = gWifiInfoBlock.textContent;
-      }
-      if (networkStatus === 'connected' ||
-          networkStatus === 'wps-timedout' ||
-          networkStatus === 'wps-failed' ||
-          networkStatus === 'wps-overlapped') {
-        gWpsInProgress = false;
-        gWpsPbcLabelBlock.textContent = _('wpsMessage');
-        gWpsPbcLabelBlock.dataset.l10nId = 'wpsMessage';
-      }
-    }
   }
 
   function setMozSettingsEnabled(value) {
@@ -735,15 +501,10 @@ navigator.mozL10n.ready(function wifiSettings() {
        */
       gWifiInfoBlock.textContent = _('fullStatus-initializing');
       gNetworkList.clear(true);
-      document.querySelector('#wps-column').hidden = false;
     } else {
       gWifiInfoBlock.textContent = _('disabled');
-      if (gWpsInProgress) {
-        gWpsInfoBlock.textContent = gWifiInfoBlock.textContent;
-      }
       gNetworkList.clear(false);
       gNetworkList.autoscan = false;
-      document.querySelector('#wps-column').hidden = true;
     }
   }
 

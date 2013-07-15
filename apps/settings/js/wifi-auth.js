@@ -6,7 +6,7 @@
 // handle Wi-Fi settings
 navigator.mozL10n.ready(function wifiSettings() {
 
-  var _ = navigator.mozL10n.get;  
+  var _ = navigator.mozL10n.get;
   var network = JSON.parse(window.location.hash.slice(1));
 
   var key = WifiHelper.getKeyManagement(network);
@@ -67,7 +67,7 @@ navigator.mozL10n.ready(function wifiSettings() {
     checkPassword();
   }
 
-  var keys = network.capabilities;
+  var keys = WifiHelper.getSecurity(network);
   var security = (keys && keys.length) ? keys.join(', ') : '';
   var sl = Math.min(Math.floor(network.relSignalStrength / 20), 4);
   dialog.querySelector('[data-ssid]').textContent = network.ssid;
@@ -76,9 +76,9 @@ navigator.mozL10n.ready(function wifiSettings() {
   dialog.querySelector('[data-security]').textContent =
       security || _('securityNone');
   dialog.dataset.security = security;
+
   // OK|Cancel buttons
   button.addEventListener('click', function(e) {
-    console.log('Click');
     e.preventDefault();
     if (key) {
       setPassword(password.value, identity.value);

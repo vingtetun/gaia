@@ -29,31 +29,35 @@
     <script defer src="/shared/js/l10n.js"></script>
 
     <script defer src="/shared/js/wifi_helper.js"></script>
-    <script defer src="/js/params.js"></script>
     <script defer src="/js/utils.js"></script>
     <script defer src="/js/wifi-connectivity.js"></script>
-    <script defer src="/js/wifi-auth.js"></script>
+    <script defer src="/js/wifi-join-hidden.js"></script>
   </head>
   <body class="skin-organic">
-    <section role="region" id="wifi-auth" class="current">
+    <section role="region" id="wifi-joinHidden" class="current">
       <header>
         <menu type="toolbar">
           <button type="submit"><span data-l10n-id="ok">OK</span></button>
         </menu>
-        <h1 data-ssid> Network Authentication </h1>
+        <h1 data-l10n-id="authentication"> Authentication </h1>
       </header>
 
       <div>
         <ul>
           <li>
-            <a data-l10n-id="security">security
-              <span data-security>WPA-PSK</span>
-            </a>
+            <p data-l10n-id="ssid-name">SSID Network Name</p>
+            <input type="text" data-ignore name="ssid" />
           </li>
           <li>
-            <a data-l10n-id="signalStrength">signal strength
-              <span data-signal>good</span>
-            </a>
+            <p data-l10n-id="security">Security</p>
+            <p class="fake-select">
+              <button class="icon icon-dialog">empty</button>
+              <select>
+                <option data-l10n-id="securityNone">none</option>
+                <option>WEP</option>
+                <option selected>WPA-PSK</option>
+              </select>
+            </p>
           </li>
           <li class="identity">
             <p data-l10n-id="identity">identity</p>
@@ -61,12 +65,12 @@
           </li>
           <li class="password">
             <label>
-              <input type="checkbox" data-ignore name="show-pwd" id="pwd-auth" />
+              <input type="checkbox" data-ignore name="show-pwd" id="pwd-joinHidden" />
               <span></span>
             </label>
             <span data-l10n-id="showPassword">show password</span>
             <p data-l10n-id="password">password</p>
-            <input type="password" data-ignore name="password" maxlength="63" x-inputmode="verbatim" />
+            <input type="password" data-ignore name="password" maxlength="63" />
           </li>
         </ul>
       </div>

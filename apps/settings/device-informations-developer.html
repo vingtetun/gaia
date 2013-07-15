@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/switches.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+    <script defer src="/js/about-developer.js"></script>
+  </head>
+  <body class="skin-organic">
+    <section role="region" id="about-moreInfo-developer" class="current">
+      <header>
+        <button type="reset">
+          <span data-l10n-id="back" class="icon icon-back">Back</span>
+        </button>
+        <h1 data-l10n-id="developer"> Developer </h1>
+      </header>
+
+      <div>
+        <header>
+          <h2 data-l10n-id="debug">Debug</h2>
+        </header>
+        <ul>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.grid.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="grid">Grid</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.fps.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="fps-monitor">Show frames per second</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.paint-flashing.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="paint-flashing">Flash repainted area</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="layers.draw-borders"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="layers-draw-borders">Flash repainted area</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.log-animations.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="log-animations">Log slow animations</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.ttl.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="ttl-monitor">Show time to load</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="devtools.debugger.remote-enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="remote-debugging">Remote Debugging</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="wifi.debugging.enabled" />
+              <span></span>
+            </label>
+            <a data-l10n-id="wifi-debugging">Wi-Fi output in adb</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="bluetooth.debugging.enabled" />
+              <span></span>
+            </label>
+            <a data-l10n-id="bluetooth-debugging">Bluetooth output in adb</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="dom.mozContacts.debugging.enabled" />
+              <span></span>
+            </label>
+            <a data-l10n-id="contacts-debugging">Contacts debugging output in adb</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.console.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="console-enabled">Console enabled</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="software-button.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="software-button-enabled">Software home button enabled</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="debug.gaia.enabled"/>
+              <span></span>
+            </label>
+            <a data-l10n-id="debug-gaia-enabled">Gaia debug traces</a>
+          </li>
+          <li>
+            <label>
+              <button id="ftuLauncher" data-l10n-id="launch-ftu">Launch FTU</button>
+            </label>
+          </li>
+        </ul>
+
+        <header>
+          <h2 data-l10n-id="keyboardLayouts">Keyboard Layouts</h2>
+        </header>
+        <ul>
+          <li>
+            <label>
+              <input type="checkbox" name="keyboard.layouts.zhuyin"/>
+              <span></span>
+            </label>
+            <small data-l10n-id="traditionalChinese-desc">Zhuyin</small>
+            <a data-l10n-id="traditionalChinese">Traditional Chinese</a>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="keyboard.layouts.pinyin"/>
+              <span></span>
+            </label>
+            <small data-l10n-id="simplifiedChinese-desc">Pinyin</small>
+            <a data-l10n-id="simplifiedChinese">Simplified Chinese</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </body>
+</html>

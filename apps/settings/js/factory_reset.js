@@ -32,5 +32,10 @@ navigator.mozL10n.ready(function SettingsFactoryReset() {
       }
     });
   }
+
+  var developer = document.getElementById('developer');
+  developer.addEventListener('click', function() {
+    window.open('device-informations-developer.html');
+  });
 });
 

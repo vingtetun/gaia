@@ -156,6 +156,9 @@
 
     init: function() {
       gKnownNetworkList.scan();
+      document.getElementById('joinHidden').addEventListener('click', function() {
+        window.open('wifi-join-hidden.html#' + JSON.stringify({}));
+      });
     }
 
   };

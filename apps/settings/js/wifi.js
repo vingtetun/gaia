@@ -343,7 +343,7 @@ navigator.mozL10n.ready(function wifiSettings() {
     if (!network) {
       // offline, hidden SSID
       network = {};
-      wifiDialog('wifi-joinHidden', wifiConnect);
+      wifiDialog('wifi-join-hidden', wifiConnect);
     } else if (isConnected(network)) {
       // online: show status + offer to disconnect
       wifiDialog('wifi-status', wifiDisconnect);
@@ -434,21 +434,6 @@ navigator.mozL10n.ready(function wifiSettings() {
         password.oninput = checkPassword;
         identity.oninput = checkPassword;
         checkPassword();
-      }
-
-      // initialisation
-      switch (dialogID) {
-        case 'wifi-joinHidden':
-          var security = dialog.querySelector('select');
-          var onSecurityChange = function() {
-            key = security.selectedIndex ? security.value : '';
-            WifiHelper.setSecurity(network, [key]);
-            dialog.dataset.security = key;
-            checkPassword();
-          };
-          security.onchange = onSecurityChange;
-          onSecurityChange();
-          break;
       }
 
       // reset dialog box

@@ -239,7 +239,7 @@ navigator.mozL10n.ready(function wifiSettings() {
 
     // supported authentication methods
     var small = document.createElement('small');
-    var keys = network.capabilities;
+    var keys = WifiHelper.getSecurity(network);
     if (keys && keys.length) {
       small.textContent = _('securedBy', { capabilities: keys.join(', ') });
       icon.classList.add('secured');
@@ -326,7 +326,8 @@ navigator.mozL10n.ready(function wifiSettings() {
         for (var i = 0; i < allNetworks.length; ++i) {
           var network = allNetworks[i];
           // use ssid + capabilities as a composited key
-          var key = network.ssid + '+' + network.capabilities.join('+');
+          var key = network.ssid + '+' +
+            WifiHelper.getSecurity(network).join('+');
           // keep connected network first, or select the highest strength
           if (!networks[key] || network.connected) {
             networks[key] = network;
@@ -391,7 +392,8 @@ navigator.mozL10n.ready(function wifiSettings() {
         return;
       }
 
-      var key = network.ssid + '+' + network.capabilities.join('+');
+      var key = network.ssid + '+' +
+        WifiHelper.getSecurity(network).join('+');
       var listItem = index[key];
       var active = list.querySelector('.active');
       if (active && active != listItem) {
@@ -460,7 +462,8 @@ navigator.mozL10n.ready(function wifiSettings() {
         for (var i = 0; i < allNetworks.length; ++i) {
           var network = allNetworks[i];
           // use ssid + capabilities as a composited key
-          var key = network.ssid + '+' + network.capabilities.join('+');
+          var key = network.ssid + '+' +
+            WifiHelper.getSecurity(network).join('+');
           networks[key] = network;
         }
         var networkKeys = Object.getOwnPropertyNames(networks);
@@ -511,9 +514,10 @@ navigator.mozL10n.ready(function wifiSettings() {
     var currentNetwork = gWifiManager.connection.network;
     if (!currentNetwork)
       return false;
-    var key = network.ssid + '+' + network.capabilities.join('+');
+    var key = network.ssid + '+' +
+      WifiHelper.getSecurity(network).join('+');
     var curkey = currentNetwork.ssid + '+' +
-        currentNetwork.capabilities.join('+');
+      WifiHelper.getSecurity(currentNetwork).join('+');
     return (key == curkey);
   }
 
@@ -633,7 +637,7 @@ navigator.mozL10n.ready(function wifiSettings() {
 
         case 'wifi-auth':
           // network info -- #wifi-status and #wifi-auth
-          var keys = network.capabilities;
+          var keys = WifiHelper.getSecurity(network);
           var security = (keys && keys.length) ? keys.join(', ') : '';
           var sl = Math.min(Math.floor(network.relSignalStrength / 20), 4);
           dialog.querySelector('[data-ssid]').textContent = network.ssid;
@@ -648,7 +652,7 @@ navigator.mozL10n.ready(function wifiSettings() {
           var security = dialog.querySelector('select');
           var onSecurityChange = function() {
             key = security.selectedIndex ? security.value : '';
-            network.capabilities = [key];
+            WifiHelper.setSecurity(network, [key]);
             dialog.dataset.security = key;
             checkPassword();
           };

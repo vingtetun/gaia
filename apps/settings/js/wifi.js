@@ -621,32 +621,6 @@ navigator.mozL10n.ready(function wifiSettings() {
 
       // initialisation
       switch (dialogID) {
-        case 'wifi-status':
-          // we're connected, let's display some connection info
-          var ipAddress = dialog.querySelector('[data-ip]'); // IP address
-          var speed = dialog.querySelector('[data-speed]'); // link speed
-          var updateNetInfo = function() {
-            var info = gWifiManager.connectionInformation;
-            ipAddress.textContent = info.ipAddress || '';
-            speed.textContent =
-                _('linkSpeedMbs', { linkSpeed: info.linkSpeed });
-          };
-          gWifiManager.connectionInfoUpdate = updateNetInfo;
-          updateNetInfo();
-
-        case 'wifi-auth':
-          // network info -- #wifi-status and #wifi-auth
-          var keys = WifiHelper.getSecurity(network);
-          var security = (keys && keys.length) ? keys.join(', ') : '';
-          var sl = Math.min(Math.floor(network.relSignalStrength / 20), 4);
-          dialog.querySelector('[data-ssid]').textContent = network.ssid;
-          dialog.querySelector('[data-signal]').textContent =
-              _('signalLevel' + sl);
-          dialog.querySelector('[data-security]').textContent =
-              security || _('securityNone');
-          dialog.dataset.security = security;
-          break;
-
         case 'wifi-joinHidden':
           var security = dialog.querySelector('select');
           var onSecurityChange = function() {

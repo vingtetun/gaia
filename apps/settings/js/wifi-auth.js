@@ -6,7 +6,7 @@
 // handle Wi-Fi settings
 navigator.mozL10n.ready(function wifiSettings() {
 
-  var _ = navigator.mozL10n.get;  
+  var _ = navigator.mozL10n.get;
   var network = JSON.parse(window.location.hash.slice(1));
 
   var key = WifiHelper.getKeyManagement(network);

@@ -310,76 +310,10 @@ navigator.mozL10n.ready(function wifiSettings() {
     };
   }) (document.getElementById('wifi-availableNetworks'));
 
-  // saved network list
-  var gKnownNetworkList = (function knownNetworkList(list) {
-    // clear the network list
-    function clear() {
-      while (list.hasChildNodes()) {
-        list.removeChild(list.lastChild);
-      }
-    }
-
-    // propose to forget a network
-    function forgetNetwork(network) {
-      var dialog = document.querySelector('#wifi-manageNetworks form');
-      dialog.hidden = false;
-      dialog.onsubmit = function forget() {
-        gWifiManager.forget(network);
-        scan();
-        dialog.hidden = true;
-        return false;
-      };
-      dialog.onreset = function cancel() {
-        dialog.hidden = true;
-        return false;
-      };
-    }
-
-    // list known networks
-    function scan() {
-      var req = gWifiManager.getKnownNetworks();
-
-      req.onsuccess = function onSuccess() {
-        var allNetworks = req.result;
-        var networks = {};
-        for (var i = 0; i < allNetworks.length; ++i) {
-          var network = allNetworks[i];
-          // use ssid + capabilities as a composited key
-          var key = network.ssid + '+' +
-            WifiHelper.getSecurity(network).join('+');
-          networks[key] = network;
-        }
-        var networkKeys = Object.getOwnPropertyNames(networks);
-        clear();
-
-        // display network list
-        if (networkKeys.length) {
-          networkKeys.sort();
-          for (var i = 0; i < networkKeys.length; i++) {
-            var aItem = newListItem(networks[networkKeys[i]], forgetNetwork);
-            list.appendChild(aItem);
-          }
-        } else {
-          // display a "no known networks" message if necessary
-          list.appendChild(newExplanationItem('noKnownNetworks'));
-        }
-      };
-
-      req.onerror = function onScanError(error) {
-        console.warn('wifi: could not retrieve any known network. ');
-      };
-    }
-
-    // API
-    return {
-      clear: clear,
-      scan: scan
-    };
-  }) (document.getElementById('wifi-knownNetworks'));
-
   document.getElementById('manageNetworks').onclick = function knownNetworks() {
-    gKnownNetworkList.scan();
-    openDialog('wifi-manageNetworks');
+    window.open('wifi-manage-networks.html');
+    // gKnownNetworkList.scan();
+    // openDialog('wifi-manageNetworks');
   };
 
   // join hidden network
@@ -539,9 +473,9 @@ navigator.mozL10n.ready(function wifiSettings() {
         }
         if (callback) {
           callback();
-          if (dialogID === 'wifi-joinHidden') {
-            gKnownNetworkList.scan();
-          }
+          // if (dialogID === 'wifi-joinHidden') {
+          //   gKnownNetworkList.scan();
+          // }
         }
         reset();
       };

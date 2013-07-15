@@ -67,7 +67,7 @@ navigator.mozL10n.ready(function wifiSettings() {
     checkPassword();
   }
 
-  var keys = network.capabilities;
+  var keys = WifiHelper.getSecurity(network);
   var security = (keys && keys.length) ? keys.join(', ') : '';
   var sl = Math.min(Math.floor(network.relSignalStrength / 20), 4);
   dialog.querySelector('[data-ssid]').textContent = network.ssid;
@@ -79,7 +79,6 @@ navigator.mozL10n.ready(function wifiSettings() {
 
   // OK|Cancel buttons
   button.addEventListener('click', function(e) {
-    console.log('Click');
     e.preventDefault();
     if (key) {
       setPassword(password.value, identity.value);

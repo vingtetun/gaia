@@ -586,7 +586,6 @@ navigator.mozL10n.ready(function wifiSettings() {
         window.open(url);
         return;
       }
-      
 
       // authentication fields
       var identity, password, showPassword;

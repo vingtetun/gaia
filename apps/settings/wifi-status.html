@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <title>Settings</title>
+
+    <base target="_blank">
+
+    <!-- multi-resolution support -->
+    <link rel="stylesheet" href="/shared/style/responsive.css">
+
+    <!-- Common style -->
+    <link rel="stylesheet" type="text/css" href="/shared/style/headers.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/switches.css"/>
+
+    <!-- Specific style -->
+    <link rel="stylesheet" type="text/css" href="/style/lists.css"/>
+    <link rel="stylesheet" type="text/css" href="/style/settings.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/buttons.css"/>
+    <link rel="stylesheet" type="text/css" href="/shared/style/input_areas.css"/>
+
+    <!-- Shared resources
+    <link rel="resource" type="application/json" href="/shared/resources/languages.json"/>
+    -->
+
+    <!-- Localization -->
+    <link rel="resource" type="application/l10n" href="/locales/locales.ini"/>
+    <script defer src="/shared/js/l10n.js"></script>
+
+    <script defer src="/shared/js/wifi_helper.js"></script>
+    <script defer src="/js/params.js"></script>
+    <script defer src="/js/utils.js"></script>
+    <script defer src="/js/wifi-connectivity.js"></script>
+    <script defer src="/js/wifi-status.js"></script>
+  </head>
+  <body class="skin-organic">
+    <!-- Connectivity :: Wi-Fi -->
+    <section role="region" id="wifi-auth" class="current">
+      <header>
+        <menu type="toolbar">
+          <button type="submit"><span data-l10n-id="ok">OK</span></button>
+        </menu>
+        <h1 data-ssid> Network Authentication </h1>
+      </header>
+
+      <div>
+        <ul>
+          <li>
+            <a data-l10n-id="security">security
+              <span data-security>WPA-PSK</span>
+            </a>
+          </li>
+          <li>
+            <a data-l10n-id="signalStrength">signal strength
+              <span data-signal>good</span>
+            </a>
+          </li>
+          <li class="identity">
+            <p data-l10n-id="identity">identity</p>
+            <input type="text" data-ignore name="identity" />
+          </li>
+          <li class="password">
+            <label>
+              <input type="checkbox" data-ignore name="show-pwd" id="pwd-auth" />
+              <span></span>
+            </label>
+            <span data-l10n-id="showPassword">show password</span>
+            <p data-l10n-id="password">password</p>
+            <input type="password" data-ignore name="password" maxlength="63" x-inputmode="verbatim" />
+          </li>
+        </ul>
+      </div>
+    </section>
+  </body>
+</html>

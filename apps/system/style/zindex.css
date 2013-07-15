@@ -76,7 +76,15 @@
   z-index: 4097;
 }
 
-#screen > [data-z-index-level="statusbar"] {
+#screen:not(.utility-tray) > [data-z-index-level="statusbar"] {
+  z-index: -1000;
+}
+
+#screen.utility-tray > [data-z-index-level="statusbar"] {
+  z-index: 4096;
+}
+
+#screen.locked > [data-z-index-level="statusbar"] {
   z-index: 4096;
 }
 
@@ -95,7 +103,7 @@
 
 /* Demote level 5 elements to homescreen level if there is an active
  * full screen app frame */
-#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="statusbar"],
+/*#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="statusbar"],*/
 #screen:not(.locked):not(.attention):not(.notifications-tray) > [data-z-index-level="notifications-tray"],
 #screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="utility-tray"] {
   z-index: 0;

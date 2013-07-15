@@ -132,9 +132,9 @@ var ThreadListUI = {
   },
 
   handleEvent: function thlui_handleEvent(evt) {
-    if (evt.target.dataset.threadId) {
+    if (evt.target.dataset.threadId &&  !this.mainWrapper.classList.contains('edit')) {
       window.open('thread.html#' + evt.target.dataset.threadId);
-    } else if (evt.target.parentNode.dataset.threadId) {
+    } else if (evt.target.parentNode.dataset.threadId && !this.mainWrapper.classList.contains('edit')) {
       window.open('thread.html#' + evt.target.parentNode.dataset.threadId);
     }
 

@@ -174,7 +174,7 @@ var WindowManager = (function() {
     if (currentHistory) {
       // If someone try to open the application but it is already opened lets
       // not do it and close the homescreen.
-      //if (!origin) {
+      if (!origin) {
         if (currentHistory.isHomescreen) {
           var previousHistory = navigate[current - 1];
           if (previousHistory && previousHistory.iframe.getAttribute('mozapp') == manifestURL) {
@@ -187,7 +187,7 @@ var WindowManager = (function() {
             return;
           }
         }
-      //}
+      }
 
       currentHistory.free();
       for (var i = navigate.length - 1; i > current; i--) {

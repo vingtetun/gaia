@@ -13,8 +13,7 @@ var WindowManager = (function() {
       for (var i = 0; i < history.length; i++) {
         var item = history[i];
         if (item) {
-          str += 'item ' + i + ' (' + item.isHomescreen + ' +)\n' +
-                 'isHomescreen: ' + item.isHomescreen + '\n' +
+          str += 'item ' + i + ' (' + item.isHomescreen + ')\n' +
                  'location: ' + item.location + '\n' +
                  '\n';
         } else{
@@ -110,6 +109,12 @@ var WindowManager = (function() {
       declareSheetAsCurrent(navigate[current], true);
     },
 
+    goLast: function() {
+      debug("goLast: " + current);
+      debugHistory();
+      declareSheetAsCurrent(navigate[current], true);
+    },
+
     getPrevious: function() {
       return navigate[current - 1];
     },
@@ -123,9 +128,13 @@ var WindowManager = (function() {
     },
 
     evictEntry: function(history) {
+      debug("evictEntry: " + current);
+      debugHistory();
       for (var i in navigate) {
-        if (navigate[i].wrapper == this.wrapper) {
+        if (navigate[i].wrapper == history.wrapper) {
           navigate.splice(i, 1);
+          if (i <= current)
+            current--;
           break;
         }
       }
@@ -533,12 +542,16 @@ History.prototype = {
       case 'close':
       case 'error':
         // XXX This is a bit rude with error but that's ok for now
-        if (this.wrapper.dataset.current) {
-          WindowManager.goBack();
-        }
         WindowManager.evictEntry(this);
-        this.wrapper.parentNode.removeChild(this.wrapper);
+        var wrapper = this.wrapper.parentNode.removeChild(this.wrapper);
+        this.free();
         this.close();
+
+        if (wrapper.dataset.current) {
+          setTimeout(function() {
+            WindowManager.goLast();
+          }, 1000);
+        }
         break;
     }
   },

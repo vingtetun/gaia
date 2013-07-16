@@ -19,10 +19,18 @@ body, html {
 
   padding: 0.2rem 0;
   -moz-box-sizing: border-box;
+
+  transform: translateY(-100%);
+  transition: transform 0.15s linear;
+}
+
+#statusbar.displayed {
+  transform: translateY(0);
 }
 
 .locked #statusbar {
   background-color: transparent;
+  transform: translateY(0);
 }
 
 #screen.attention.locked #statusbar-time {

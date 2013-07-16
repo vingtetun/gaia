@@ -10,6 +10,7 @@ var TransitionManager = (function() {
     console.log('TransitionManager: ' + str + '\n');
   }
 
+  var statusbar = document.getElementById('statusbar');
   var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
     var previous = current;
@@ -23,8 +24,6 @@ var TransitionManager = (function() {
       prevWrapper.classList.add('transitioning');
     }
     curWrapper.classList.add('transitioning');
-
-    document.getElementById('screen').classList.remove('utility-tray');
 
     function afterTransition() {
       if (prevWrapper) {
@@ -75,11 +74,8 @@ var TransitionManager = (function() {
       }
       curWrapper.removeEventListener('transitionend', animWait);
 
-      if (current.isHomescreen) {
-        document.getElementById('screen').classList.add('utility-tray');
-      }
-
       setTimeout(function nextTick() {
+        statusbar.classList[current.isHomescreen ? 'add' : 'remove']('displayed');
         afterTransition();
       });
     });

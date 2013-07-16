@@ -36,48 +36,41 @@ var TransitionManager = (function() {
 
       curWrapper.style.MozTransition = '';
       curWrapper.classList.remove('shadow');
-      curWrapper.classList.remove('forward');
-
       curWrapper.classList.remove('transitioning');
       curWrapper.style.zIndex = '';
     }
 
     var partial = !!curWrapper.style.MozTransition;
-    if (forward) {
-      curWrapper.classList.add('forward');
-    } else {
-      curWrapper.classList.remove('forward');
-    }
-
     if (partial) {
       // Already in the middle of the transition
       if (prevWrapper) {
         delete prevWrapper.dataset.current;
       }
       curWrapper.dataset.current = true;
+      prevWrapper.dataset.previous = forward;
+      prevWrapper.dataset.next = !forward;
     } else {
       // Making sure we transition for the right position
+      if (current.isHomescreen) {
+        curWrapper.dataset.previous = !forward;
+        curWrapper.dataset.next = forward;
+      }
+
       setTimeout(function nextTick() {
         if (prevWrapper) {
-          if (previous && previous.isHomescreen && forward) {
-            prevWrapper.style.MozTransition = 'opacity 0.2s linear';
-          } else {
-            prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
-          }
+          prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
           delete prevWrapper.dataset.current;
+          prevWrapper.dataset.previous = forward;
+          prevWrapper.dataset.next = !forward;
         }
 
-        if (previous && previous.isHomescreen && forward) {
-          curWrapper.style.MozTransition = 'opacity 0.4s linear';
-        } else {
-          curWrapper.style.MozTransition = 'transform 0.4s linear';
-        }
+        curWrapper.style.MozTransition = 'transform 0.4s linear';
         curWrapper.dataset.current = true;
       }, 100);
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {
-      if ((previous && !previous.isHomescreen) && e.propertyName != 'transform') {
+      if (e.propertyName != 'transform') {
         return;
       }
       curWrapper.removeEventListener('transitionend', animWait);

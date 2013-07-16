@@ -213,7 +213,6 @@ var WindowManager = (function() {
     if (currentHistory) {
      // If someone try to open the application but it is already opened lets
       // not do it and close the homescreen.
-      // XXX need to fix dedup for entry points. Bitch.
       if (!origin) {
         if (currentHistory.isHomescreen) {
           var previousHistory = navigate[current - 1];
@@ -459,14 +458,18 @@ function History(origin, type) {
 
   this.wrapper = null;
   this.iframe = null;
+  this.cover = null;
 
   this._awake = true;
+  this._screenshotCached = false;
+  this._screenshotInvalidationID = null;
 }
 
 History.prototype = {
   attach: function history_attach(wrapper, iframe) {
     this.wrapper = wrapper;
     this.iframe = iframe;
+    this.cover = wrapper.querySelector('.cover');
 
     iframe.addEventListener('mozbrowsertitlechange', this);
     iframe.addEventListener('mozbrowserlocationchange', this);
@@ -486,6 +489,7 @@ History.prototype = {
 
     this.wrapper = null;
     this.iframe = null;
+    this.cover = null;
   },
 
   handleEvent: function history_handleEvent(evt) {
@@ -607,33 +611,16 @@ History.prototype = {
       return;
     }
 
+    if (this._screenshotInvalidationID) {
+      clearTimeout(this._screenshotInvalidationID);
+      this._screenshotInvalidationID = null;
+    };
+
     var iframe = this.iframe;
-    var cover = this.wrapper.querySelector('.cover');
-
-    var screenshotAndHide = (function() {
-      var req = iframe.getScreenshot(window.innerWidth, window.innerHeight);
-      var afterScreenshot = (function(e) {
-        if (e.target.result) {
-          cover.style.display = 'block';
-          cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
-        }
-
-        if ('setVisible' in iframe) {
-          iframe.setVisible(false);
-        }
-
-        // Wow, the window was awaken while we were screenshoting
-        if (this._awake) {
-          this.wakeUp();
-        }
-      }).bind(this);
-
-      req.onsuccess = afterScreenshot;
-      req.onerror = afterScreenshot;
-    }).bind(this);
 
     // Making sure we don't let the iframe in a keyboard state
     // while screenshoting
+    var screenshotAndHide = this._screenshotAndHide.bind(this);
     if (iframe.style.height) {
       iframe.style.height = '';
       iframe.addNextPaintListener(function paintWait() {
@@ -644,6 +631,44 @@ History.prototype = {
     }
 
     screenshotAndHide();
+  },
+
+  _screenshotAndHide: function history_screenshotAndHide() {
+    if (this._screenshotCached) {
+      this._swapWithCover();
+      return;
+    }
+
+    var cover = this.cover;
+
+    var req = this.iframe.getScreenshot(window.innerWidth, window.innerHeight);
+    var afterScreenshot = (function(e) {
+      if (e.target.result) {
+        cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+        this._screenshotCached = true;
+      } else {
+        cover.style.backgroundImage = '';
+      }
+
+      this._swapWithCover();
+    }).bind(this);
+
+    req.onsuccess = afterScreenshot;
+    req.onerror = afterScreenshot;
+  },
+
+  _swapWithCover: function history_swapWithCover() {
+    var iframe = this.iframe;
+
+    this.cover.style.display = 'block';
+    if ('setVisible' in iframe) {
+      iframe.setVisible(false);
+    }
+
+    // Wow, the window was awaken while we were screenshoting
+    if (this._awake) {
+      this.wakeUp();
+    }
   },
 
   wakeUp: function history_wakeUp() {
@@ -658,15 +683,22 @@ History.prototype = {
       return;
     }
 
-    var cover = this.wrapper.querySelector('.cover');
+    var cover = this.cover;
     iframe.addNextPaintListener(function paintWait() {
       iframe.removeNextPaintListener(paintWait);
 
       setTimeout(function bitLater() {
         cover.style.display = '';
-        cover.style.backgroundImage = '';
       }, 250);
     });
+
+    // We invalidate the screenshot once the sheet has been displayed
+    // for 1.5sec
+    this._screenshotInvalidationID = setTimeout((function invalidate() {
+      this._screenshotCached = false;
+      this.cover.style.backgroundImage = '';
+    }).bind(this), 1500);
+
   },
 
   ontitlechange: null,

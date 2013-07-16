@@ -6,6 +6,29 @@ var WindowManager = (function() {
     dump('WindowManager: ' + str + '\n');
   }
 
+  function debugHistory() {
+    var history = navigate;
+    try {
+      var str = '--- History\n';
+      for (var i = 0; i < history.length; i++) {
+        var item = history[i];
+        if (item) {
+          str += 'item ' + i + ' (' + item.isHomescreen + ' +)\n' +
+                 'isHomescreen: ' + item.isHomescreen + '\n' +
+                 'location: ' + item.location + '\n' +
+                 '\n';
+        } else{
+          str += 'history ' + i + ' (empty) \n\n';
+        }
+      }
+      str += '--- History End\n';
+    } catch(e) {
+      debug(e);
+    }
+
+    debug(str);
+  }
+
   var obj = {
     launch: function() {
       debug('Someone call launch: ' + arguments);
@@ -102,7 +125,7 @@ var WindowManager = (function() {
     evictEntry: function(history) {
       for (var i in navigate) {
         if (navigate[i].wrapper == this.wrapper) {
-          navigate = navigate.slice(i, i + 1);
+          navigate.splice(i, 1);
           break;
         }
       }
@@ -144,6 +167,16 @@ var WindowManager = (function() {
   var navigate = [];
   var current = 0;
 
+  function pruneForwardNavigation() {
+    for (var i = navigate.length - 1; i > current; i--) {
+      var next = navigate.pop();
+      if (next.isHomescreen)
+        continue;
+      next.wrapper.parentNode.removeChild(next.wrapper);
+      next.close();
+    }
+  }
+
   function openApp(manifestURL, origin, iframe) {
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
@@ -151,10 +184,7 @@ var WindowManager = (function() {
 
     var manifest = app.manifest;
     var entryPoints = manifest.entry_points;
-    if (entryPoints/* && manifest.type == 'certified'*/) {
-
-      // Workaround here until the bug (to be filed) is fixed
-      // Basicly, gecko is sending the URL without launch_path sometimes
+    if (entryPoints) {
       for (var ep in entryPoints) {
         var currentEp = entryPoints[ep];
         var path = origin;
@@ -166,15 +196,16 @@ var WindowManager = (function() {
         if (path.indexOf('/' + ep) == 0 &&
             (currentEp.launch_path == path)) {
           origin = origin + currentEp.launch_path;
-          //name = new ManifestHelper(currentEp).name;
         }
       }
     }
+
     var currentHistory = navigate[current];
     if (currentHistory) {
-      // If someone try to open the application but it is already opened lets
+     // If someone try to open the application but it is already opened lets
       // not do it and close the homescreen.
-      //if (!origin) {
+      // XXX need to fix dedup for entry points. Bitch.
+      if (!origin) {
         if (currentHistory.isHomescreen) {
           var previousHistory = navigate[current - 1];
           if (previousHistory && previousHistory.iframe.getAttribute('mozapp') == manifestURL) {
@@ -187,20 +218,13 @@ var WindowManager = (function() {
             return;
           }
         }
-      //}
+      }
 
       currentHistory.free();
-      for (var i = navigate.length - 1; i > current; i--) {
-        var next = navigate.pop();
-        next.wrapper.parentNode.removeChild(next.wrapper);
-        next.close();
-      }
+      pruneForwardNavigation();
     }
 
-    if (currentHistory.isHomescreen == false)
-      current++;
-
-
+    current++;
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
 
@@ -216,12 +240,9 @@ var WindowManager = (function() {
   function openOrigin(origin, iframe) {
     if (navigate[current]) {
       navigate[current].free();
-      for (var i = navigate.length - 1; i > current; i--) {
-        var next = navigate.pop();
-        next.wrapper.parentNode.removeChild(next.wrapper);
-        next.close();
-      }
+      pruneForwardNavigation();
     }
+
     if (navigate[current].isHomescreen == false)
       current++;
 
@@ -365,16 +386,24 @@ var WindowManager = (function() {
     if (navigate[current] == homescreenHistory)
       return;
 
+
+    // Look for the navigation history and remove previous homescreen if any.
+    for (var i = 0; i < navigate.length; i++) {
+      var outer = navigate[i];
+      if (outer && outer.isHomescreen) {
+        navigate.splice(i, 1);
+
+        if (i < current) {
+          current--;
+        }
+        break;
+      }
+    }
+
+    // Let's delete the navigation history that comes after us.
     if (navigate[current]) {
       navigate[current].free();
-      for (var i = navigate.length - 1; i > current; i--) {
-        var next = navigate.pop();
-
-        if (next.isHomescreen)
-          continue;
-        next.wrapper.parentNode.removeChild(next.wrapper);
-        next.close();
-      }
+      pruneForwardNavigation();
     }
 
     current++;

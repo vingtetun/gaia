@@ -76,6 +76,11 @@
   z-index: 4097;
 }
 
+#screen:not(.locked) > [data-z-index-level="progress"] {
+  z-index: 4098;
+}
+
+
 #screen:not(.utility-tray) > [data-z-index-level="statusbar"] {
   z-index: -1000;
 }
@@ -85,10 +90,6 @@
 }
 
 #screen.locked > [data-z-index-level="statusbar"] {
-  z-index: 4096;
-}
-
-#screen:not(.locked) > [data-z-index-level="progress"] {
   z-index: 4096;
 }
 

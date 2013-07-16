@@ -72,7 +72,7 @@ settings = {
  "lockscreen.passcode-lock.timeout": 0,
  "lockscreen.passcode-lock.enabled": False,
  "lockscreen.notifications-preview.enabled": True,
- "lockscreen.enabled": True,
+ "lockscreen.enabled": False,
  "lockscreen.locked": True,
  "lockscreen.unlock-sound.enabled": False,
  "mail.sent-sound.enabled": True,

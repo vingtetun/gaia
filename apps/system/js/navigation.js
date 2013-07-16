@@ -204,10 +204,6 @@ var WindowManager = (function() {
     if (currentHistory) {
      // If someone try to open the application but it is already opened lets
       // not do it and close the homescreen.
-<<<<<<< HEAD
-=======
-      // XXX need to fix dedup for entry points. Bitch.
->>>>>>> 8683302b1f160e5a7b717438e43c5e37d3643f5f
       if (!origin) {
         if (currentHistory.isHomescreen) {
           var previousHistory = navigate[current - 1];

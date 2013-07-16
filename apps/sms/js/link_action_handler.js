@@ -47,14 +47,15 @@
       if (action) {
         switch (action) {
           case 'url-link':
-            activity = {
-              name: 'view',
-              data: {
-                type: 'url',
-                url: dataset.url
-              }
-            };
-            activityInProgress = true;
+            // activity = {
+            //   name: 'view',
+            //   data: {
+            //     type: 'url',
+            //     url: dataset.url
+            //   }
+            // };
+            // activityInProgress = true;
+            window.open(dataset.url);
             break;
           case 'email-link':
             activity = {

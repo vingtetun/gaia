@@ -165,10 +165,8 @@ function init() {
       initDB();
       setView(thumbnailListView);
     } else {
-      console.log('ACTIVATE! show: ', parseInt(window.location.hash.substr(1)));
       setView(fullscreenView);
       files = window.opener.files;
-      console.log('fajls: ', files.length);
       showFile(parseInt(window.location.hash.substr(1)));
     }
      

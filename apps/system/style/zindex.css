@@ -80,16 +80,7 @@
   z-index: 4098;
 }
 
-
-#screen:not(.utility-tray) > [data-z-index-level="statusbar"] {
-  z-index: -1000;
-}
-
-#screen.utility-tray > [data-z-index-level="statusbar"] {
-  z-index: 4096;
-}
-
-#screen.locked > [data-z-index-level="statusbar"] {
+#screen > [data-z-index-level="statusbar"] {
   z-index: 4096;
 }
 

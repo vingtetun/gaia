@@ -36,7 +36,7 @@ var Rocketbar = {
     }, this);
 
     Places.init(function(firstRun) {});
-    
+
     navigator.mozSettings.addObserver('rocketbar.show', function(event) {
       this.open(true);
     }.bind(this));
@@ -203,22 +203,20 @@ var Rocketbar = {
    */
   handleClick: function rocketbar_handleClick(evt) {
     var target = evt.target;
-    if (target.parentNode.nodeName == 'LI')
-      target = target.parentNode;
 
     // If app, launch app
     var manifestURL = target.getAttribute('data-manifest-url');
     if (manifestURL && Applications.installedApps[manifestURL]) {
       Applications.installedApps[manifestURL].launch();
-      this.close(true);
-      return;
     }
+
     // If site, open site in new sheet
     var siteURL = target.getAttribute('data-site-url');
     if (siteURL) {
       WindowManager.openNewSheet(siteURL);
-      this.close(true);
     }
+
+    this.close(true);
   },
 
   /**

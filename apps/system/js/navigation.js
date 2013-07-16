@@ -149,11 +149,32 @@ var WindowManager = (function() {
     if (!app)
       return;
 
+    var manifest = app.manifest;
+    var entryPoints = manifest.entry_points;
+    if (entryPoints/* && manifest.type == 'certified'*/) {
+
+      // Workaround here until the bug (to be filed) is fixed
+      // Basicly, gecko is sending the URL without launch_path sometimes
+      for (var ep in entryPoints) {
+        var currentEp = entryPoints[ep];
+        var path = origin;
+        if (path.indexOf('?') != -1) {
+          path = path.substr(0, path.indexOf('?'));
+        }
+
+        //Remove the origin and / to find if if the url is the entry point
+        if (path.indexOf('/' + ep) == 0 &&
+            (currentEp.launch_path == path)) {
+          origin = origin + currentEp.launch_path;
+          //name = new ManifestHelper(currentEp).name;
+        }
+      }
+    }
     var currentHistory = navigate[current];
     if (currentHistory) {
       // If someone try to open the application but it is already opened lets
       // not do it and close the homescreen.
-      if (!origin) {
+      //if (!origin) {
         if (currentHistory.isHomescreen) {
           var previousHistory = navigate[current - 1];
           if (previousHistory && previousHistory.iframe.getAttribute('mozapp') == manifestURL) {
@@ -166,7 +187,7 @@ var WindowManager = (function() {
             return;
           }
         }
-      }
+      //}
 
       currentHistory.free();
       for (var i = navigate.length - 1; i > current; i--) {
@@ -178,6 +199,7 @@ var WindowManager = (function() {
 
     if (currentHistory.isHomescreen == false)
       current++;
+
 
     navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
@@ -283,7 +305,7 @@ var WindowManager = (function() {
   window.addEventListener('mozChromeEvent', function onChromeEvent(e) {
     if (e.detail.type != 'webapps-launch')
       return;
-    openApp(e.detail.manifestURL);
+    openApp(e.detail.manifestURL, e.detail.url);
     e.preventDefault();
   });
 

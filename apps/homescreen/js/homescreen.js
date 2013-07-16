@@ -17,9 +17,9 @@ const Homescreen = (function() {
     {
       name: '',
       content: [
-        { name: 'Dialer' },
+        { name: 'Phone' },
         { name: 'Messages' },
-        { name: 'People' },
+        { name: 'Contacts' },
         { name: 'Facebook' },
         { name: 'Twitter' },
         { name: 'Music' },
@@ -197,18 +197,7 @@ const Homescreen = (function() {
     //tile.innerHTML += name;
     tile.addEventListener('tap', (function(application, entry) {
       return function() {
-         
-        if (app.manifest.entry_points && app.manifest.entry_points[entry]) {
-          console.log('ENTRY', JSON.stringify(app.manifest.entry_points[entry]));
-          try {
-          application.launch(app.manifest.entry_points[entry]);
-        } catch(e) {
-          console.log('-------------', e);
-        }
-        } else {
-          console.log('NO!ENTRY');
-          application.launch();
-        }
+        application.launch(entry ? entry : null);
         page.removeEventListener('transitionend', runAppTrans);
         setTimeout(function() {
           page.classList.remove('show');

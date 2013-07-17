@@ -184,10 +184,6 @@ var Settings = {
 
     // panel-specific initialization tasks
     switch (panel.id) {
-      case 'display':             // <input type="range"> + brightness control
-        bug344618_polyfill();     // XXX to be removed when bug344618 is fixed
-        this.updateDisplayPanel();
-        break;
       case 'battery':             // full battery status
         Battery.update();
         break;
@@ -546,39 +542,6 @@ var Settings = {
 
     reset(); // preset all fields before opening the dialog
     openDialog(dialogID, submit);
-  },
-
-  updateDisplayPanel: function settings_updateDisplayPanel() {
-    var panel = document.getElementById('display');
-    var settings = Settings.mozSettings;
-    if (!settings || !panel)
-      return;
-
-    var manualBrightness = panel.querySelector('#brightness-manual');
-    var autoBrightness = panel.querySelector('#brightness-auto');
-    var autoBrightnessSetting = 'screen.automatic-brightness';
-
-    // hide "Adjust automatically" if there's no ambient light sensor --
-    // until bug 876496 is fixed, we have to read the `sensors.json' file to
-    // be sure this ambient light sensor is enabled.
-    loadJSON('/resources/sensors.json', function loadSensors(activeSensors) {
-      if (activeSensors.ambientLight) { // I can haz ambient light sensor
-        autoBrightness.hidden = false;
-        settings.addObserver(autoBrightnessSetting, function(event) {
-          manualBrightness.hidden = event.settingValue;
-        });
-        var req = settings.createLock().get(autoBrightnessSetting);
-        req.onsuccess = function brightness_onsuccess() {
-          manualBrightness.hidden = req.result[autoBrightnessSetting];
-        };
-      } else { // no ambient light sensor: force manual brightness setting
-        autoBrightness.hidden = true;
-        manualBrightness.hidden = false;
-        var cset = {};
-        cset[autoBrightnessSetting] = false;
-        settings.createLock().set(cset);
-      }
-    });
   },
 
   loadPanelStylesheetsIfNeeded: function settings_loadPanelStylesheetsIN() {

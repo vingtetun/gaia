@@ -16,6 +16,33 @@ var Wallpaper = {
     initSettingsRange();
     fakeSelector();
     bug344618_polyfill();
+    this.updateDisplayPanel();
+  },
+
+  updateDisplayPanel: function() {
+    var manualBrightness = document.querySelector('#brightness-manual');
+    var autoBrightness = document.querySelector('#brightness-auto');
+
+    // hide "Adjust automatically" if there's no ambient light sensor --
+    // until bug 876496 is fixed, we have to read the `sensors.json' file to
+    // be sure this ambient light sensor is enabled.
+    loadJSON('/resources/sensors.json', function loadSensors(activeSensors) {
+      if (activeSensors.ambientLight) { // I can haz ambient light sensor
+        autoBrightness.hidden = false;
+        Accessor.sync('screen.automatic-brightness', function(isActive) {
+          manualBrightness.hidden = isActive;
+        });
+        Accessor.get('screen.automatic-brightness', function(isActive) {
+          manualBrightness.hidden = isActive;
+        });
+      } else { // no ambient light sensor: force manual brightness setting
+        autoBrightness.hidden = true;
+        manualBrightness.hidden = false;
+        Accessor.set({
+          'screen.automatic-brightness': false
+        });
+      }
+    });
   },
 
   setWallpaper: function wallpaper_setWallpaper(wallpaper_path) {

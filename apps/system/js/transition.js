@@ -11,6 +11,7 @@ var TransitionManager = (function() {
   }
 
   var statusbar = document.getElementById('statusbar');
+  var progress = document.getElementById('progress');
   var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
     var previous = current;
@@ -24,20 +25,7 @@ var TransitionManager = (function() {
       prevWrapper.classList.add('transitioning');
     }
     curWrapper.classList.add('transitioning');
-
-    function afterTransition() {
-      if (prevWrapper) {
-        prevWrapper.classList.remove('transitioning');
-        prevWrapper.style.MozTransition = '';
-        prevWrapper.classList.remove('shadow');
-        prevWrapper.style.zIndex = '';
-      }
-
-      curWrapper.style.MozTransition = '';
-      curWrapper.classList.remove('shadow');
-      curWrapper.classList.remove('transitioning');
-      curWrapper.style.zIndex = '';
-    }
+    progress.classList.add('freeze');
 
     var partial = !!curWrapper.style.MozTransition;
     if (partial) {
@@ -77,7 +65,19 @@ var TransitionManager = (function() {
 
       setTimeout(function nextTick() {
         statusbar.classList[current.isHomescreen ? 'add' : 'remove']('displayed');
-        afterTransition();
+        progress.classList.remove('freeze');
+
+        if (prevWrapper) {
+          prevWrapper.classList.remove('transitioning');
+          prevWrapper.style.MozTransition = '';
+          prevWrapper.classList.remove('shadow');
+          prevWrapper.style.zIndex = '';
+        }
+
+        curWrapper.style.MozTransition = '';
+        curWrapper.classList.remove('shadow');
+        curWrapper.classList.remove('transitioning');
+        curWrapper.style.zIndex = '';
       });
     });
   });

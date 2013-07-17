@@ -39,73 +39,20 @@ var Contacts = (function() {
   var checkUrl = function checkUrl() {
     var hasParams = window.location.hash.split('?');
     var hash = hasParams[0];
-    var sectionId = hash.substr(1, hash.length) || '';
+    var sectionId = window.location.pathname.split('/').pop();//hash.substr(1, hash.length) || '';
     var cList = contacts.List;
     var params = hasParams.length > 1 ?
       extractParams(hasParams[1]) : -1;
 
     switch (sectionId) {
-      case 'view-contact-details':
-        initContactsList();
-        initDetails(function onInitDetails() {
-          if (params == -1 || !('id' in params)) {
-            console.log('Param missing');
-            return;
-          }
-          var id = params['id'];
-          cList.getContactById(id, function onSuccess(savedContact) {
-            currentContact = savedContact;
-            contactsDetails.render(currentContact, TAG_OPTIONS);
-            if (params['tel'])
-              contactsDetails.reMark('tel', params['tel']);
-            navigation.go(sectionId, 'right-left');
-            showApp();
-          }, function onError() {
-            console.error('Error retrieving contact');
-          });
-        });
-        break;
-      case 'view-contact-form':
+      case 'new-contact.html':
         initForm(function onInitForm() {
-          if (params == -1 || !('id' in params)) {
-            contactsForm.render(params, goToForm);
-            showApp();
-          } else {
-            // Editing existing contact
-            if ('id' in params) {
-              var id = params['id'];
-              cList.getContactById(id, function onSuccess(savedContact) {
-                currentContact = savedContact;
-                // Check if we have extra parameters to render
-                if ('extras' in params) {
-                  addExtrasToContact(params['extras']);
-                }
-                contactsForm.render(currentContact, goToForm,
-                                    null, params['fromUpdateActivity']);
-                showApp();
-              }, function onError() {
-                console.log('Error retrieving contact to be edited');
-                contactsForm.render(null, goToForm);
-                showApp();
-              });
-            }
-          }
+          contactsForm.render(params, goToForm);
+          //showApp();
         });
         break;
-
-      case 'add-parameters':
-        initContactsList();
-        initForm(function onInitForm() {
-          navigation.home();
-          if (ActivityHandler.currentlyHandling) {
-            selectList(params, true);
-          }
-          showApp();
-        });
-        break;
-
-      default:
-        showApp();
+      // default:
+      //   showApp();
     }
 
   };
@@ -205,6 +152,8 @@ var Contacts = (function() {
     initContainers();
     initEventListeners();
     window.addEventListener('hashchange', checkUrl);
+    
+    checkUrl();
   };
 
   var initContactsList = function initContactsList() {
@@ -650,7 +599,7 @@ var Contacts = (function() {
       '#cancel_activity': handleCancel, // Activity (any) cancellation
       '#cancel-edit': handleCancel, // Cancel edition
       '#save-button': saveContact,
-      '#add-contact-button': showAddContact,
+      '#add-contact-button': function(){ window.open('new-contact.html')},
       '#settings-button': showSettings, // Settings related
       '#cancel-search': exitSearchMode, // Search related
       '#search-start': [

@@ -8,13 +8,13 @@ var About = {
     initDataName();
     fakeSelector();
     document.getElementById('check-update-now').onclick = this.checkForUpdates;
-    this.loadHardwareInfo();
-    // this.loadGaiaCommit();
-    this.loadLastUpdated();
     document.getElementById('more').addEventListener('click', function(e) {
-      window.open('device-information-more.html');
       e.preventDefault();
+      window.open('device-information-more.html');
     });
+    // this.loadHardwareInfo();
+    // this.loadGaiaCommit();
+    // this.loadLastUpdated();
   },
 
   loadGaiaCommit: function about_loadGaiaCommit() {

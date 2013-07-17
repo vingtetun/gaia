@@ -424,13 +424,15 @@ var Rocketbar = {
     'app://homescreen.gaiamobile.org/manifest.webapp',
     'app://system.gaiamobile.org/manifest.webapp',
     'app://image-uploader.gaiamobile.org/manifest.webapp',
+    'app://browser.gaiamobile.org/manifest.webapp',
     'http://keyboard.gaiamobile.org:8080/manifest.webapp',
     'http://wallpaper.gaiamobile.org:8080/manifest.webapp',
     'http://bluetooth.gaiamobile.org:8080/manifest.webapp',
     'http://pdfjs.gaiamobile.org:8080/manifest.webapp',
     'http://homescreen.gaiamobile.org:8080/manifest.webapp',
     'http://system.gaiamobile.org:8080/manifest.webapp',
-    'http://image-uploader.gaiamobile.org/manifest.webapp']
+    'http://image-uploader.gaiamobile.org/manifest.webapp',
+    'http://browser.gaiamobile.org:8080/manifest.webapp']
 };
 
 window.addEventListener('load', function rocketbar_onLoad() {

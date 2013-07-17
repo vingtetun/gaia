@@ -293,6 +293,7 @@ var WindowManager = (function() {
 
     var cover = document.createElement('div');
     cover.className = 'cover';
+    cover.style.display = 'block';
     wrapper.appendChild(cover);
 
     var backButton = document.createElement('button');

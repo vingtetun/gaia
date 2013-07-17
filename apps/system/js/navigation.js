@@ -96,6 +96,12 @@ var WindowManager = (function() {
       setting.onerror = function errorRetrievingHomescreenURL() {
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
+
+      // Tell to RIL that we are ready to receive messages.
+      var evt = new CustomEvent('mozContentEvent', {
+        bubbles: true, cancelable: false,
+        detail: { type: 'system-message-listener-ready' } });
+      window.dispatchEvent(evt);
     },
     goBack: function() {
       navigate[current].free();

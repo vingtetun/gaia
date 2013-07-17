@@ -23,12 +23,19 @@ var TransitionManager = (function() {
     var prevWrapper = previous ? previous.wrapper : null;
     var curWrapper = current.wrapper;
 
-    if (prevWrapper) {
-      prevWrapper.classList.add('transitioning');
-    }
-    curWrapper.classList.add('transitioning');
     progress.classList.add('freeze');
     rocketbar.classList.add('freeze');
+
+    if (prevWrapper) {
+      prevWrapper.dataset.previous = forward;
+      prevWrapper.dataset.next = !forward;
+      prevWrapper.classList.add('transitioning');
+    }
+
+    curWrapper.dataset.previous = !forward;
+    curWrapper.dataset.next = forward;
+    curWrapper.classList.add('transitioning');
+    curWrapper.classList[forward ? 'add' : 'remove']('shadow');
 
     var partial = !!curWrapper.style.MozTransition;
     if (partial) {
@@ -37,22 +44,13 @@ var TransitionManager = (function() {
         delete prevWrapper.dataset.current;
       }
       curWrapper.dataset.current = true;
-      prevWrapper.dataset.previous = forward;
-      prevWrapper.dataset.next = !forward;
     } else {
-      if (current.isHomescreen) {
-        curWrapper.dataset.previous = !forward;
-        curWrapper.dataset.next = forward;
-      }
-
       // Making sure we transition for the right position
       curWrapper.offsetLeft; // forcing reflow
       setTimeout(function nextTick() {
         if (prevWrapper) {
           prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
           delete prevWrapper.dataset.current;
-          prevWrapper.dataset.previous = forward;
-          prevWrapper.dataset.next = !forward;
         }
 
         curWrapper.style.MozTransition = 'transform 0.4s linear';

@@ -667,15 +667,17 @@ History.prototype = {
   _swapWithCover: function history_swapWithCover() {
     var iframe = this.iframe;
 
-    this.cover.style.display = 'block';
-    if ('setVisible' in iframe) {
-      iframe.setVisible(false);
-    }
+    setTimeout((function bitLater() {
+      this.cover.style.display = 'block';
+      if ('setVisible' in iframe) {
+        iframe.setVisible(false);
+      }
 
-    // Wow, the window was awaken while we were screenshoting
-    if (this._awake) {
-      this.wakeUp();
-    }
+      // Wow, the window was awaken while we were screenshoting
+      if (this._awake) {
+        this.wakeUp();
+      }
+    }).bind(this), 400); // The duration of the sheet transition
   },
 
   wakeUp: function history_wakeUp() {

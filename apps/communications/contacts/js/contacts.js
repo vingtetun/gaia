@@ -71,6 +71,9 @@ var Contacts = (function() {
              });
            });
            break;
+        case 'settings.html' :
+          showSettings();
+          break;
       // default:
       //   showApp();
     }
@@ -439,6 +442,8 @@ var Contacts = (function() {
       contactTag.dispatchEvent(valueModifiedEvent);
       handleBack();
     });
+    console.log('elo');
+    window.close();
   };
 
   var handleCustomTag = function handleCustomTag() {
@@ -593,7 +598,7 @@ var Contacts = (function() {
     initSettings(function onSettingsReady() {
       // The number of FB Friends has to be recalculated
       contacts.Settings.refresh();
-      navigation.go('view-settings', 'popup');
+      //navigation.go('view-settings', 'popup');
     });
   };
 
@@ -622,7 +627,7 @@ var Contacts = (function() {
       '#cancel-edit': handleCancel, // Cancel edition
       '#save-button': saveContact,
       '#add-contact-button': function(){ window.open('new-contact.html')},
-      '#settings-button': showSettings, // Settings related
+      '#settings-button': function(){ window.open('settings.html')}, //showSettings, // Settings related
       '#cancel-search': exitSearchMode, // Search related
       '#search-start': [
         {
@@ -633,10 +638,10 @@ var Contacts = (function() {
       '#details-back': handleDetailsBack, // Details
       '#edit-contact-button': showEditContact,
       '#contact-form button[data-field-type]': newField,
-      '#settings-close': hideSettings,
+      '#settings-close': function(){ window.close(); } ,//hideSettings,
       '#toggle-favorite': toggleFavorite,
       'button[type="reset"]': stopPropagation,
-      '#settings-done': handleSelectTagDone,
+      '#settings-done':   handleSelectTagDone,
       '#settings-cancel': handleBack,
       // Bug 832861: Click event can't be synthesized correctly on customTag by
       // mouse_event_shim due to Gecko bug.  Use ontouchend here.

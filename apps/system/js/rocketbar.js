@@ -106,19 +106,25 @@ var Rocketbar = {
    * Close the rocketbar.
    *
    * @param {boolean} evenIfFocused Close rocketbar even when focussed if true.
+   * @param {function} callback Called after the transition
    */
-  close: function rocketbar_close(evenIfFocused) {
+  close: function rocketbar_close(evenIfFocused, callback) {
+    this.progress.classList.remove('loading');
+
     var focus = (this.input == document.activeElement);
     if (!focus || evenIfFocused) {
-      this.bar.classList.remove('open');
       this.results.classList.remove('open');
       this.input.blur();
-    }
-  },
 
-  hide: function rb_hide() {
-    this.progress.classList.remove('loading');
-    this.close(false);
+      var bar = this.bar;
+      bar.classList.remove('open');
+      bar.addEventListener('transitionend', function trWait() {
+        bar.removeEventListener('transitionend', trWait);
+        if (callback) {
+          callback();
+        }
+      });
+    }
   },
 
   currentWindow: null,
@@ -204,19 +210,19 @@ var Rocketbar = {
   handleClick: function rocketbar_handleClick(evt) {
     var target = evt.target;
 
-    // If app, launch app
-    var manifestURL = target.getAttribute('data-manifest-url');
-    if (manifestURL && Applications.installedApps[manifestURL]) {
-      Applications.installedApps[manifestURL].launch();
-    }
+    this.close(true, function() {
+      // If app, launch app
+      var manifestURL = target.getAttribute('data-manifest-url');
+      if (manifestURL && Applications.installedApps[manifestURL]) {
+        Applications.installedApps[manifestURL].launch();
+      }
 
-    // If site, open site in new sheet
-    var siteURL = target.getAttribute('data-site-url');
-    if (siteURL) {
-      WindowManager.openNewSheet(siteURL);
-    }
-
-    this.close(true);
+      // If site, open site in new sheet
+      var siteURL = target.getAttribute('data-site-url');
+      if (siteURL) {
+        WindowManager.openNewSheet(siteURL);
+      }
+    });
   },
 
   /**
@@ -227,7 +233,6 @@ var Rocketbar = {
   handleSubmit: function rocketbar_handleSubmit(evt) {
     evt.preventDefault();
 
-    this.close(true);
     var input = this.input.value;
 
     // No protocol, could be a search term
@@ -242,7 +247,9 @@ var Rocketbar = {
       input = 'http://' + input;
     }
 
-    WindowManager.openNewSheet(input);
+    this.close(true, function() {
+      WindowManager.openNewSheet(input);
+    });
   },
 
   /**
@@ -300,7 +307,7 @@ var Rocketbar = {
     }
 
     if (!history.loading) {
-      this.hide();
+      this.close(false);
     }
     this.setLoading(history.loading);
     history.ontitlechange = this.setTitle.bind(this);
@@ -357,7 +364,7 @@ var Rocketbar = {
         this.close(false);
       }).bind(this), 5000);
     } else {
-      this.hide();
+      this.close(false);
     }
   },
 

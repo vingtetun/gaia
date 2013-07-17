@@ -273,7 +273,7 @@ contacts.List = (function() {
   var renderContact = function renderContact(contact, fbContacts) {
     contact = refillContactData(contact);
     var contactContainer = document.createElement('li');
-    contactContainer.dataset.uuid = contact.id;
+    //contactContainer.dataset.uuid = contact.id;
     var fbUid = getFbUid(contact);
     if (fbUid) {
       contactContainer.dataset.fbUid = fbUid;
@@ -297,6 +297,11 @@ contacts.List = (function() {
     if (contact.category || contact.photo) {
       contactsPhoto.push(contact.id);
     }
+    
+    contactContainer.addEventListener('click', function(e){
+      window.open('contact-details.html?id=' + contact.id);
+      e.preventDefault();
+    })
     return contactContainer;
   };
 

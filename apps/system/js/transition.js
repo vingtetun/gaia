@@ -12,6 +12,8 @@ var TransitionManager = (function() {
 
   var statusbar = document.getElementById('statusbar');
   var progress = document.getElementById('progress');
+  var rocketbar = document.getElementById('rocketbar');
+
   var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
     var previous = current;
@@ -26,6 +28,7 @@ var TransitionManager = (function() {
     }
     curWrapper.classList.add('transitioning');
     progress.classList.add('freeze');
+    rocketbar.classList.add('freeze');
 
     var partial = !!curWrapper.style.MozTransition;
     if (partial) {
@@ -66,6 +69,7 @@ var TransitionManager = (function() {
       setTimeout(function nextTick() {
         statusbar.classList[current.isHomescreen ? 'add' : 'remove']('displayed');
         progress.classList.remove('freeze');
+        rocketbar.classList.remove('freeze');
 
         if (prevWrapper) {
           prevWrapper.classList.remove('transitioning');

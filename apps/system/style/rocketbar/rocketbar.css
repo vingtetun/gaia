@@ -8,7 +8,11 @@
 
   transform: translateY(-100%);
 
-  transition: transform 0.3s linear 0.1s; /* delay to prevent jumping while redirecting */
+  transition: transform 0.3s linear 0.1s; /* the delay is preventing jumping while redirecting */
+}
+
+#rocketbar.open.freeze {
+  transform: translateY(-100%);
 }
 
 #rocketbar.open {

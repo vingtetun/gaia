@@ -13,7 +13,7 @@ var Contacts = (function() {
   var navigation = new navigationStack('view-contacts-list');
 
   var goToForm = function edit() {
-    navigation.go('view-contact-form', 'popup');
+    //navigation.go('view-contact-form', 'popup');
   };
 
   var contactTag,
@@ -37,7 +37,7 @@ var Contacts = (function() {
   var contactsForm;
 
   var checkUrl = function checkUrl() {
-    var hasParams = window.location.hash.split('?');
+    var hasParams = window.location.toString().split('?');
     var hash = hasParams[0];
     var sectionId = window.location.pathname.split('/').pop();//hash.substr(1, hash.length) || '';
     var cList = contacts.List;
@@ -51,6 +51,26 @@ var Contacts = (function() {
           //showApp();
         });
         break;
+        case 'contact-details.html':
+           initContactsList();
+           initDetails(function onInitDetails() {
+             if (params == -1 || !('id' in params)) {
+               console.log('Param missing');
+               return;
+             }
+             var id = params['id'];
+             cList.getContactById(id, function onSuccess(savedContact) {
+               currentContact = savedContact;
+               contactsDetails.render(currentContact, TAG_OPTIONS);
+               if (params['tel'])
+                 contactsDetails.reMark('tel', params['tel']);
+               //navigation.go(sectionId, 'right-left');
+               showApp();
+             }, function onError() {
+               console.error('Error retrieving contact');
+             });
+           });
+           break;
       // default:
       //   showApp();
     }
@@ -138,7 +158,7 @@ var Contacts = (function() {
       asyncScriptsLoaded = true;
       window.removeEventListener('asyncScriptsLoaded', onAsyncLoad);
       contactsList.initAlphaScroll();
-      checkUrl();
+      //checkUrl();
 
       PerformanceTestingHelper.dispatch('init-finished');
 
@@ -151,9 +171,9 @@ var Contacts = (function() {
     initLanguages();
     initContainers();
     initEventListeners();
-    window.addEventListener('hashchange', checkUrl);
+    //window.addEventListener('hashchange', checkUrl);
     
-    checkUrl();
+    //checkUrl();
   };
 
   var initContactsList = function initContactsList() {
@@ -316,6 +336,7 @@ var Contacts = (function() {
       background = 'url(' + URL.createObjectURL(photo) + ')';
     }
     dest.style.backgroundImage = background;
+    //dest.style.backgroundColor = '#f0f';
   };
 
   // Checks if an object fields are empty, by empty means
@@ -516,8 +537,9 @@ var Contacts = (function() {
         contactsDetails = contacts.Details;
         contactsDetails.init();
         callback();
+        detailsReady = true;
       });
-      detailsReady = true;
+      
     }
   };
 

@@ -686,17 +686,22 @@ History.prototype = {
       iframe.setVisible(true);
     }
 
-    if (!('addNextPaintListener' in iframe)) {
-      return;
-    }
-
     var cover = this.cover;
-    iframe.addNextPaintListener(function paintWait() {
-      iframe.removeNextPaintListener(paintWait);
-
+    var removeCoverWhenPainted = function() {
       setTimeout(function bitLater() {
         cover.style.display = '';
       }, 250);
+    }
+
+    if (!('addNextPaintListener' in iframe)) {
+      removeCoverWhenPainted();
+      return;
+    }
+
+
+    iframe.addNextPaintListener(function paintWait() {
+      iframe.removeNextPaintListener(paintWait);
+      removeCoverWhenPainted();
     });
 
     // We invalidate the screenshot once the sheet has been displayed

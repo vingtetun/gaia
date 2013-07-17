@@ -208,7 +208,7 @@ var WindowManager = (function() {
         }
 
         //Remove the origin and / to find if if the url is the entry point
-        if (path.indexOf('/' + ep) == 0 &&
+        if (path.indexOf('/' + ep) === 0 &&
             (currentEp.launch_path == path)) {
           origin = origin + currentEp.launch_path;
         }
@@ -257,7 +257,7 @@ var WindowManager = (function() {
       pruneForwardNavigation();
     }
 
-    if (navigate[current].isHomescreen == false)
+    if (navigate[current].isHomescreen === false)
       current++;
 
     navigate[current] = new History(origin, 'remote');
@@ -284,7 +284,7 @@ var WindowManager = (function() {
       iframe.setAttribute('mozasyncpanzoom', 'true');
     }
 
-    var wrapper = wrap(iframe)
+    var wrapper = wrap(iframe);
     appendWindow(wrapper);
 
     iframe.src = history.location;
@@ -462,6 +462,7 @@ function History(origin, type) {
   this.type = type;
   this.isHomescreen = false;
   this.isApp = (origin.indexOf('app://') != -1);
+  this.painted = false;
 
   this.wrapper = null;
   this.iframe = null;
@@ -484,6 +485,7 @@ History.prototype = {
     iframe.addEventListener('mozbrowserloadend', this);
     iframe.addEventListener('mozbrowserclose', this);
     iframe.addEventListener('mozbrowsererror', this);
+    iframe.addEventListener('mozbrowserfirstpaint', this);
   },
 
   detach: function history_detach(iframe) {
@@ -493,6 +495,7 @@ History.prototype = {
     iframe.removeEventListener('mozbrowserloadend', this);
     iframe.removeEventListener('mozbrowserclose', this);
     iframe.removeEventListener('mozbrowsererror', this);
+    iframe.removeEventListener('mozbrowserfirstpaint', this);
 
     this.wrapper = null;
     this.iframe = null;
@@ -511,6 +514,7 @@ History.prototype = {
 
       case 'locationchange':
         this.location = evt.detail;
+        this.painted = false;
 
         if (this.onlocationchange) {
           this.onlocationchange(this.location);
@@ -550,6 +554,14 @@ History.prototype = {
         }
         break;
 
+      case 'firstpaint':
+        this.painted = true;
+
+        if (this.onfirstpaint) {
+          this.onfirstpaint();
+        }
+        break;
+
       case 'close':
       case 'error':
         // XXX This is a bit rude with error but that's ok for now
@@ -563,6 +575,9 @@ History.prototype = {
             WindowManager.goLast();
           }, 1000);
         }
+        break;
+
+      default:
         break;
     }
   },
@@ -612,6 +627,7 @@ History.prototype = {
     this.onstatuschange = null;
     this.oncangoback = null;
     this.oncangoforward = null;
+    this.onfirstpaint = null;
 
     this._awake = false;
     if (!this.wrapper || !this.iframe) {
@@ -621,7 +637,7 @@ History.prototype = {
     if (this._screenshotInvalidationID) {
       clearTimeout(this._screenshotInvalidationID);
       this._screenshotInvalidationID = null;
-    };
+    }
 
     var iframe = this.iframe;
 
@@ -677,7 +693,7 @@ History.prototype = {
       if (this._awake) {
         this.wakeUp();
       }
-    }).bind(this), 400); // The duration of the sheet transition
+    }).bind(this), 1000); // The duration of the sheet transition
   },
 
   wakeUp: function history_wakeUp() {
@@ -719,6 +735,7 @@ History.prototype = {
   onlocationchange: null,
   onstatuschange: null,
   oncangoback: null,
-  oncangoforward: null
+  oncangoforward: null,
+  onfirstpaint: null
 };
 

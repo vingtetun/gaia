@@ -47,7 +47,7 @@ var TransitionManager = (function() {
     } else {
       // Making sure we transition for the right position
       curWrapper.offsetLeft; // forcing reflow
-      setTimeout(function nextTick() {
+      var nextTick = function() {
         if (prevWrapper) {
           prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
           delete prevWrapper.dataset.current;
@@ -55,7 +55,18 @@ var TransitionManager = (function() {
 
         curWrapper.style.MozTransition = 'transform 0.4s linear';
         curWrapper.dataset.current = true;
-      });
+      }
+
+      // Let's give a little time for the sheets to come up.
+      if (current.painted) {
+        nextTick();
+      } else {
+        current.onfirstpaint = nextTick;
+        setTimeout(function() {
+          current.onfirstpaint = null;
+          nextTick();
+        }, 600);
+      }
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {

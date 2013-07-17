@@ -49,12 +49,13 @@ var TransitionManager = (function() {
       prevWrapper.dataset.previous = forward;
       prevWrapper.dataset.next = !forward;
     } else {
-      // Making sure we transition for the right position
       if (current.isHomescreen) {
         curWrapper.dataset.previous = !forward;
         curWrapper.dataset.next = forward;
       }
 
+      // Making sure we transition for the right position
+      curWrapper.offsetLeft; // forcing reflow
       setTimeout(function nextTick() {
         if (prevWrapper) {
           prevWrapper.style.MozTransition = 'transform 0.2s linear 0.2s, opacity 0.2s linear 0.2s';
@@ -65,7 +66,7 @@ var TransitionManager = (function() {
 
         curWrapper.style.MozTransition = 'transform 0.4s linear';
         curWrapper.dataset.current = true;
-      }, 100);
+      });
     }
 
     curWrapper.addEventListener('transitionend', function animWait(e) {

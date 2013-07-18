@@ -15,7 +15,8 @@
 #                                                                             #
 # REPORTER    : Mocha reporter to use for test output.                        #
 #                                                                             #
-# GAIA_APP_SRCDIRS : list of directories to search for web apps               #
+# GAIA_APP_CONFIG : The app.list file representing applications to include in #
+#                   Gaia                                                      #
 #                                                                             #
 ###############################################################################
 -include local.mk
@@ -29,9 +30,10 @@ GAIA_DOMAIN?=gaiamobile.org
 DEBUG?=0
 PRODUCTION?=0
 GAIA_OPTIMIZE?=0
-HIDPI?=0
+GAIA_DEV_PIXELS_PER_PX?=1
 DOGFOOD?=0
 TEST_AGENT_PORT?=8789
+GAIA_APP_TARGET?=engineering
 
 # Enable compatibility to run in Firefox Desktop
 DESKTOP?=$(DEBUG)
@@ -70,15 +72,12 @@ endif
 
 REPORTER?=Spec
 
-GAIA_APP_SRCDIRS?=apps test_apps showcase_apps
 GAIA_INSTALL_PARENT?=/data/local
 ADB_REMOUNT?=0
 
-GAIA_ALL_APP_SRCDIRS=$(GAIA_APP_SRCDIRS)
-
 ifeq ($(MAKECMDGOALS), demo)
 GAIA_DOMAIN=thisdomaindoesnotexist.org
-GAIA_APP_SRCDIRS=apps showcase_apps
+GAIA_APP_TARGET=demo
 else ifeq ($(MAKECMDGOALS), dogfood)
 DOGFOOD=1
 else ifeq ($(MAKECMDGOALS), production)
@@ -93,31 +92,17 @@ endif
 ifeq ($(PRODUCTION), 1)
 GAIA_OPTIMIZE=1
 B2G_SYSTEM_APPS=1
-GAIA_APP_SRCDIRS=apps
+GAIA_APP_TARGET=production
 ADB_REMOUNT=1
 endif
 
 ifeq ($(DOGFOOD), 1)
-GAIA_APP_SRCDIRS+=dogfood_apps
+GAIA_APP_TARGET=dogfood
 endif
 
 ifeq ($(B2G_SYSTEM_APPS), 1)
 GAIA_INSTALL_PARENT=/system/b2g
 endif
-
-ifneq ($(GAIA_OUTOFTREE_APP_SRCDIRS),)
-  $(shell mkdir -p outoftree_apps \
-    $(foreach dir,$(GAIA_OUTOFTREE_APP_SRCDIRS),\
-      $(foreach appdir,$(wildcard $(dir)/*),\
-        && ln -sf $(appdir) outoftree_apps/)))
-  GAIA_APP_SRCDIRS += outoftree_apps
-endif
-
-GAIA_LOCALES_PATH?=locales
-LOCALES_FILE?=shared/resources/languages.json
-GAIA_LOCALE_SRCDIRS=shared $(GAIA_APP_SRCDIRS)
-GAIA_DEFAULT_LOCALE?=en-US
-GAIA_INLINE_LOCALES?=1
 
 ###############################################################################
 # The above rules generate the profile/ folder and all its content.           #
@@ -160,20 +145,25 @@ ifeq (${SYS}/${ARCH},Darwin/i386)
 ARCH=x86_64
 endif
 SEP=/
+SEP_FOR_SED=/
 ifneq (,$(findstring MINGW32_,$(SYS)))
 CURDIR:=$(shell pwd -W | sed -e 's|/|\\\\|g')
 SEP=\\
+SEP_FOR_SED=\\\\
 # Mingw mangle path and append c:\mozilla-build\msys\data in front of paths
 MSYS_FIX=/
+endif
+
+ifndef GAIA_APP_CONFIG
+GAIA_APP_CONFIG=build$(SEP)apps-$(GAIA_APP_TARGET).list
 endif
 
 ifndef GAIA_DISTRIBUTION_DIR
   GAIA_DISTRIBUTION_DIR := $(CURDIR)$(SEP)distribution
 else
 	ifneq (,$(findstring MINGW32_,$(SYS)))
-		GAIA_DISTRIBUTION_DIR := $(join \
-			$(filter %:,$(subst :,: ,$GAIA_DISTRIBUTION_DIR)),\
-			$(realpath $(filter-out %:,$(subst :,: ,$GAIA_DISTRIBUTION_DIR))))
+		GAIA_DISTRIBUTION_DIR := $(shell pushd $(GAIA_DISTRIBUTION_DIR) > /dev/null; \
+			pwd -W | sed 's|/|\\\\|g'; popd > /dev/null;)
 	else
 		GAIA_DISTRIBUTION_DIR := $(realpath $(GAIA_DISTRIBUTION_DIR))
 	endif
@@ -183,21 +173,63 @@ SETTINGS_PATH := build/custom-settings.json
 ifdef GAIA_DISTRIBUTION_DIR
 	DISTRIBUTION_SETTINGS := $(realpath $(GAIA_DISTRIBUTION_DIR))$(SEP)settings.json
 	DISTRIBUTION_CONTACTS := $(realpath $(GAIA_DISTRIBUTION_DIR))$(SEP)contacts.json
+	DISTRIBUTION_APP_CONFIG := $(realpath $(GAIA_DISTRIBUTION_DIR))$(SEP)apps.list
 	ifneq ($(wildcard $(DISTRIBUTION_SETTINGS)),)
 		SETTINGS_PATH := $(DISTRIBUTION_SETTINGS)
 	endif
 	ifneq ($(wildcard $(DISTRIBUTION_CONTACTS)),)
 		CONTACTS_PATH := $(DISTRIBUTION_CONTACTS)
 	endif
+	ifneq ($(wildcard $(DISTRIBUTION_APP_CONFIG)),)
+		GAIA_APP_CONFIG := $(DISTRIBUTION_APP_CONFIG)
+	endif
 endif
 
-# Add apps from customization package
-ifdef GAIA_DISTRIBUTION_DIR
-  DISTRIBUTION_APPS := $(realpath $(GAIA_DISTRIBUTION_DIR))$(SEP)apps
-  ifneq ($(wildcard $(DISTRIBUTION_APPS)),)
-      GAIA_APP_SRCDIRS += $(DISTRIBUTION_APPS)
-  endif
+# Read the file specified in $GAIA_APP_CONFIG and turn them into $GAIA_APPDIRS,
+# i.e., absolute path of each app.
+# Path ending in wildcard (*) will be expanded, non-absolute path in the list will be matched against
+# $GAIA_DISTRIBUTION_DIR and $GAIA_DIR.
+# See MDN for more information.
+#
+# explain shell magic here:
+# "$${LINE\#$${LINE%?}}": get last character
+# sed 's/.\{2\}$$//': remove last two character
+
+ifdef GAIA_APP_SRCDIRS
+$(shell printf "`echo $(GAIA_APP_SRCDIRS) | sed 's| |/*\\\n|g'`/*\n" > /tmp/gaia-apps-temp.list)
+GAIA_APP_CONFIG := /tmp/gaia-apps-temp.list
+$(warning GAIA_APP_SRCDIRS is deprecated, please use GAIA_APP_CONFIG)
 endif
+
+GAIA_APPDIRS=$(shell while read LINE; do \
+	if [ "$${LINE\#$${LINE%?}}" = "*" ]; then \
+		srcdir="`echo "$$LINE" | sed 's/.\{2\}$$//'`"; \
+		[ -d $(CURDIR)$(SEP)$$srcdir ] && find $(CURDIR)$(SEP)$$srcdir -mindepth 1 -maxdepth 1 -type d | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
+		[ -d $(GAIA_DISTRIBUTION_DIR)$(SEP)$$srcdir ] && find $(GAIA_DISTRIBUTION_DIR)$(SEP)$$srcdir -mindepth 1 -maxdepth 1 -type d | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
+	else \
+    if [ -d "$(GAIA_DISTRIBUTION_DIR)$(SEP)$$LINE" ]; then \
+      echo "$(GAIA_DISTRIBUTION_DIR)$(SEP)$$LINE" | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
+    elif [ -d "$(CURDIR)$(SEP)$$LINE" ]; then \
+		  echo "$(CURDIR)$(SEP)$$LINE" | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
+    elif [ -d "$$LINE" ]; then \
+      echo "$$LINE" | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
+    fi \
+	fi \
+done < $(GAIA_APP_CONFIG))
+
+ifneq ($(GAIA_OUTOFTREE_APP_SRCDIRS),)
+  $(shell mkdir -p outoftree_apps \
+    $(foreach dir,$(GAIA_OUTOFTREE_APP_SRCDIRS),\
+      $(foreach appdir,$(wildcard $(dir)/*),\
+        && ln -sf $(appdir) outoftree_apps/)))
+endif
+
+GAIA_LOCALES_PATH?=locales
+LOCALES_FILE?=shared/resources/languages.json
+GAIA_LOCALE_SRCDIRS=shared $(GAIA_APPDIRS)
+GAIA_DEFAULT_LOCALE?=en-US
+GAIA_INLINE_LOCALES?=1
+GAIA_CONCAT_LOCALES?=1
 
 ifeq ($(SYS),Darwin)
 MD5SUM = md5 -r
@@ -236,7 +268,7 @@ TEST_DIRS ?= $(CURDIR)/tests
 
 # Generate profile/
 
-$(PROFILE_FOLDER): multilocale applications-data preferences app-makefiles test-agent-config offline contacts extensions install-xulrunner-sdk $(PROFILE_FOLDER)/settings.json create-default-data
+$(PROFILE_FOLDER): multilocale applications-data preferences app-makefiles test-agent-config offline contacts extensions install-xulrunner-sdk install-git-hook $(PROFILE_FOLDER)/settings.json create-default-data $(PROFILE_FOLDER)/installed-extensions.json
 	@echo "Profile Ready: please run [b2g|firefox] -profile $(CURDIR)$(SEP)$(PROFILE_FOLDER)"
 
 LANG=POSIX # Avoiding sort order differences between OSes
@@ -279,9 +311,9 @@ endif
 endif
 
 app-makefiles:
-	@for d in ${GAIA_APP_SRCDIRS}; \
+	@for d in ${GAIA_APPDIRS}; \
 	do \
-		for mfile in `find $$d -mindepth 2 -maxdepth 2 -name "Makefile"` ;\
+		for mfile in `find $$d -mindepth 1 -maxdepth 1 -name "Makefile"` ;\
 		do \
 			make -C `dirname $$mfile`; \
 		done; \
@@ -364,7 +396,7 @@ reference-workload-x-heavy:
 
 # The install-xulrunner target arranges to get xulrunner downloaded and sets up
 # some commands for invoking it. But it is platform dependent
-XULRUNNER_SDK_URL=http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2012/09/2012-09-20-03-05-43-mozilla-central/xulrunner-18.0a1.en-US.
+XULRUNNER_SDK_URL=http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2013/06/2013-06-11-03-11-40-mozilla-central/xulrunner-24.0a1.en-US.
 
 ifeq ($(SYS),Darwin)
 # For mac we have the xulrunner-sdk so check for this directory
@@ -377,8 +409,8 @@ else
 # 64-bit
 XULRUNNER_SDK_DOWNLOAD=$(XULRUNNER_MAC_SDK_URL)x86_64.sdk.tar.bz2
 endif
-XULRUNNERSDK=./xulrunner-sdk/bin/run-mozilla.sh
-XPCSHELLSDK=./xulrunner-sdk/bin/xpcshell
+XULRUNNERSDK=./xulrunner-sdk/bin/XUL.framework/Versions/Current/run-mozilla.sh
+XPCSHELLSDK=./xulrunner-sdk/bin/XUL.framework/Versions/Current/xpcshell
 
 else ifeq ($(findstring MINGW32,$(SYS)), MINGW32)
 # For windows we only have one binary
@@ -425,19 +457,20 @@ define run-js-command
 	const DEBUG = $(DEBUG); const LOCAL_DOMAINS = $(LOCAL_DOMAINS);             \
 	const DESKTOP = $(DESKTOP);                                                 \
 	const HOMESCREEN = "$(HOMESCREEN)"; const GAIA_PORT = "$(GAIA_PORT)";       \
-	const GAIA_APP_SRCDIRS = "$(GAIA_APP_SRCDIRS)";                             \
 	const GAIA_LOCALES_PATH = "$(GAIA_LOCALES_PATH)";                           \
 	const LOCALES_FILE = "$(subst \,\\,$(LOCALES_FILE))";                       \
 	const BUILD_APP_NAME = "$(BUILD_APP_NAME)";                                 \
 	const PRODUCTION = "$(PRODUCTION)";                                         \
 	const GAIA_OPTIMIZE = "$(GAIA_OPTIMIZE)";                                   \
-	const HIDPI = "$(HIDPI)";                                                   \
+	const GAIA_DEV_PIXELS_PER_PX = "$(GAIA_DEV_PIXELS_PER_PX)";                 \
 	const DOGFOOD = "$(DOGFOOD)";                                               \
 	const OFFICIAL = "$(MOZILLA_OFFICIAL)";                                     \
 	const GAIA_DEFAULT_LOCALE = "$(GAIA_DEFAULT_LOCALE)";                       \
 	const GAIA_INLINE_LOCALES = "$(GAIA_INLINE_LOCALES)";                       \
+	const GAIA_CONCAT_LOCALES = "$(GAIA_CONCAT_LOCALES)";                       \
 	const GAIA_ENGINE = "xpcshell";                                             \
 	const GAIA_DISTRIBUTION_DIR = "$(GAIA_DISTRIBUTION_DIR)";                   \
+	const GAIA_APPDIRS = "$(GAIA_APPDIRS)";                                     \
 	';                                                                          \
 	$(XULRUNNERSDK) $(XPCSHELLSDK) -e "$$JS_CONSTS" -f build/utils.js "build/$(strip $1).js"
 endef
@@ -455,22 +488,28 @@ ifeq ($(DOGFOOD),1)
 EXTENDED_PREF_FILES += dogfood-prefs.js
 endif
 
+# Optional partner provided preference files. They will be added
+# after the ones on the EXTENDED_PREF_FILES and they will be read
+# from the GAIA_DISTRIBUTION_DIR directory
+PARTNER_PREF_FILES = \
+  partner-prefs.js\
+
 # Generate profile/prefs.js
 preferences: install-xulrunner-sdk
 	@test -d $(PROFILE_FOLDER) || mkdir -p $(PROFILE_FOLDER)
 	@$(call run-js-command, preferences)
 	@$(foreach prefs_file,$(addprefix build/,$(EXTENDED_PREF_FILES)),\
 	  if [ -f $(prefs_file) ]; then \
-	    cat $(prefs_file) git dif $(PROFILE_FOLDER)/user.js; \
+	    cat $(prefs_file) >> $(PROFILE_FOLDER)/user.js; \
 	  fi; \
 	)
-
 	@echo "" >> $(PROFILE_FOLDER)/user.js
 	@$(foreach prefs_file,$(addprefix $(GAIA_DISTRIBUTION_DIR)/,$(PARTNER_PREF_FILES)),\
 	  if [ -f $(prefs_file) ]; then \
 	    cat $(prefs_file) >> $(PROFILE_FOLDER)/user.js; \
 	  fi; \
 	)
+
 
 # Generate $(PROFILE_FOLDER)/
 applications-data: install-xulrunner-sdk
@@ -576,9 +615,11 @@ test-agent-config: test-agent-bootstrap-apps
 	@touch $(TEST_AGENT_CONFIG)
 	@rm -f /tmp/test-agent-config;
 	@# Build json array of all test files
-	@for d in ${GAIA_APP_SRCDIRS}; \
+	@for d in ${GAIA_APPDIRS}; \
 	do \
-		find $$d -name '*_test.js' | sed "s:$$d/::g"  >> /tmp/test-agent-config; \
+		parent="`dirname $$d`"; \
+		pathlen=`expr $${#parent} + 2`; \
+		find "$$d" -name '*_test.js' | awk '{print substr($$0,'$${pathlen}')}' >> /tmp/test-agent-config; \
 	done;
 	@echo '{"tests": [' >> $(TEST_AGENT_CONFIG)
 	@cat /tmp/test-agent-config |  \
@@ -591,12 +632,17 @@ test-agent-config: test-agent-bootstrap-apps
 
 .PHONY: test-agent-bootstrap-apps
 test-agent-bootstrap-apps:
-	@for d in `find -L ${GAIA_APP_SRCDIRS} -mindepth 1 -maxdepth 1 -type d` ;\
+	@for d in ${GAIA_APPDIRS} ;\
 	do \
-		mkdir -p $$d/test/unit ; \
-		mkdir -p $$d/test/integration ; \
-		cp -f $(TEST_COMMON)/test/boilerplate/_proxy.html $$d/test/unit/_proxy.html; \
-		cp -f $(TEST_COMMON)/test/boilerplate/_sandbox.html $$d/test/unit/_sandbox.html; \
+		if [[ "$(SYS)" != *MINGW32_* ]]; then \
+			mkdir -p $$d$(SEP)test$(SEP)unit ; \
+			mkdir -p $$d$(SEP)test$(SEP)integration ; \
+		else \
+			mkdir -p `echo "$$d" | sed 's|^\(\w\):|/\1|g' | sed 's|\\\\|/|g'`/test/unit ; \
+			mkdir -p `echo "$$d" | sed 's|^\(\w\):|/\1|g' | sed 's|\\\\|/|g'`/test/integration ; \
+		fi; \
+		cp -f $(TEST_COMMON)$(SEP)test$(SEP)boilerplate$(SEP)_proxy.html $$d$(SEP)test$(SEP)unit$(SEP)_proxy.html; \
+		cp -f $(TEST_COMMON)$(SEP)test$(SEP)boilerplate$(SEP)_sandbox.html $$d$(SEP)test$(SEP)unit$(SEP)_sandbox.html; \
 	done
 	@echo "Finished: bootstrapping test proxies/sandboxes";
 
@@ -647,12 +693,9 @@ endif
 
 # Lint apps
 lint:
-	@# ignore lint on:
-	@# cubevid
-	@# crystalskull
-	@# towerjelly
-	@gjslint --nojsdoc -r apps -e 'homescreen/everything.me,sms/js/ext,pdfjs/content,pdfjs/test,email/js/ext,music/js/ext,calendar/js/ext' -x 'calendar/js/presets.js,homescreen/js/hiddenapps.js,settings/js/hiddenapps.js'
-	@gjslint --nojsdoc -r shared/js -e 'phoneNumberJS'
+	# --disable 210,217,220,225 replaces --nojsdoc because it's broken in closure-linter 2.3.10
+	# http://code.google.com/p/closure-linter/issues/detail?id=64
+	gjslint --disable 210,217,220,225 -r apps -r shared -e '$(shell cat ./build/lint-excluded-dirs.list)' -x '$(shell cat ./build/lint-excluded-files.list)'
 
 # Erase all the indexedDB databases on the phone, so apps have to rebuild them.
 delete-databases:
@@ -767,7 +810,7 @@ SETTINGS_ARG += --enable-debugger
 endif
 
 ifeq ($(DEBUG),1)
-SETTINGS_ARG += --homescreen=http://homescreen.$(GAIA_DOMAIN):$(GAIA_PORT)/manifest.webapp
+SETTINGS_ARG += --homescreen=http://homescreen.$(GAIA_DOMAIN)$(GAIA_PORT)/manifest.webapp
 endif
 
 # We want the console to be disabled for device builds using the user variant.
@@ -814,3 +857,6 @@ clean:
 really-clean: clean
 	rm -rf xulrunner-sdk .xulrunner-url
 
+.PHONY: install-git-hook
+install-git-hook:
+	test -d .git && cp tools/pre-commit .git/hooks/pre-commit || true

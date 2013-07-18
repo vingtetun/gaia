@@ -76,7 +76,6 @@ var Contacts = (function() {
           break;
         case 'edit-contact.html' :
           currentContact = window.opener.Contacts.currentContact;
-          console.log(typeof currentContact);
           showEditContact();
           break;
       // default:
@@ -765,8 +764,8 @@ var Contacts = (function() {
     var currView = navigation.currentView();
     switch (event.reason) {
       case 'update':
-        if (currView == 'view-contact-details' && currentContact != null &&
-          currentContact.id == event.contactID) {
+        if (currentContact != null &&
+                currentContact.id == event.contactID) {
           contactsList.getContactById(event.contactID,
             function success(contact, enrichedContact) {
             currentContact = contact;
@@ -776,10 +775,7 @@ var Contacts = (function() {
             contactsList.refresh(mergedContact, checkPendingChanges,
                                  event.reason);
           });
-        } else {
-          contactsList.refresh(event.contactID, checkPendingChanges,
-            event.reason);
-        }
+       }
         break;
       case 'create':
         contactsList.refresh(event.contactID, checkPendingChanges,
@@ -851,6 +847,9 @@ var Contacts = (function() {
     'close': close,
       get currentContact() {
         return currentContact;
+      },
+      set currentContact(cont) {
+        currentContact = cont;
       },
       get asyncScriptsLoaded() {
         return asyncScriptsLoaded;

@@ -33,7 +33,6 @@ var ActivityHandler = {
   // A mapping of MozActivity names to their associated event handler
   _handlers: {
     'new': function newHandler(activity) {
-
       // XXX This lock is about https://github.com/mozilla-b2g/gaia/issues/5405
       if (MessageManager.activity.isLocked) {
         return;
@@ -163,7 +162,7 @@ var ActivityHandler = {
         MessageManager.activity.contact = contact || null;
 
         // Move to new message
-        window.location.hash = '#new';
+        startupFunction();
         return;
       }
       var locationHash = window.location.hash;

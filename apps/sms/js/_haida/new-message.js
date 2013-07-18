@@ -8,7 +8,6 @@ var startupFunction = function() {
 
     if (MessageManager.activity.number ||
         MessageManager.activity.contact) {
-
       recipient = MessageManager.activity.contact || {
         number: MessageManager.activity.number,
         source: 'manual'

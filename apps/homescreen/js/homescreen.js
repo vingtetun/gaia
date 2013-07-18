@@ -27,7 +27,8 @@ const Homescreen = (function() {
         { name: 'Gallery' },
         { name: 'Video' },
         { name: 'FM Radio' },
-        { name: 'Email' }
+        { name: 'Email' },
+        { name: 'Pages' }
       ]
     },
     {
@@ -162,6 +163,13 @@ const Homescreen = (function() {
     } else {
       var app = { manifest: { name: application.name }};
     }
+    
+    if (application.name === "Pages") {
+      app.launch = function(){
+        window.open('about:blank');
+      };
+    }
+    
     var name, icon;
     if (entryPoint !== null) {
       name = app.manifest.entry_points[entryPoint].name;

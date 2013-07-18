@@ -187,6 +187,8 @@ contacts.Form = (function() {
     formTitle.setAttribute('data-l10n-id', 'editContact');
     formTitle.textContent = _('editContact');
     currentContactId.value = contact.id;
+    console.log('AJDI!!!',contact.id);
+    
     givenName.value = contact.givenName || '';
     familyName.value = contact.familyName || '';
     company.value = contact.org && contact.org.length > 0 ? contact.org[0] : '';
@@ -405,7 +407,7 @@ contacts.Form = (function() {
   }
 
   var saveContact = function saveContact() {
-    currentContact = currentContact || {};
+    currentContact = window.opener.Contacts.currentContact || {};
     currentContact = deviceContact || currentContact;
     var deviceGivenName = currentContact.givenName;
     var deviceFamilyName = currentContact.familyName;

@@ -187,7 +187,6 @@ contacts.Form = (function() {
     formTitle.setAttribute('data-l10n-id', 'editContact');
     formTitle.textContent = _('editContact');
     currentContactId.value = contact.id;
-    console.log('AJDI!!!',contact.id);
     
     givenName.value = contact.givenName || '';
     familyName.value = contact.familyName || '';
@@ -502,10 +501,12 @@ contacts.Form = (function() {
         ActivityHandler.postNewSuccess(contact);
       }
       Contacts.cancel();
+      window.close();
     };
 
     request.onerror = function onerror() {
       console.error('Error saving contact', request.error.name);
+      window.close();
     };
   };
 

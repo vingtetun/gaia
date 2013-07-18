@@ -74,6 +74,11 @@ var Contacts = (function() {
         case 'settings.html' :
           showSettings();
           break;
+        case 'edit-contact.html' :
+          currentContact = window.opener.Contacts.currentContact;
+          console.log(typeof currentContact);
+          showEditContact();
+          break;
       // default:
       //   showApp();
     }
@@ -442,7 +447,6 @@ var Contacts = (function() {
       contactTag.dispatchEvent(valueModifiedEvent);
       handleBack();
     });
-    console.log('elo');
     window.close();
   };
 
@@ -636,7 +640,7 @@ var Contacts = (function() {
         }
       ],
       '#details-back': handleDetailsBack, // Details
-      '#edit-contact-button': showEditContact,
+      '#edit-contact-button': function(){ window.open('edit-contact.html')},
       '#contact-form button[data-field-type]': newField,
       '#settings-close': function(){ window.close(); } ,//hideSettings,
       '#toggle-favorite': toggleFavorite,
@@ -845,8 +849,11 @@ var Contacts = (function() {
     'cardStateChanged': cardStateChanged,
     'loadFacebook': loadFacebook,
     'close': close,
-    get asyncScriptsLoaded() {
-      return asyncScriptsLoaded;
-    }
+      get currentContact() {
+        return currentContact;
+      },
+      get asyncScriptsLoaded() {
+        return asyncScriptsLoaded;
+      }
   };
 })();

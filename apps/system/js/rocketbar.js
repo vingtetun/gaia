@@ -308,10 +308,16 @@ var Rocketbar = {
 
     if (!history.loading) {
       this.close(false);
+    } 
+    
+    if (history.location === 'about:blank') {
+      this.open();
+    } else {
+      this.setLoading(history.loading);
+      history.ontitlechange = this.setTitle.bind(this);
+      history.onstatuschange = this.setLoading.bind(this);
     }
-    this.setLoading(history.loading);
-    history.ontitlechange = this.setTitle.bind(this);
-    history.onstatuschange = this.setLoading.bind(this);
+    
   },
 
   /**

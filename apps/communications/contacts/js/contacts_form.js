@@ -223,6 +223,8 @@ contacts.Form = (function() {
         callback: function onAccept() {
           deleteContact(currentContact);
           ConfirmDialog.hide();
+          window.opener.close();
+          window.close();
         }
       };
 

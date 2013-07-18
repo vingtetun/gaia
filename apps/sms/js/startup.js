@@ -59,6 +59,7 @@ window.addEventListener('load', function() {
         Settings.mmsSizeLimitation = size;
       }
     });
+    startupFunction();
   }
 
   navigator.mozL10n.ready(function waitLocalizedForLoading() {
@@ -73,7 +74,7 @@ window.addEventListener('load', function() {
       MessageManager.init(initUIApp);
  
       // HAIDA PROTO
-      startupFunction();
+      
       
     });
   });

@@ -24,7 +24,6 @@ const kScriptsPerDomain = {
     'lib/bluetooth.js',
     'lib/cameras.js',
     'lib/mobile_connection.js',
-    'lib/icc_manager.js',
     'lib/wifi.js'
   ]
 };

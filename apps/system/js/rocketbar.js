@@ -10,7 +10,7 @@ var Rocketbar = {
   bar: document.getElementById('rocketbar'),
   input: document.getElementById('rocketbar-input'),
   results: document.getElementById('rocketbar-results'),
-
+  
   /**
    * Initialise Rocketbar.
    */
@@ -109,6 +109,7 @@ var Rocketbar = {
    * @param {function} callback Called after the transition
    */
   close: function rocketbar_close(evenIfFocused, callback) {
+    PagesIntro.hide();
     this.progress.classList.remove('loading');
 
     var focus = (this.input == document.activeElement);
@@ -311,6 +312,7 @@ var Rocketbar = {
     } 
     
     if (history.location === 'about:blank') {
+      PagesIntro.show();
       this.open();
     } else {
       this.setLoading(history.loading);

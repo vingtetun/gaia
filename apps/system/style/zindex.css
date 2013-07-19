@@ -93,6 +93,14 @@
   z-index: 4094;
 }
 
+#screen:not(.locked) > .active[data-z-index-level="pages-intro"] {
+  z-index: 4092;
+}
+
+#screen:not(.locked) > :not(.active)[data-z-index-level="pages-intro"] {
+  z-index: 0;
+}
+
 /* Demote level 5 elements to homescreen level if there is an active
  * full screen app frame */
 /*#screen:not(.locked):not(.attention):not(.utility-tray) > [data-z-index-level="statusbar"],*/

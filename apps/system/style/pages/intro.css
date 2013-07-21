@@ -1,13 +1,58 @@
 #pages-intro {
   width: 100%;
-  height: 100%;
-  background-color: #BADA55;
+  height: calc(100% - 6.7rem);
+  background-color: #FFF;
   position: absolute;
-  z-index: 2147483648;
-  transition: opacity 0.5s;
+  transition: opacity 0.2s linear 1s;
   opacity: 0;
+  list-style-type: none;
+  font-size: 1.4rem;
+  padding-top: 6rem;
 }
 
 #pages-intro.active {
-  opacity:1 ;
+  opacity: 1;
+}
+
+#pages-intro.active li {
+  border-bottom: 1px solid rgb(68, 68, 68);
+  margin: 0;
+  padding: 1.5rem 1.5rem 1.5rem 5rem;
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  background-position: 1.5rem center;
+  background-size: 3rem;
+  color: #000;
+}
+
+#pages-intro.active li * {
+  pointer-events: none;
+}
+
+#pages-intro.active li:last-child {
+  border-bottom: none;
+}
+
+#pages-intro.active li h3 {
+  display: block;
+  height: 1.2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1em;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+#pages-intro.active li small {
+  display: block;
+  height: 1.2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #999;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
 }

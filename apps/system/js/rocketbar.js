@@ -109,7 +109,6 @@ var Rocketbar = {
    * @param {function} callback Called after the transition
    */
   close: function rocketbar_close(evenIfFocused, callback) {
-    PagesIntro.hide();
     this.progress.classList.remove('loading');
 
     var focus = (this.input == document.activeElement);

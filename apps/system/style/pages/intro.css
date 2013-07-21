@@ -1,0 +1,13 @@
+#pages-intro {
+  width: 100%;
+  height: 100%;
+  background-color: #BADA55;
+  position: absolute;
+  z-index: 2147483648;
+  transition: opacity 0.5s;
+  opacity: 0;
+}
+
+#pages-intro.active {
+  opacity:1 ;
+}

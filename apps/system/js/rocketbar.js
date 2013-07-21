@@ -168,8 +168,6 @@ var Rocketbar = {
       this.input.value = this.currentTitle;
     } else if (this.currentlyPackagedOnApp) {
       this.input.value = this.currentLocation;
-    } else if (this.currentLocation === 'about:blank') {
-      this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
     }
@@ -352,7 +350,7 @@ var Rocketbar = {
   setLocation: function rocketbar_setLocation(location) {
     this.currentTitle = '';
     this.currentLocation = location;
-    this.input.value = location;
+    this.input.value = location === 'about:blank' ? '' : location;
     if (!this.currentlyOnPackagedApp)
       Places.addVisit(location);
   },

@@ -113,13 +113,15 @@ var PanelSwitcher = {
   out: null,
   in: null,
   overflowing: false,
+  pageInfoVisible: false,
   handleEvent: function navigation_handleEvent(e) {
     var forward = (e.target == this.next);
     var diffX = this.lastX - this.startX;
     var progress = Math.abs(diffX / window.innerWidth);
-
     switch(e.type) {
       case 'touchstart':
+        this.pageInfoVisible = PagesIntro.isVisible();
+        if (this.pageInfoVisible) PagesIntro.hide();
         this.lastX = this.startX = e.touches[0].pageX;
         this.lastDate = Date.now();
 
@@ -153,6 +155,10 @@ var PanelSwitcher = {
           snapBack = false;
         }
 
+        if (snapBack && this.pageInfoVisible) {
+          PagesIntro.show();
+        }
+        
         var progressToAnimate = snapBack ? progress : (1 - progress);
         var durationLeft = Math.min((progressToAnimate / deltaP) * deltaT, progressToAnimate * 500);
 

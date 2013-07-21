@@ -330,6 +330,11 @@ var WindowManager = (function() {
     var origin = e.detail.url;
 
     var frame = e.detail.frameElement;
+    
+    if (origin === 'about:blank') {
+      PagesIntro.show();
+    }
+    
     if (frame.hasAttribute('mozapp')) {
       openApp(frame.getAttribute('mozapp'), origin, frame);
     } else {
@@ -401,7 +406,7 @@ var WindowManager = (function() {
     if (navigate[current] == homescreenHistory)
       return;
 
-
+    PagesIntro.hide();
     // Look for the navigation history and remove previous homescreen if any.
     for (var i = 0; i < navigate.length; i++) {
       var outer = navigate[i];
@@ -436,6 +441,9 @@ var WindowManager = (function() {
 })();
 
 function declareSheetAsCurrent(history, forward) {
+  if (history.location === 'about:blank') {
+    PagesIntro.show();
+  }
   var evt = new CustomEvent('historychange', {
     bubbles: true,
     detail: {
@@ -516,6 +524,10 @@ History.prototype = {
         this.location = evt.detail;
         this.painted = false;
 
+        if (this.location !== 'about:blank') {
+          PagesIntro.hide();
+        }
+        
         if (this.onlocationchange) {
           this.onlocationchange(this.location);
         }

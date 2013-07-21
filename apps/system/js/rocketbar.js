@@ -168,6 +168,8 @@ var Rocketbar = {
       this.input.value = this.currentTitle;
     } else if (this.currentlyPackagedOnApp) {
       this.input.value = this.currentLocation;
+    } else if (this.currentLocation === 'about:blank') {
+      this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
     }
@@ -209,8 +211,7 @@ var Rocketbar = {
    */
   handleClick: function rocketbar_handleClick(evt) {
     var target = evt.target;
-
-    this.close(true, function() {
+    var callback = function() {
       // If app, launch app
       var manifestURL = target.getAttribute('data-manifest-url');
       if (manifestURL && Applications.installedApps[manifestURL]) {
@@ -222,7 +223,15 @@ var Rocketbar = {
       if (siteURL) {
         WindowManager.openNewSheet(siteURL);
       }
-    });
+    };
+    
+    if (this.currentLocation === 'about:blank') {
+      this.results.classList.remove('open');
+      this.input.blur();
+      callback();
+    } else {
+      this.close(true, callback);
+    }
   },
 
   /**

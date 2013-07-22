@@ -29,7 +29,7 @@ PagesIntro = {
   },
   
   init: function(){
-    Places.getTopSites(6, '', this.showResults.bind(this));
+    Places.getHistory(10, this.showResults.bind(this));
   },
   
   show: function() {

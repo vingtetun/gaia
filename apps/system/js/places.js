@@ -176,9 +176,9 @@ var Places = {
     this.db.getPlacesByFrecency(maximum, filter, callback);
   },
 
-  getHistory: function places_getHistory(callback) {
+  getHistory: function places_getHistory(maximum, callback) {
     // Just get the most recent 20 for now
-    this.db.getHistory(20, callback);
+    this.db.getHistory(maximum, callback);
   },
 
   clearHistory: function places_clearHistory(callback) {

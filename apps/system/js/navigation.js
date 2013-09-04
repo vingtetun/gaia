@@ -6,28 +6,6 @@ var WindowManager = (function() {
     dump('WindowManager: ' + str + '\n');
   }
 
-  function debugHistory() {
-    var history = navigate;
-    try {
-      var str = '--- History\n';
-      for (var i = 0; i < history.length; i++) {
-        var item = history[i];
-        if (item) {
-          str += 'item ' + i + ' (' + item.isHomescreen + ')\n' +
-                 'location: ' + item.location + '\n' +
-                 '\n';
-        } else{
-          str += 'history ' + i + ' (empty) \n\n';
-        }
-      }
-      str += '--- History End\n';
-    } catch(e) {
-      debug(e);
-    }
-
-    debug(str);
-  }
-
   var obj = {
     launch: function() {
       debug('Someone call launch: ' + arguments);
@@ -103,46 +81,47 @@ var WindowManager = (function() {
         detail: { type: 'system-message-listener-ready' } });
       window.dispatchEvent(evt);
     },
+
     goBack: function() {
-      navigate[current].free();
+      GroupedNavigation.getSheet(current).free();
       current--;
-      declareSheetAsCurrent(navigate[current], false);
+      declareSheetAsCurrent(GroupedNavigation.getSheet(current), false);
     },
 
     goNext: function() {
-      navigate[current].free();
+      GroupedNavigation.getSheet(current).free();
       current++;
-      declareSheetAsCurrent(navigate[current], true);
+      declareSheetAsCurrent(GroupedNavigation.getSheet(current), true);
     },
 
     goLast: function() {
       debug("goLast: " + current);
-      debugHistory();
-      declareSheetAsCurrent(navigate[current], true);
+      GroupedNavigation._debug();
+      declareSheetAsCurrent(GroupedNavigation.getSheet(current), true);
     },
 
     getPrevious: function() {
-      return navigate[current - 1];
+      return GroupedNavigation.getSheet(current - 1);
     },
 
     getNext: function() {
-      return navigate[current + 1];
+      return GroupedNavigation.getSheet(current + 1);
     },
 
     getCurrent: function() {
-      return navigate[current];
+      return GroupedNavigation.getSheet(current);
     },
 
     evictEntry: function(history) {
       debug("evictEntry: " + current);
-      debugHistory();
-      for (var i in navigate) {
-        if (navigate[i].wrapper == history.wrapper) {
-          navigate.splice(i, 1);
-          if (i <= current)
-            current--;
-          break;
-        }
+      GroupedNavigation._debug();
+
+      var previousCurrent = current;
+      current = GroupedNavigation.evictSheet(current, history);
+
+      if (current != previousCurrent) {
+        var newHistory = GroupedNavigation.getSheet(current);
+        declareSheetAsCurrent(newHistory, (previousCurrent < current));
       }
     },
 
@@ -182,20 +161,25 @@ var WindowManager = (function() {
   var navigate = [];
   var current = 0;
 
-  function pruneForwardNavigation() {
-    for (var i = navigate.length - 1; i > current; i--) {
-      var next = navigate.pop();
-      if (next.isHomescreen)
-        continue;
-      next.wrapper.parentNode.removeChild(next.wrapper);
-      next.close();
-    }
-  }
-
   function openApp(manifestURL, origin, iframe) {
+    var currentHistory = GroupedNavigation.getSheet(current);
+    if (currentHistory) {
+      currentHistory.free();
+    }
+
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
       return;
+
+    if (!iframe) {
+      var bringBackCurrent = GroupedNavigation.requestApp(current, manifestURL);
+      if (bringBackCurrent != -1) {
+        current = bringBackCurrent;
+        var appHistory = GroupedNavigation.getSheet(current);
+        declareSheetAsCurrent(appHistory, true);
+        return;
+      }
+    }
 
     var manifest = app.manifest;
     var entryPoints = manifest.entry_points;
@@ -215,60 +199,35 @@ var WindowManager = (function() {
       }
     }
 
-    var currentHistory = navigate[current];
-    if (currentHistory) {
-     // If someone try to open the application but it is already opened lets
-      // not do it and close the homescreen.
-      if (!origin) {
-        if (currentHistory.isHomescreen) {
-          var previousHistory = navigate[current - 1];
-          if (previousHistory && previousHistory.iframe.getAttribute('mozapp') == manifestURL) {
-            current--;
-            declareSheetAsCurrent(previousHistory, false);
-            return;
-          }
-        } else {
-          if (currentHistory && currentHistory.iframe.getAttribute('mozapp') == manifestURL) {
-            return;
-          }
-        }
-      }
-
-      currentHistory.free();
-      pruneForwardNavigation();
-    }
-
-    current++;
-    navigate[current] = new History(origin || app.origin + app.manifest.launch_path,
+    var newHistory = new History(origin || app.origin + app.manifest.launch_path,
                                     app.manifest.type || 'hosted');
+    current = GroupedNavigation.insertSheet(current, app.manifestURL, newHistory);
 
     if (iframe) {
-      appendIframe(iframe, navigate[current]);
+      appendIframe(iframe, newHistory);
     } else {
-      createWindow(navigate[current], app.manifestURL);
+      createWindow(newHistory, app.manifestURL);
     }
 
-    declareSheetAsCurrent(navigate[current], true);
+    declareSheetAsCurrent(newHistory, true);
   }
 
   function openOrigin(origin, iframe) {
-    if (navigate[current]) {
-      navigate[current].free();
-      pruneForwardNavigation();
+    var currentHistory = GroupedNavigation.getSheet(current);
+    if (currentHistory) {
+      currentHistory.free();
     }
 
-    if (navigate[current].isHomescreen == false)
-      current++;
-
-    navigate[current] = new History(origin, 'remote');
+    var newHistory = new History(origin, 'remote');
+    current = GroupedNavigation.insertSheet(current, origin, newHistory);
 
     if (iframe) {
-      appendIframe(iframe, navigate[current]);
+      appendIframe(iframe, newHistory);
     } else {
-      createWindow(navigate[current]);
+      createWindow(newHistory);
     }
 
-    declareSheetAsCurrent(navigate[current], true);
+    declareSheetAsCurrent(newHistory, true);
   }
 
   function createWindow(history, manifestURL) {
@@ -330,11 +289,11 @@ var WindowManager = (function() {
     var origin = e.detail.url;
 
     var frame = e.detail.frameElement;
-    
+
     if (origin === 'about:blank') {
       PagesIntro.show();
     }
-    
+
     if (frame.hasAttribute('mozapp')) {
       openApp(frame.getAttribute('mozapp'), origin, frame);
     } else {
@@ -400,34 +359,20 @@ var WindowManager = (function() {
     document.body.appendChild(wrapper);
     iframe.src = homescreenHistory.location;
     homescreenHistory.attach(wrapper, iframe);
+
+    GroupedNavigation.insertSheet(0, homescreenManifestURL, homescreenHistory);
+    declareSheetAsCurrent(homescreenHistory, true);
   }
 
   function showHomescreen() {
-    if (navigate[current] == homescreenHistory)
+    var currentHistory = GroupedNavigation.getSheet(current);
+    if (currentHistory == homescreenHistory)
       return;
 
     PagesIntro.hide();
-    // Look for the navigation history and remove previous homescreen if any.
-    for (var i = 0; i < navigate.length; i++) {
-      var outer = navigate[i];
-      if (outer && outer.isHomescreen) {
-        navigate.splice(i, 1);
+    currentHistory.free();
 
-        if (i < current) {
-          current--;
-        }
-        break;
-      }
-    }
-
-    // Let's delete the navigation history that comes after us.
-    if (navigate[current]) {
-      navigate[current].free();
-      pruneForwardNavigation();
-    }
-
-    current++;
-    navigate[current] = homescreenHistory;
+    current = GroupedNavigation.requestApp(current, homescreenManifestURL);
     declareSheetAsCurrent(homescreenHistory, true);
   }
 
@@ -527,7 +472,7 @@ History.prototype = {
         if (this.location !== 'about:blank') {
           PagesIntro.hide();
         }
-        
+
         if (this.onlocationchange) {
           this.onlocationchange(this.location);
         }
@@ -581,12 +526,6 @@ History.prototype = {
         var wrapper = this.wrapper.parentNode.removeChild(this.wrapper);
         this.free();
         this.close();
-
-        if (wrapper.dataset.current) {
-          setTimeout(function() {
-            WindowManager.goLast();
-          }, 1000);
-        }
         break;
 
       default:

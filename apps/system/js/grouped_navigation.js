@@ -1,6 +1,12 @@
 'use strict';
 
 var GroupedNavigation = {
+  getAllGroups: function(){
+    return this._groups.map(function(group){
+      return group.url;
+    });
+  },
+  
   getSheet: function(flatIndex) {
     var indexPath = this._indexPath(flatIndex);
 

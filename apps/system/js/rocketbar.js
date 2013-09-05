@@ -2,6 +2,7 @@
 
 var Rocketbar = {
 
+  gestureDetector: null,
   /**
    * DOM elements.
    */
@@ -37,6 +38,9 @@ var Rocketbar = {
 
     Places.init(function(firstRun) {});
 
+    this.gestureDetector = new GestureDetector(this.results);
+    this.gestureDetector.startDetecting();
+        
     navigator.mozSettings.addObserver('rocketbar.show', function(event) {
       this.open(true);
     }.bind(this));

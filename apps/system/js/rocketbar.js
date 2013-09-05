@@ -271,36 +271,57 @@ var Rocketbar = {
     if (results.length == 0)
       return;
     results.forEach(function(manifestURL) {
-      var app = Applications.installedApps[manifestURL];
-      var li = document.createElement('li');
-      li.textContent = app.manifest.name;
-      li.setAttribute('data-manifest-url', manifestURL);
-      li.style.backgroundImage = 'url(' + app.origin +
-        app.manifest.icons['60'] + ')';
-      this.results.appendChild(li);
+      this.renderSingleAppResult(manifestURL);
     }, this);
   },
 
+  renderSingleAppResult: function rocketbar_renderSingleAppResult(manifestURL) {
+    var app = Applications.installedApps[manifestURL];
+    var li = document.createElement('li');
+    li.textContent = app.manifest.name;
+    li.setAttribute('data-manifest-url', manifestURL);
+    if (app.manifest.icons) {
+      // XXX: Apps with multiple entry points have icon for 
+      // every entry point but not for an app
+      li.style.backgroundImage = 'url(' + app.origin +
+        app.manifest.icons['60'] + ')';
+    }
+    this.results.appendChild(li);
+  },
+  
   /**
    *  Show rocketbar results for a list of places.
    */
   showSiteResults: function rocketbar_showSiteResults(results) {
     console.log(JSON.stringify(results));
     results.forEach(function(result) {
-      var resultItem = document.createElement('li');
-      var resultTitle = document.createElement('h3');
-      var resultURL = document.createElement('small');
-      resultTitle.textContent = result.title;
-      resultURL.textContent = result.uri;
-      resultItem.setAttribute('data-site-url', result.uri);
-      resultItem.appendChild(resultTitle);
-      resultItem.appendChild(resultURL);
-      this.results.appendChild(resultItem);
+      this.renderSingleSiteResult(result);
     }, this);
   },
 
+  renderSingleSiteResult: function rocketbar_renderSingleSiteResult(result) {
+    var resultItem = document.createElement('li');
+    var resultTitle = document.createElement('h3');
+    var resultURL = document.createElement('small');
+    resultTitle.textContent = result.title;
+    resultURL.textContent = result.uri;
+    resultItem.setAttribute('data-site-url', result.uri);
+    resultItem.appendChild(resultTitle);
+    resultItem.appendChild(resultURL);
+    this.results.appendChild(resultItem);
+  },
+  
   showRunningApps: function rocketbar_showRunningApps(){
-    
+    var runningApps = GroupedNavigation.getAllGroups();
+    runningApps.forEach(function(element) {
+      // Is there a smartest way to distinguish apps from 
+      // webpages? This doesn't work on nightly.
+      if (element.indexOf('app://') === -1) {
+        this.renderSingleSiteResult({uri: element, title:element});
+      } else {
+        this.renderSingleAppResult(element);
+      }
+    }, this);
   },
   
   /**

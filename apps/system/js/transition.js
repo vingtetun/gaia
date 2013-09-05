@@ -10,10 +10,6 @@ var TransitionManager = (function() {
     console.log('TransitionManager: ' + str + '\n');
   }
 
-  var statusbar = document.getElementById('statusbar');
-  var progress = document.getElementById('progress');
-  var rocketbar = document.getElementById('rocketbar');
-
   var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
     var previous = current;
@@ -23,8 +19,7 @@ var TransitionManager = (function() {
     var prevWrapper = previous ? previous.wrapper : null;
     var curWrapper = current.wrapper;
 
-    progress.classList.add('freeze');
-    rocketbar.classList.add('freeze');
+    document.body.classList.add('rocketbar-freeze');
 
     if (prevWrapper) {
       prevWrapper.dataset.previous = forward;
@@ -76,9 +71,7 @@ var TransitionManager = (function() {
       curWrapper.removeEventListener('transitionend', animWait);
 
       setTimeout(function nextTick() {
-        statusbar.classList[current.isHomescreen ? 'add' : 'remove']('displayed');
-        progress.classList.remove('freeze');
-        rocketbar.classList.remove('freeze');
+        document.body.classList.remove('rocketbar-freeze');
 
         if (prevWrapper) {
           prevWrapper.classList.remove('transitioning');

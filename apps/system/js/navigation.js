@@ -67,7 +67,7 @@ var WindowManager = (function() {
       setting.onsuccess = function successRetrievingHomescreenURL() {
         setHomescreen(this.result['homescreen.manifestURL']);
         openHomescreen();
-        showHomescreen();
+        toggleHomescreen({turn: 'on'});
         window.dispatchEvent(new CustomEvent('homescreen-ready'));
       }
 
@@ -176,6 +176,7 @@ var WindowManager = (function() {
       if (bringBackCurrent != -1) {
         current = bringBackCurrent;
         var appHistory = GroupedNavigation.getSheet(current);
+        toggleHomescreen({turn: 'off'});
         declareSheetAsCurrent(appHistory, true);
         return;
       }
@@ -209,6 +210,7 @@ var WindowManager = (function() {
       createWindow(newHistory, app.manifestURL);
     }
 
+    toggleHomescreen({turn: 'off'});
     declareSheetAsCurrent(newHistory, true);
   }
 
@@ -227,6 +229,7 @@ var WindowManager = (function() {
       createWindow(newHistory);
     }
 
+    toggleHomescreen({turn: 'off'});
     declareSheetAsCurrent(newHistory, true);
   }
 
@@ -354,31 +357,45 @@ var WindowManager = (function() {
     homescreenHistory.isHomescreen = true;
 
     var wrapper = wrap(iframe);
+    wrapper.id = 'homescreen';
     wrapper.dataset.type = 'homescreen';
 
     document.body.appendChild(wrapper);
     iframe.src = homescreenHistory.location;
     homescreenHistory.attach(wrapper, iframe);
-
-    GroupedNavigation.insertSheet(0, homescreenManifestURL, homescreenHistory);
-    declareSheetAsCurrent(homescreenHistory, true);
   }
 
-  function showHomescreen() {
-    var currentHistory = GroupedNavigation.getSheet(current);
-    if (currentHistory == homescreenHistory)
+  var homeScreenOn = false;
+  function toggleHomescreen(force) {
+    var turnOn = !homeScreenOn;
+
+    if (force) {
+      turnOn = (force.turn == 'on');
+    }
+
+    if ((turnOn && homeScreenOn) ||
+        (!turnOn && !homeScreenOn)) {
       return;
+    }
 
-    PagesIntro.hide();
-    currentHistory.free();
+    var statusbar = document.getElementById('statusbar');
 
-    current = GroupedNavigation.requestApp(current, homescreenManifestURL);
-    declareSheetAsCurrent(homescreenHistory, true);
+    if (turnOn) {
+      statusbar.classList.add('displayed');
+      homeScreenOn = true;
+      homescreenHistory.wakeUp();
+      document.body.classList.add('homescreen-displayed');
+    } else {
+      statusbar.classList.remove('displayed');
+      homeScreenOn = false;
+      homescreenHistory.free();
+      document.body.classList.remove('homescreen-displayed');
+    }
   }
 
   window.addEventListener('home', function onHomeButton(e) {
     e.preventDefault();
-    showHomescreen();
+    toggleHomescreen();
     Rocketbar.close(true);
   }, true);
 

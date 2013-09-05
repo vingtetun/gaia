@@ -11,7 +11,7 @@
   transition: transform 0.3s linear 0.1s; /* the delay is preventing jumping while redirecting */
 }
 
-#rocketbar.open.freeze {
+body.rocketbar-freeze #rocketbar.open {
   transform: translateY(-100%);
 }
 
@@ -111,7 +111,7 @@
   transition: opacity 0.3s linear;
 }
 
-#progress.loading.freeze {
+body.rocketbar-freeze #progress.loading {
   opacity: 0;
 }
 

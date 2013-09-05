@@ -95,6 +95,8 @@ var Rocketbar = {
     this.results.innerHTML = '';
     this.bar.classList.add('open');
 
+    this.showRunningApps();
+    
     if (focus) {
       this.input.focus();
       this.results.classList.add('open');
@@ -297,6 +299,10 @@ var Rocketbar = {
     }, this);
   },
 
+  showRunningApps: function rocketbar_showRunningApps(){
+    
+  },
+  
   /**
    * Handle window history change event.
    *

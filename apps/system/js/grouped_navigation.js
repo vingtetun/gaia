@@ -57,6 +57,11 @@ var GroupedNavigation = {
                             this._flatIndex(ip.groupIndex, ip.sheetIndex));
   },
 
+  removeGroup: function(url) {
+    // XXX: implement
+    console.log('removing group', url);
+  },
+
   requestApp: function(current, manifestURL) {
     var gIndex = this._indexOfGroup(manifestURL);
     if (gIndex == -1) {

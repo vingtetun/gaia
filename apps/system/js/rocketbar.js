@@ -2,6 +2,7 @@
 
 var Rocketbar = {
 
+  gestureDetector: null,
   /**
    * DOM elements.
    */
@@ -37,6 +38,9 @@ var Rocketbar = {
 
     Places.init(function(firstRun) {});
 
+    this.gestureDetector = new GestureDetector(this.results);
+    this.gestureDetector.startDetecting();
+        
     navigator.mozSettings.addObserver('rocketbar.show', function(event) {
       this.open(true);
     }.bind(this));
@@ -261,6 +265,40 @@ var Rocketbar = {
     });
   },
 
+  pan: function rocketbar_taskSwitcherPan(e) {
+    var elementStyle = e.target.style;
+    var movement = Math.min(document.documentElement.clientWidth,
+                            Math.abs(e.detail.absolute.dx));
+    if (movement > 0) {
+      elementStyle.opacity = 1 - (movement / document.documentElement.clientWidth);
+    }
+    elementStyle.transform = 'translateX(' + e.detail.absolute.dx + 'px)';
+  },
+
+  swipe: function rocketbar_taskSwitcherSwipe(e) {
+    var element = e.target;
+    var elementStyle = element.style;
+    var TRANSITION_SPEED = 1.8;
+    var TRANSITION_FRACTION = 0.3;
+    var distance = e.detail.start.screenX - e.detail.end.screenX;
+    var fastenough = Math.abs(e.detail.vx) > TRANSITION_SPEED;
+    var farenough = Math.abs(distance) >
+      document.documentElement.clientWidth * TRANSITION_FRACTION;
+
+    if (!(farenough || fastenough)) {
+      // Werent far or fast enough to delete, restore
+      var time = Math.abs(distance) / TRANSITION_SPEED;
+      var transition = 'transform ' + time + 'ms linear';
+      elementStyle.MozTransition = transition;
+      elementStyle.transform = 'translateX(0)';
+      elementStyle.opacity = 1;
+      return;
+    }
+
+    this.results.removeChild(element);
+    GroupedNavigation.removeGroup(element.dataset.manifestURL || element.dataset.siteURL);
+  },
+  
   /**
    * Show rocketbar results for a list of app manifest URLs.
    *
@@ -275,7 +313,7 @@ var Rocketbar = {
     }, this);
   },
 
-  renderSingleAppResult: function rocketbar_renderSingleAppResult(manifestURL) {
+  renderSingleAppResult: function rocketbar_renderSingleAppResult(manifestURL, isInTaskSwitcher) {
     var app = Applications.installedApps[manifestURL];
     var li = document.createElement('li');
     li.textContent = app.manifest.name;
@@ -286,6 +324,12 @@ var Rocketbar = {
       li.style.backgroundImage = 'url(' + app.origin +
         app.manifest.icons['60'] + ')';
     }
+    
+    if (isInTaskSwitcher) {
+      li.addEventListener('pan', this.pan.bind(this));
+      li.addEventListener('swipe', this.swipe.bind(this));
+    }
+    
     this.results.appendChild(li);
   },
   
@@ -299,7 +343,7 @@ var Rocketbar = {
     }, this);
   },
 
-  renderSingleSiteResult: function rocketbar_renderSingleSiteResult(result) {
+  renderSingleSiteResult: function rocketbar_renderSingleSiteResult(result, isInTaskSwitcher) {
     var resultItem = document.createElement('li');
     var resultTitle = document.createElement('h3');
     var resultURL = document.createElement('small');
@@ -308,6 +352,12 @@ var Rocketbar = {
     resultItem.setAttribute('data-site-url', result.uri);
     resultItem.appendChild(resultTitle);
     resultItem.appendChild(resultURL);
+    
+    if (isInTaskSwitcher) {
+      resultItem.addEventListener('pan', this.pan.bind(this));
+      resultItem.addEventListener('swipe', this.swipe.bind(this));
+    }
+    
     this.results.appendChild(resultItem);
   },
   
@@ -317,9 +367,9 @@ var Rocketbar = {
       // Is there a smartest way to distinguish apps from 
       // webpages? This doesn't work on nightly.
       if (element.indexOf('app://') === -1) {
-        this.renderSingleSiteResult({uri: element, title:element});
+        this.renderSingleSiteResult({uri: element, title:element}, true);
       } else {
-        this.renderSingleAppResult(element);
+        this.renderSingleAppResult(element, true);
       }
     }, this);
   },

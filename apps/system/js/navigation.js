@@ -11,8 +11,13 @@ var WindowManager = (function() {
       debug('Someone call launch: ' + arguments);
     },
 
-    kill: function() {
+    kill: function(url) {
       debug('Someone call kill: ' + arguments);
+
+      var previousCurrent = current;
+      current = GroupedNavigation.removeGroup(current, url);
+      var newHistory = GroupedNavigation.getSheet(current);
+      declareSheetAsCurrent(newHistory, true);
     },
 
     reload: function() {
@@ -49,6 +54,7 @@ var WindowManager = (function() {
 
     toggleHomescreen: function() {
       debug('Someone call toggleHomescreen: ' + arguments);
+      toggleHomescreen();
     },
 
 
@@ -118,11 +124,8 @@ var WindowManager = (function() {
 
       var previousCurrent = current;
       current = GroupedNavigation.evictSheet(current, history);
-
-      if (current != previousCurrent) {
-        var newHistory = GroupedNavigation.getSheet(current);
-        declareSheetAsCurrent(newHistory, (previousCurrent < current));
-      }
+      var newHistory = GroupedNavigation.getSheet(current);
+      declareSheetAsCurrent(newHistory, true);
     },
 
     resizeCurrentSheet: function(width, height) {
@@ -403,6 +406,11 @@ var WindowManager = (function() {
 })();
 
 function declareSheetAsCurrent(history, forward) {
+  if (!history) {
+    WindowManager.toggleHomescreen();
+    return;
+  }
+
   if (history.location === 'about:blank') {
     PagesIntro.show();
   }

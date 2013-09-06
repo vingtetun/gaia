@@ -1,12 +1,12 @@
 'use strict';
 
 var GroupedNavigation = {
-  getAllGroups: function(){
+  getAllGroups: function() {
     return this._groups.map(function(group){
       return group.url;
     });
   },
-  
+
   getSheet: function(flatIndex) {
     var indexPath = this._indexPath(flatIndex);
 
@@ -36,14 +36,19 @@ var GroupedNavigation = {
     return this._flatIndex(nextIndex, 0);
   },
 
-  removeSheet: function(current, sheetFlatIndex) {
+  removeSheetAtIndex: function(current, sheetFlatIndex) {
     var flatIndex = (current >= sheetFlatIndex) ? (current - 1) : current;
 
     var indexPath = this._indexPath(sheetFlatIndex);
     var groupIndex = indexPath.groupIndex;
     var sheetIndex = indexPath.sheetIndex;
 
-    this._groups[groupIndex].sheets.splice(sheetIndex, 1);
+    var removedSheet = this._groups[groupIndex].sheets.splice(sheetIndex, 1)[0];
+    if (removedSheet) {
+      removedSheet.wrapper.parentNode.removeChild(removedSheet.wrapper);
+      removedSheet.free();
+      removedSheet.close();
+    }
     if (!this._groups[groupIndex].sheets.length) {
       this._groups.splice(groupIndex, 1);
     }
@@ -53,13 +58,23 @@ var GroupedNavigation = {
 
   evictSheet: function(current, sheet) {
     var ip = this._indexPathOfSheet(sheet);
-    return this.removeSheet(current,
+    return this.removeSheetAtIndex(current,
                             this._flatIndex(ip.groupIndex, ip.sheetIndex));
   },
 
-  removeGroup: function(url) {
-    // XXX: implement
-    console.log('removing group', url);
+  removeGroup: function(current, url) {
+    var newCurrent = current;
+    var gIndex = this._indexOfGroup(url);
+    var group = this._groups[gIndex];
+    if (!group) {
+      return current;
+    }
+
+    for (var i = (group.sheets.length - 1); i >= 0; i--) {
+      newCurrent = this.removeSheetAtIndex(newCurrent, this._flatIndex(gIndex, i));
+    }
+
+    return newCurrent;
   },
 
   requestApp: function(current, manifestURL) {

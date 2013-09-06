@@ -16,7 +16,7 @@ var ContextMenu = {
       if (item.nodeName == 'A') {
         items.push({
           label: 'Open In New Sheet',
-          value: item.data
+          value: item.data.uri
         });
       }
     });

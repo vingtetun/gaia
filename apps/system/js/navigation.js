@@ -376,6 +376,11 @@ var WindowManager = (function() {
       turnOn = (force.turn == 'on');
     }
 
+    // If we have nothing we always want the homescreen
+    if (!GroupedNavigation.getAllGroups().length) {
+      turnOn = true;
+    }
+
     if ((turnOn && homeScreenOn) ||
         (!turnOn && !homeScreenOn)) {
       return;

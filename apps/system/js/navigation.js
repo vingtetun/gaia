@@ -14,10 +14,12 @@ var WindowManager = (function() {
     kill: function(url) {
       debug('Someone call kill: ' + arguments);
 
-      var previousCurrent = current;
+      var previousHistory = GroupedNavigation.getSheet(current);
       current = GroupedNavigation.removeGroup(current, url);
       var newHistory = GroupedNavigation.getSheet(current);
-      declareSheetAsCurrent(newHistory, true);
+      if (newHistory != previousHistory) {
+        declareSheetAsCurrent(newHistory, true, true);
+      }
     },
 
     reload: function() {
@@ -410,7 +412,7 @@ var WindowManager = (function() {
   return obj;
 })();
 
-function declareSheetAsCurrent(history, forward) {
+function declareSheetAsCurrent(history, forward, removing) {
   if (!history) {
     WindowManager.toggleHomescreen();
     return;
@@ -423,7 +425,8 @@ function declareSheetAsCurrent(history, forward) {
     bubbles: true,
     detail: {
       current: history,
-      forward: forward
+      forward: forward,
+      removing: removing
     }
   });
 

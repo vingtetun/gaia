@@ -300,7 +300,7 @@ var WindowManager = (function() {
       PagesIntro.show();
     }
 
-    if (frame.hasAttribute('mozapp')) {
+    if (frame.hasAttribute('mozapp') && (origin.indexOf('app://') != -1)) {
       openApp(frame.getAttribute('mozapp'), origin, frame);
     } else {
       openOrigin(origin, frame);

@@ -11,7 +11,7 @@ var Rocketbar = {
   bar: document.getElementById('rocketbar'),
   input: document.getElementById('rocketbar-input'),
   results: document.getElementById('rocketbar-results'),
-  
+
   /**
    * Initialise Rocketbar.
    */
@@ -383,6 +383,7 @@ var Rocketbar = {
    */
   handleWindowChange: function rocketbar_handleWindowChange(evt) {
     var history = evt.detail.current;
+    var removing = e.detail.removing;
     this.currentWindow = history;
     this.currentLocation = history.location;
     this.currentTitle = history.title;
@@ -392,7 +393,7 @@ var Rocketbar = {
       this.input.value = this.currentLocation;
     }
 
-    if (!history.loading) {
+    if (!history.loading && !removing) {
       this.close(false);
     }
 

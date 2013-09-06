@@ -12,6 +12,7 @@ var TransitionManager = (function() {
 
   var current = null;
   window.addEventListener('historychange', function onHistoryChange(e) {
+    //TODO: if detail.removing we should animate differently
     var previous = current;
     current = e.detail.current;
     var forward = e.detail.forward;

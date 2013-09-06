@@ -1,6 +1,12 @@
 'use strict';
 
 var GroupedNavigation = {
+  getAllGroups: function(){
+    return this._groups.map(function(group){
+      return group.url;
+    });
+  },
+  
   getSheet: function(flatIndex) {
     var indexPath = this._indexPath(flatIndex);
 
@@ -49,6 +55,11 @@ var GroupedNavigation = {
     var ip = this._indexPathOfSheet(sheet);
     return this.removeSheet(current,
                             this._flatIndex(ip.groupIndex, ip.sheetIndex));
+  },
+
+  removeGroup: function(url) {
+    // XXX: implement
+    console.log('removing group', url);
   },
 
   requestApp: function(current, manifestURL) {

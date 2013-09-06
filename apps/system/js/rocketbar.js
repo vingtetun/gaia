@@ -364,12 +364,14 @@ var Rocketbar = {
   showRunningApps: function rocketbar_showRunningApps(){
     var runningApps = GroupedNavigation.getAllGroups();
     runningApps.forEach(function(element) {
-      // Is there a smartest way to distinguish apps from 
-      // webpages? This doesn't work on nightly.
-      if (element.indexOf('app://') === -1) {
-        this.renderSingleSiteResult({uri: element, title:element}, true);
-      } else {
-        this.renderSingleAppResult(element, true);
+      if (this.HIDDEN_APPS.indexOf(element) === -1) {
+        // Is there a smartest way to distinguish apps from 
+        // webpages? This doesn't work on nightly.
+        if (element.indexOf('app://') === -1) {
+          this.renderSingleSiteResult({uri: element, title:element}, true);
+        } else {
+          this.renderSingleAppResult(element, true);
+        }
       }
     }, this);
   },

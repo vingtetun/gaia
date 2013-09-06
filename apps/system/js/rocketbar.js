@@ -40,7 +40,7 @@ var Rocketbar = {
 
     this.gestureDetector = new GestureDetector(this.results);
     this.gestureDetector.startDetecting();
-        
+
     navigator.mozSettings.addObserver('rocketbar.show', function(event) {
       this.open(true);
     }.bind(this));
@@ -228,7 +228,7 @@ var Rocketbar = {
         WindowManager.openNewSheet(siteURL);
       }
     };
-    
+
     if (this.currentLocation === 'about:blank') {
       this.results.classList.remove('open');
       this.input.blur();
@@ -296,9 +296,9 @@ var Rocketbar = {
     }
 
     this.results.removeChild(element);
-    GroupedNavigation.removeGroup(element.dataset.manifestURL || element.dataset.siteURL);
+    WindowManager.kill(element.dataset.manifestUrl || element.dataset.siteUrl);
   },
-  
+
   /**
    * Show rocketbar results for a list of app manifest URLs.
    *
@@ -324,15 +324,15 @@ var Rocketbar = {
       li.style.backgroundImage = 'url(' + app.origin +
         app.manifest.icons['60'] + ')';
     }
-    
+
     if (isInTaskSwitcher) {
       li.addEventListener('pan', this.pan.bind(this));
       li.addEventListener('swipe', this.swipe.bind(this));
     }
-    
+
     this.results.appendChild(li);
   },
-  
+
   /**
    *  Show rocketbar results for a list of places.
    */
@@ -352,15 +352,15 @@ var Rocketbar = {
     resultItem.setAttribute('data-site-url', result.uri);
     resultItem.appendChild(resultTitle);
     resultItem.appendChild(resultURL);
-    
+
     if (isInTaskSwitcher) {
       resultItem.addEventListener('pan', this.pan.bind(this));
       resultItem.addEventListener('swipe', this.swipe.bind(this));
     }
-    
+
     this.results.appendChild(resultItem);
   },
-  
+
   showRunningApps: function rocketbar_showRunningApps(){
     var runningApps = GroupedNavigation.getAllGroups();
     runningApps.forEach(function(element) {
@@ -375,7 +375,7 @@ var Rocketbar = {
       }
     }, this);
   },
-  
+
   /**
    * Handle window history change event.
    *
@@ -394,8 +394,8 @@ var Rocketbar = {
 
     if (!history.loading) {
       this.close(false);
-    } 
-    
+    }
+
     if (history.location === 'about:blank') {
       PagesIntro.show();
       this.open();
@@ -404,7 +404,7 @@ var Rocketbar = {
       history.ontitlechange = this.setTitle.bind(this);
       history.onstatuschange = this.setLoading.bind(this);
     }
-    
+
   },
 
   /**

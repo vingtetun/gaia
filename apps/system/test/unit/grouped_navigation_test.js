@@ -32,6 +32,13 @@ suite('system/GroupedNavigation', function() {
     GroupedNavigation._groups = [];
   });
 
+  suite('> getting all the groups', function() {
+    test('should return one url per group', function() {
+      var urls = ['http://mozilla.com', smsManifest, 'http://google.com'];
+      assert.deepEqual(urls, GroupedNavigation.getAllGroups());
+    });
+  });
+
   suite('> basic grouping', function() {
     test('should group app sheet together', function() {
       assert.equal(smsHistory, GroupedNavigation.getSheet(1));
@@ -166,7 +173,7 @@ suite('system/GroupedNavigation', function() {
     suite('before the current position', function() {
       setup(function() {
         // [mozilla.com]-[sms]-[sms/new message]-[google.com]
-        newCurrent = GroupedNavigation.removeSheet(1, 0);
+        newCurrent = GroupedNavigation.removeSheetAtIndex(1, 0);
         // [sms]-[sms/new message]-[google.com]
       });
 
@@ -177,12 +184,21 @@ suite('system/GroupedNavigation', function() {
       test('should remove the sheet', function() {
         assert.equal(smsHistory, GroupedNavigation.getSheet(0));
       });
+
+      test('should close the history', function() {
+        assert.isTrue(mozHistory.mFreeCalled);
+        assert.isTrue(mozHistory.mCloseCalled);
+      });
+
+      test('should remove the history from the dom', function() {
+        assert.isTrue(mozHistory.mRemovedCalled);
+      });
     });
 
     suite('after the current position', function() {
       setup(function() {
         // [mozilla.com]-[sms]-[sms/new message]-[google.com]
-        newCurrent = GroupedNavigation.removeSheet(1, 3);
+        newCurrent = GroupedNavigation.removeSheetAtIndex(1, 3);
         // [mozilla.com]-[sms]-[sms/new message]
       });
 
@@ -198,7 +214,7 @@ suite('system/GroupedNavigation', function() {
     suite('removing the current sheet', function() {
       setup(function() {
         // [mozilla.com]-[sms]-[sms/new message]-[google.com]
-        newCurrent = GroupedNavigation.removeSheet(2, 2);
+        newCurrent = GroupedNavigation.removeSheetAtIndex(2, 2);
         // [mozilla.com]-[sms]-[google.com]
       });
 
@@ -260,6 +276,61 @@ suite('system/GroupedNavigation', function() {
 
       test('should remove the sheet', function() {
         assert.equal(googleHistory, GroupedNavigation.getSheet(2));
+      });
+    });
+  });
+
+  suite('> group removal', function() {
+    var newCurrent;
+
+    suite('before the current position', function() {
+      setup(function() {
+        // [mozilla.com]-[sms]-[sms/new message]-[google.com]
+        newCurrent = GroupedNavigation.removeGroup(3, smsManifest);
+        // [mozilla.com]-[google.com]
+      });
+
+      test('should give a updated current position', function() {
+        assert.equal(1, newCurrent);
+      });
+
+      test('should remove all the sheets', function() {
+        assert.equal(mozHistory, GroupedNavigation.getSheet(0));
+        assert.equal(googleHistory, GroupedNavigation.getSheet(1));
+      });
+    });
+
+    suite('after the current position', function() {
+      setup(function() {
+        // [mozilla.com]-[sms]-[sms/new message]-[google.com]
+        newCurrent = GroupedNavigation.removeGroup(0, smsManifest);
+        // [mozilla.com]-[google.com]
+      });
+
+      test('should leave the current position unchanged', function() {
+        assert.equal(0, newCurrent);
+      });
+
+      test('should remove all the sheets', function() {
+        assert.equal(mozHistory, GroupedNavigation.getSheet(0));
+        assert.equal(googleHistory, GroupedNavigation.getSheet(1));
+      });
+    });
+
+    suite('removing the group of the current sheet', function() {
+      setup(function() {
+        // [mozilla.com]-[sms]-[sms/new message]-[google.com]
+        newCurrent = GroupedNavigation.removeGroup(2, smsManifest);
+        // [mozilla.com]-[google.com]
+      });
+
+      test('should go back a sheet', function() {
+        assert.equal(0, newCurrent);
+      });
+
+      test('should remove all the sheets', function() {
+        assert.equal(mozHistory, GroupedNavigation.getSheet(0));
+        assert.equal(googleHistory, GroupedNavigation.getSheet(1));
       });
     });
   });

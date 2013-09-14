@@ -85,6 +85,15 @@ var TransitionManager = (function() {
         curWrapper.classList.remove('shadow');
         curWrapper.classList.remove('transitioning');
         curWrapper.style.zIndex = '';
+
+        var evt = new CustomEvent('sheetschanged', {
+          bubbles: true,
+          detail: {
+            current: current,
+            previous: previous
+          }
+        });
+        window.dispatchEvent(evt);
       });
     });
   });

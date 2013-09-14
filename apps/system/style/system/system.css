@@ -685,10 +685,6 @@ body {
 }
 
 /* Touch */
-body.homescreen-displayed .touch-panel {
-  pointer-events: none;
-}
-
 .touch-panel {
   position:absolute;
   z-index: 4093;
@@ -783,22 +779,6 @@ body.homescreen-displayed .touch-panel {
 
 .window-wrapper.canGoBack button.back,
 .window-wrapper.canGoForward button.forward {
-  pointer-events: auto;
-  opacity: 1;
-}
-
-#homescreen {
-  display: block;
-  transform: translateX(0);
-  z-index: 1500;
-
-  transition: opacity .3s linear;
-  opacity: 0;
-
-  pointer-events: none;
-}
-
-body.homescreen-displayed #homescreen {
   pointer-events: auto;
   opacity: 1;
 }

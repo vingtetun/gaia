@@ -77,6 +77,7 @@ html, body {
 img.searchbar {
   width: -moz-calc(100% - 26px);
   margin: 40px 0px 20px 0;
+  border: 2px white solid;
 }
 
 .labelWrapper {

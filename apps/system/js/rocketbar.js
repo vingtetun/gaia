@@ -383,7 +383,6 @@ var Rocketbar = {
    */
   handleWindowChange: function rocketbar_handleWindowChange(evt) {
     var history = evt.detail.current;
-    var removing = e.detail.removing;
     this.currentWindow = history;
     this.currentLocation = history.location;
     this.currentTitle = history.title;
@@ -393,7 +392,7 @@ var Rocketbar = {
       this.input.value = this.currentLocation;
     }
 
-    if (!history.loading && !removing) {
+    if (!history.loading) {
       this.close(false);
     }
 

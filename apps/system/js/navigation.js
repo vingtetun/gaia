@@ -258,7 +258,6 @@ var WindowManager = (function() {
 
     var cover = document.createElement('div');
     cover.className = 'cover';
-    cover.style.display = 'block';
     wrapper.appendChild(cover);
 
     var backButton = document.createElement('button');
@@ -604,38 +603,20 @@ History.prototype = {
       return;
     }
 
-    var cover = this.cover;
-
-    var req = this.iframe.getScreenshot(window.innerWidth, window.innerHeight);
-    var afterScreenshot = (function(e) {
-      if (e.target.result) {
-        cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
-        this._screenshotCached = true;
-      } else {
-        cover.style.backgroundImage = '';
-      }
-
-      this._swapWithCover();
-    }).bind(this);
-
-    req.onsuccess = afterScreenshot;
-    req.onerror = afterScreenshot;
+    this._afterScreenshot(this._swapWithCover.bind(this));
   },
 
   _swapWithCover: function history_swapWithCover() {
     var iframe = this.iframe;
 
-    setTimeout((function bitLater() {
-      this.cover.style.display = 'block';
-      if ('setVisible' in iframe) {
-        iframe.setVisible(false);
-      }
+    this.cover.style.display = 'block';
+    if ('setVisible' in iframe) {
+      iframe.setVisible(false);
+    }
 
-      // Wow, the window was awaken while we were screenshoting
-      if (this._awake) {
-        this.wakeUp();
-      }
-    }).bind(this), 1000); // The duration of the sheet transition
+    if (this._awake) {
+      this.wakeUp();
+    }
   },
 
   wakeUp: function history_wakeUp() {
@@ -646,31 +627,49 @@ History.prototype = {
       iframe.setVisible(true);
     }
 
-    var cover = this.cover;
-    var removeCoverWhenPainted = function() {
-      setTimeout(function bitLater() {
-        cover.style.display = '';
-      }, 250);
-    }
-
-    if (!('addNextPaintListener' in iframe)) {
-      removeCoverWhenPainted();
+    if (!('getScreenshot' in iframe)) {
+      this._swapWithFrame();
       return;
     }
 
+    // We get a screenshot here to fore compositing
+    this._afterScreenshot(this._swapWithFrame.bind(this));
+  },
 
-    iframe.addNextPaintListener(function paintWait() {
-      iframe.removeNextPaintListener(paintWait);
-      removeCoverWhenPainted();
+  _swapWithFrame: function history_swapWithFrame() {
+    this.cover.style.display = '';
+
+    if (!this._awake) {
+      this.free();
+      return;
+    }
+
+    // We invalidate the screenshot only if the sheet gets repainted
+    var self = this;
+    self.iframe.addNextPaintListener(function paintWait() {
+      self.iframe.removeNextPaintListener(paintWait);
+      self._screenshotCached = false;
     });
+  },
 
-    // We invalidate the screenshot once the sheet has been displayed
-    // for 1.5sec
-    this._screenshotInvalidationID = setTimeout((function invalidate() {
-      this._screenshotCached = false;
-      this.cover.style.backgroundImage = '';
-    }).bind(this), 1500);
+  _afterScreenshot: function history_afterScreenshot(callback) {
+    var req = this.iframe.getScreenshot(window.innerWidth, window.innerHeight);
+    var afterScreenshot = (function(e) {
+      if (e.target.result) {
+        this.cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
+        this._screenshotCached = true;
+      } else {
+        this.cover.style.backgroundImage = '';
+        this._screenshotCached = false;
+      }
 
+      if (callback && typeof(callback) == 'function') {
+        callback();
+      }
+    }).bind(this);
+
+    req.onsuccess = afterScreenshot;
+    req.onerror = afterScreenshot;
   },
 
   ontitlechange: null,

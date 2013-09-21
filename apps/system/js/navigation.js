@@ -204,6 +204,7 @@ var WindowManager = (function() {
 
     if (manifestURL == homescreenManifestURL) {
       newHistory.isHomescreen = true;
+      homescreenHistory = newHistory;
     }
 
     current = GroupedNavigation.insertSheet(current, app.manifestURL, newHistory);
@@ -327,6 +328,7 @@ var WindowManager = (function() {
 
   /* Homescreen */
   var homescreenManifestURL = null;
+  var homescreenHistory = null;
 
   function setHomescreen(manifestURL) {
     homescreenManifestURL = manifestURL;
@@ -339,6 +341,13 @@ var WindowManager = (function() {
   function openHomescreen(force) {
     var currentHistory = GroupedNavigation.getSheet(current);
     if (currentHistory && currentHistory.isHomescreen) {
+      return;
+    }
+
+    if (homescreenHistory) {
+      current = GroupedNavigation.insertSheet(current, homescreenManifestURL,
+                                              homescreenHistory);
+      declareSheetAsCurrent(homescreenHistory, true);
       return;
     }
 

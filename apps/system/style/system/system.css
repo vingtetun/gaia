@@ -699,10 +699,12 @@ body {
 }
 
 #right-panel {
-  height: calc(100% - 40px);
-  width: 20px;
+  height: calc(100% - 88px);
+  width: 30px;
   right: 0;
-  top: 20px;
+  top: 44px;
+
+  border-radius: 50% 0 0 50%;
 }
 
 #bottom-panel {
@@ -713,10 +715,12 @@ body {
 }
 
 #left-panel {
-  height: calc(100% - 40px);
-  width: 20px;
+  height: calc(100% - 88px);
+  width: 30px;
   left: 0;
-  top: 20px;
+  top: 44px;
+
+  border-radius: 0 50% 50% 0;
 }
 
 .window-wrapper > iframe {

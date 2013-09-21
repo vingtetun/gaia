@@ -44,7 +44,7 @@ var GroupedNavigation = {
     var sheetIndex = indexPath.sheetIndex;
 
     var removedSheet = this._groups[groupIndex].sheets.splice(sheetIndex, 1)[0];
-    if (removedSheet) {
+    if (removedSheet && !removedSheet.isHomescreen) {
       removedSheet.wrapper.parentNode.removeChild(removedSheet.wrapper);
       removedSheet.free();
       removedSheet.close();

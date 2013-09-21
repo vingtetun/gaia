@@ -354,6 +354,9 @@ var WindowManager = (function() {
   window.addEventListener('sheetschanged', function onSheetsChanged(e) {
     var prev = e.detail.previous;
     var cur = e.detail.current;
+    var statusbar = document.getElementById('statusbar');
+
+    statusbar.classList[cur.isHomescreen ? 'add' : 'remove']('displayed');
 
     if (prev) {
       if (prev.isHomescreen) {
@@ -607,6 +610,10 @@ History.prototype = {
   },
 
   _swapWithCover: function history_swapWithCover() {
+    if (!this.cover) {
+      return;
+    }
+
     var iframe = this.iframe;
 
     this.cover.style.display = 'block';
@@ -659,7 +666,9 @@ History.prototype = {
         this.cover.style.backgroundImage = 'url(' + URL.createObjectURL(e.target.result) + ')';
         this._screenshotCached = true;
       } else {
-        this.cover.style.backgroundImage = '';
+        if (this.cover) {
+          this.cover.style.backgroundImage = '';
+        }
         this._screenshotCached = false;
       }
 

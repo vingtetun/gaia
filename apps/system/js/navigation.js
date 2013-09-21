@@ -372,6 +372,10 @@ var WindowManager = (function() {
         current = GroupedNavigation.removeGroup(current, homescreenManifestURL);
         return;
       }
+      if (prev.isAbout) {
+        current = GroupedNavigation.removeGroup(current, 'about:blank');
+        return;
+      }
       prev.free();
     }
 
@@ -417,6 +421,7 @@ function History(origin, type) {
   this.type = type;
   this.isHomescreen = false;
   this.isApp = (origin.indexOf('app://') != -1);
+  this.isAbout = (origin == 'about:blank');
   this.painted = false;
 
   this.wrapper = null;

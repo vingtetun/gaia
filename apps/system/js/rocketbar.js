@@ -172,7 +172,7 @@ var Rocketbar = {
   handleBlur: function rocketbar_handleBlur(evt) {
     if (this.currentTitle) {
       this.input.value = this.currentTitle;
-    } else if (this.currentlyPackagedOnApp) {
+    } else if (this.currentlyOnPackagedApp) {
       this.input.value = this.currentLocation;
     } else {
       this.input.value = '';
@@ -399,6 +399,7 @@ var Rocketbar = {
     if (history.location === 'about:blank') {
       PagesIntro.show();
       this.open();
+      this.input.value = '';
     } else {
       this.setLoading(history.loading);
       history.ontitlechange = this.setTitle.bind(this);

@@ -12,6 +12,13 @@ PagesIntro = {
   
   showResults: function pagesIntro_showResults(results) {
     this.element.innerHTML = '';
+
+    var headerItem = document.createElement('li');
+    var headerTitle = document.createElement('h2');
+    headerTitle.textContent = 'Web History';
+    headerItem.appendChild(headerTitle);
+    this.element.appendChild(headerItem);
+
     results.forEach(function(result) {
       if (result.uri !== 'about:blank') {
         var resultItem = document.createElement('li');

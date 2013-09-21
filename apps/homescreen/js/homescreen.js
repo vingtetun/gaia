@@ -28,7 +28,7 @@ const Homescreen = (function() {
         { name: 'Video' },
         { name: 'FM Radio' },
         { name: 'Email' },
-        { name: 'Pages' }
+        { name: 'Internet' }
       ]
     },
     {
@@ -163,20 +163,20 @@ const Homescreen = (function() {
     } else {
       var app = { manifest: { name: application.name }};
     }
-    
-    if (application.name === "Pages") {
+
+    if (application.name === 'Internet') {
       app.launch = function(){
         window.open('about:blank');
       };
     }
-    
+
     var name, icon;
     if (entryPoint !== null) {
       name = app.manifest.entry_points[entryPoint].name;
     } else {
       name = app.manifest.name;
     }
-    
+
     icon = window.location.protocol + '//' + 
       window.location.host + '/style/icons/' + application.name.replace(' ', '') + '.png';
 

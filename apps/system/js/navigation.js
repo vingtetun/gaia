@@ -395,7 +395,10 @@ function declareSheetAsCurrent(history, forward, removing) {
 
   if (history.location === 'about:blank') {
     PagesIntro.show();
+  } else {
+    PagesIntro.hide();
   }
+
   var evt = new CustomEvent('historychange', {
     bubbles: true,
     detail: {

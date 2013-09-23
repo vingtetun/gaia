@@ -154,6 +154,8 @@ var Rocketbar = {
    * @param {Event} evt The focus event.
    */
   handleFocus: function rocketbar_handleFocus(evt) {
+    document.getElementById('screen').classList.remove('cards-view');
+    document.getElementById('cards-view').classList.remove('active');
     // Don't show app:// URLs of packaged apps
     if (!this.currentlyOnPackagedApp) {
       this.input.value = this.currentLocation;

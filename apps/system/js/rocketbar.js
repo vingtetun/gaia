@@ -102,7 +102,7 @@ var Rocketbar = {
     this.showRunningApps();
     
     if (focus) {
-      this.input.focus();
+      //this.input.focus();
       this.results.classList.add('open');
     }
 

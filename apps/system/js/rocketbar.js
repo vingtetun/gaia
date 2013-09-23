@@ -99,12 +99,12 @@ var Rocketbar = {
     this.results.innerHTML = '';
     this.bar.classList.add('open');
 
-    //this.showRunningApps();
+    this.showRunningApps();
     
     if (focus) {
-      //this.input.focus();
-      //this.results.classList.add('open');
-      CardsView.showCardSwitcher();
+      this.input.focus();
+      this.results.classList.add('open');
+      //CardsView.showCardSwitcher();
     }
     
 

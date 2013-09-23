@@ -101,72 +101,84 @@ var CardsView = (function() {
     window.addEventListener('lock', CardsView);
 
     // Close utility tray if it is opened.
-    UtilityTray.hide(true);
+    //UtilityTray.hide(true);
 
     // Apps info from WindowManager
-    displayedApp = WindowManager.getDisplayedApp();
+    //displayedApp = WindowManager.getDisplayedApp();
     currentDisplayed = 0;
-    runningApps = WindowManager.getRunningApps();
-
+    //runningApps = WindowManager.getRunningApps();
+    runningApps = GroupedNavigation.getAllGroups();
     // Switch to homescreen
-    WindowManager.launch(null);
+    //WindowManager.launch(null);
     cardsViewShown = true;
 
     // If user is not able to sort apps manualy,
     // display most recetly active apps on the far left
-    if (!USER_DEFINED_ORDERING) {
-      var sortable = [];
-      for (var origin in runningApps)
-        sortable.push({origin: origin, app: runningApps[origin]});
-
-      sortable.sort(function(a, b) {
-        return b.app.launchTime - a.app.launchTime;
-      });
-      runningApps = {};
-
-      // I assume that object properties are enumerated in
-      // the same order they were defined.
-      // There is nothing about that in spec, but I've never
-      // seen any unexpected behavior.
-      sortable.forEach(function(element) {
-        runningApps[element.origin] = element.app;
-      });
-
-      // First add an item to the cardsList for each running app
-      for (var origin in runningApps) {
-        addCard(origin, runningApps[origin], function showCards() {
-          screenElement.classList.add('cards-view');
-          cardsView.classList.add('active');
-        });
+    // if (!USER_DEFINED_ORDERING) {
+    //       var sortable = [];
+    //       for (var origin in runningApps)
+    //         sortable.push({origin: origin, app: Applications.installedApps[origin]});
+    // 
+    //       sortable.sort(function(a, b) {
+    //         return b.app.launchTime - a.app.launchTime;
+    //       });
+    //       runningApps = {};
+    // 
+    //       // I assume that object properties are enumerated in
+    //       // the same order they were defined.
+    //       // There is nothing about that in spec, but I've never
+    //       // seen any unexpected behavior.
+    //       sortable.forEach(function(element) {
+    //         Applications.installedApps[element.origin] = element.app;
+    //       });
+    // 
+    //       // First add an item to the cardsList for each running app
+    //       for (var origin in runningApps) {
+    //         var app = Applications.installedApps[origin];
+    //         addCard(origin, app, function showCards() {
+    //           screenElement.classList.add('cards-view');
+    //           cardsView.classList.add('active');
+    //         });
+    //       }
+    // 
+    //     } else { // user ordering
+    // 
+    //       // first run
+    //       if (userSortedApps.length === 0) {
+    //         for (var origin in runningApps) {
+    //           userSortedApps.push(origin);
+    //         }
+    //       } else {
+    //         for (var origin in runningApps) {
+    //           // if we have some new app opened
+    //           if (userSortedApps.indexOf(origin) === -1) {
+    //             userSortedApps.push(origin);
+    //           }
+    //         }
+    //       }
+    // 
+    //       userSortedApps.forEach(function(origin) {
+    //         addCard(origin, runningApps[origin], function showCards() {
+    //           screenElement.classList.add('cards-view');
+    //           cardsView.classList.add('active');
+    //         });
+    //       });
+    // 
+    //       cardsView.addEventListener('contextmenu', CardsView);
+    // 
+    //     }
+    
+    runningApps.forEach(function(origin) {
+      if (Rocketbar.HIDDEN_APPS.indexOf(origin) > -1) {
+        return;
       }
-
-    } else { // user ordering
-
-      // first run
-      if (userSortedApps.length === 0) {
-        for (var origin in runningApps) {
-          userSortedApps.push(origin);
-        }
-      } else {
-        for (var origin in runningApps) {
-          // if we have some new app opened
-          if (userSortedApps.indexOf(origin) === -1) {
-            userSortedApps.push(origin);
-          }
-        }
-      }
-
-      userSortedApps.forEach(function(origin) {
-        addCard(origin, runningApps[origin], function showCards() {
-          screenElement.classList.add('cards-view');
-          cardsView.classList.add('active');
-        });
-      });
-
-      cardsView.addEventListener('contextmenu', CardsView);
-
-    }
-
+      var app = Applications.installedApps[origin];
+      addCard(origin, app, function showCards() {});
+    });
+    
+    screenElement.classList.add('cards-view');
+    cardsView.classList.add('active');
+      
     if (MANUAL_CLOSING) {
       cardsView.addEventListener('mousedown', CardsView);
     }
@@ -175,8 +187,8 @@ var CardsView = (function() {
     screen.mozLockOrientation('portrait-primary');
 
     // If there is a displayed app, take keyboard focus away
-    if (displayedApp)
-      runningApps[displayedApp].frame.blur();
+    // if (displayedApp)
+    //   runningApps[displayedApp].frame.blur();
 
     placeCards();
     // At the beginning only the current card can listen to tap events
@@ -191,9 +203,9 @@ var CardsView = (function() {
         setTimeout(displayedAppCallback);
       }
       // Not showing homescreen
-      if (app.frame.classList.contains('homescreen')) {
-        return;
-      }
+      // if (app.frame.classList.contains('homescreen')) {
+      //   return;
+      // }
 
       // Build a card representation of each window.
       // And add it to the card switcher
@@ -217,45 +229,45 @@ var CardsView = (function() {
       }
 
       var title = document.createElement('h1');
-      title.textContent = app.name;
+      //title.textContent = app.name;
+      title.textContent = app.manifest.name;
       card.appendChild(title);
 
       var frameForScreenshot = app.iframe;
 
-      if (PopupManager.getPopupFromOrigin(origin)) {
-        var popupFrame = PopupManager.getPopupFromOrigin(origin);
-        frameForScreenshot = popupFrame;
-
-        var subtitle = document.createElement('p');
-        subtitle.textContent =
-          PopupManager.getOpenedOriginFromOpener(origin);
+      // if (PopupManager.getPopupFromOrigin(origin)) {
+      //   var popupFrame = PopupManager.getPopupFromOrigin(origin);
+      //   frameForScreenshot = popupFrame;
+      // 
+      //   var subtitle = document.createElement('p');
+      //   subtitle.textContent =
+      //     PopupManager.getOpenedOriginFromOpener(origin);
+      //   card.appendChild(subtitle);
+      //   card.classList.add('popup');
+      // } else if (getOffOrigin(app.iframe.dataset.url ?
+      //       app.iframe.dataset.url : app.iframe.src, origin)) {
+      var subtitle = document.createElement('p');
+        subtitle.textContent = app.manifest.name;
         card.appendChild(subtitle);
-        card.classList.add('popup');
-      } else if (getOffOrigin(app.iframe.dataset.url ?
-            app.iframe.dataset.url : app.iframe.src, origin)) {
-        var subtitle = document.createElement('p');
-        subtitle.textContent = getOffOrigin(app.iframe.dataset.url ?
-            app.iframe.dataset.url : app.iframe.src, origin);
-        card.appendChild(subtitle);
-      }
+      //}
 
-      if (TrustedUIManager.hasTrustedUI(origin)) {
-        var popupFrame = TrustedUIManager.getDialogFromOrigin(origin);
-        frameForScreenshot = popupFrame.frame;
-        var header = document.createElement('section');
-        header.setAttribute('role', 'region');
-        header.classList.add('skin-organic');
-        header.innerHTML = '<header><button><span class="icon icon-close">';
-        header.innerHTML +=
-          '</span></button><h1>' + escapeHTML(popupFrame.name, true);
-        header.innerHTML += '</h1></header>';
-        card.appendChild(header);
-        card.classList.add('trustedui');
-      } else if (attentionScreenApps.indexOf(origin) == -1) {
+      // if (TrustedUIManager.hasTrustedUI(origin)) {
+      //       var popupFrame = TrustedUIManager.getDialogFromOrigin(origin);
+      //       frameForScreenshot = popupFrame.frame;
+      //       var header = document.createElement('section');
+      //       header.setAttribute('role', 'region');
+      //       header.classList.add('skin-organic');
+      //       header.innerHTML = '<header><button><span class="icon icon-close">';
+      //       header.innerHTML +=
+      //         '</span></button><h1>' + escapeHTML(popupFrame.name, true);
+      //       header.innerHTML += '</h1></header>';
+      //       card.appendChild(header);
+      //       card.classList.add('trustedui');
+      //     } else if (attentionScreenApps.indexOf(origin) == -1) {
         var closeButton = document.createElement('div');
         closeButton.classList.add('close-card');
         card.appendChild(closeButton);
-      }
+      //}
 
       cardsList.appendChild(card);
 
@@ -270,14 +282,14 @@ var CardsView = (function() {
         }
 
         // Handling cards in different orientations
-        var orientation = app.frame.dataset.orientation;
+        //var orientation = app.frame.dataset.orientation;
         var isLandscape = false;
-        if (orientation == 'landscape-primary' ||
-            orientation == 'landscape-secondary') {
-          isLandscape = true;
-        }
+        // if (orientation == 'landscape-primary' ||
+        //             orientation == 'landscape-secondary') {
+        //           isLandscape = true;
+        //         }
         // Rotate screenshotView if needed
-        screenshotView.classList.add(orientation);
+        //screenshotView.classList.add(orientation);
         if (isLandscape) {
           // We must exchange width and height if it's landscape mode
           var width = card.clientHeight;
@@ -290,54 +302,60 @@ var CardsView = (function() {
 
         // If we have a cached screenshot, use that first
         // We then 'res-in' the correctly sized version
-        var cachedLayer = WindowManager.screenshots[origin];
-        if (cachedLayer) {
-          screenshotView.style.backgroundImage = 'url(' + cachedLayer + ')';
-        }
+        // var cachedLayer = WindowManager.screenshots[origin];
+        // if (cachedLayer) {
+        //   screenshotView.style.backgroundImage = 'url(' + cachedLayer + ')';
+        // }
 
         // And then switch it with screenshots when one will be ready
         // (instead of -moz-element backgrounds)
         // Only take a new screenshot if is the active app
-        if (!cachedLayer || (
-          typeof frameForScreenshot.getScreenshot === 'function' &&
-          origin === displayedApp)) {
-          // rect is the final size (considering CSS transform) of the card.
-          var rect = card.getBoundingClientRect();
-          var width = isLandscape ? rect.height : rect.width;
-          var height = isLandscape ? rect.width : rect.height;
-          frameForScreenshot.getScreenshot(width, height).onsuccess =
-            function gotScreenshot(screenshot) {
-              if (screenshot.target.result) {
-                var objectURL = URL.createObjectURL(screenshot.target.result);
-
-                // Overwrite the cached image to prevent flickering
-                screenshotView.style.backgroundImage =
-                  'url(' + objectURL + '), url(' + cachedLayer + ')';
-
-                // setTimeout is needed to ensure that the image is fully drawn
-                // before we remove it. Otherwise the rendering is not smooth.
-                // See: https://bugzilla.mozilla.org/show_bug.cgi?id=844245
-                setTimeout(function() {
-
-                  // Override the cached image
-                  URL.revokeObjectURL(cachedLayer);
-                  WindowManager.screenshots[origin] = objectURL;
-                }, 200);
-              }
-            };
-        }
+        // if (
+        //   typeof frameForScreenshot.getScreenshot === 'function' &&
+        //   origin === displayedApp) {
+        //   // rect is the final size (considering CSS transform) of the card.
+        //   var rect = card.getBoundingClientRect();
+        //   var width = isLandscape ? rect.height : rect.width;
+        //   var height = isLandscape ? rect.width : rect.height;
+        //   frameForScreenshot.getScreenshot(width, height).onsuccess =
+        //     function gotScreenshot(screenshot) {
+        //       if (screenshot.target.result) {
+        //         var objectURL = URL.createObjectURL(screenshot.target.result);
+        // 
+        //         // Overwrite the cached image to prevent flickering
+        //         screenshotView.style.backgroundImage =
+        //           'url(' + objectURL + '), url(' + cachedLayer + ')';
+        // 
+        //         // setTimeout is needed to ensure that the image is fully drawn
+        //         // before we remove it. Otherwise the rendering is not smooth.
+        //         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=844245
+        //         setTimeout(function() {
+        // 
+        //           // Override the cached image
+        //           URL.revokeObjectURL(cachedLayer);
+        //           WindowManager.screenshots[origin] = objectURL;
+        //         }, 200);
+        //       }
+        //     };
+        // }
       });
+      
+      card.style.backgroundImage = 'url(' + app.origin +
+        app.manifest.icons['120'] + ')';
     }
   }
 
   function runApp(e) {
+    console.log('elo!', e.target.dataset.origin);
     // Handle close events
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
       cardsList.removeChild(element);
       closeApp(element, true);
     } else if ('origin' in e.target.dataset) {
-      WindowManager.launch(e.target.dataset.origin);
+      Applications.installedApps[e.target.dataset.origin].launch();
+      screenElement.classList.remove('cards-view');
+      cardsView.classList.remove('active');
     }
   }
 
@@ -426,6 +444,9 @@ var CardsView = (function() {
     } else {
       cardsView.addEventListener('transitionend', removeCards);
     }
+    
+    Rocketbar.close(true);
+    
   }
 
   function cardSwitcherIsShown() {

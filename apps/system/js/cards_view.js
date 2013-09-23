@@ -168,7 +168,10 @@ var CardsView = (function() {
     // 
     //     }
     
-    runningApps.forEach(function(origin){
+    runningApps.forEach(function(origin) {
+      if (Rocketbar.HIDDEN_APPS.indexOf(origin) > -1) {
+        return;
+      }
       var app = Applications.installedApps[origin];
       addCard(origin, app, function showCards() {});
     });
@@ -338,18 +341,21 @@ var CardsView = (function() {
       });
       
       card.style.backgroundImage = 'url(' + app.origin +
-        app.manifest.icons['320'] + ')';
+        app.manifest.icons['120'] + ')';
     }
   }
 
   function runApp(e) {
+    console.log('elo!', e.target.dataset.origin);
     // Handle close events
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
       cardsList.removeChild(element);
       closeApp(element, true);
     } else if ('origin' in e.target.dataset) {
-      WindowManager.launch(e.target.dataset.origin);
+      Applications.installedApps[e.target.dataset.origin].launch();
+      screenElement.classList.remove('cards-view');
+      cardsView.classList.remove('active');
     }
   }
 

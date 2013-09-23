@@ -356,7 +356,8 @@ var Rocketbar = {
     resultItem.setAttribute('data-site-url', result.uri);
     resultItem.appendChild(resultTitle);
     resultItem.appendChild(resultURL);
-
+    resultItem.style.backgroundImage = 'url(app://homescreen.gaiamobile.org/style/icons/Internet.png)';
+      
     if (isInTaskSwitcher) {
       resultItem.addEventListener('pan', this.pan.bind(this));
       resultItem.addEventListener('swipe', this.swipe.bind(this));

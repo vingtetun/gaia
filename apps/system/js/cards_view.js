@@ -230,10 +230,10 @@ var CardsView = (function() {
 
       var title = document.createElement('h1');
       //title.textContent = app.name;
-      title.textContent = app.manifest.name;
+      title.textContent = app && app.manifest && app.manifest.name || origin;
       card.appendChild(title);
 
-      var frameForScreenshot = app.iframe;
+      //var frameForScreenshot = app.iframe;
 
       // if (PopupManager.getPopupFromOrigin(origin)) {
       //   var popupFrame = PopupManager.getPopupFromOrigin(origin);
@@ -246,9 +246,9 @@ var CardsView = (function() {
       //   card.classList.add('popup');
       // } else if (getOffOrigin(app.iframe.dataset.url ?
       //       app.iframe.dataset.url : app.iframe.src, origin)) {
-      var subtitle = document.createElement('p');
-        subtitle.textContent = app.manifest.name;
-        card.appendChild(subtitle);
+      // var subtitle = document.createElement('p');
+      //   subtitle.textContent = app.manifest.name;
+      //   card.appendChild(subtitle);
       //}
 
       // if (TrustedUIManager.hasTrustedUI(origin)) {
@@ -340,18 +340,25 @@ var CardsView = (function() {
         // }
       });
       
-      card.style.backgroundImage = 'url(' + app.origin +
-        app.manifest.icons['120'] + ')';
+      var background = '';
+      if (app) {
+        background = 'url(' + app.origin + app.manifest.icons['120'] + ')';
+      } else {
+        background = 'url(app://homescreen.gaiamobile.org/style/icons/Internet.png)';
+      }
+      
+      card.style.backgroundImage = background;
     }
   }
 
   function runApp(e) {
-    console.log('elo!', e.target.dataset.origin);
     // Handle close events
+    console.log("clicked!!!!!!!", e.target.dataset.origin);
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
       cardsList.removeChild(element);
       closeApp(element, true);
+      alignCurrentCard();
     } else if ('origin' in e.target.dataset) {
       Applications.installedApps[e.target.dataset.origin].launch();
       screenElement.classList.remove('cards-view');

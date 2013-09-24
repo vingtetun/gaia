@@ -353,7 +353,6 @@ var CardsView = (function() {
 
   function runApp(e) {
     // Handle close events
-    console.log("clicked!!!!!!!", e.target.dataset.origin);
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
       cardsList.removeChild(element);

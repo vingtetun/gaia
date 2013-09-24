@@ -119,7 +119,8 @@ var Rocketbar = {
    */
   close: function rocketbar_close(evenIfFocused, callback) {
     this.progress.classList.remove('loading');
-
+    document.getElementById('screen').classList.remove('cards-view');
+    document.getElementById('cards-view').classList.remove('active');
     var focus = (this.input == document.activeElement);
     if (!focus || evenIfFocused) {
       this.results.classList.remove('open');

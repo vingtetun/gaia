@@ -346,12 +346,12 @@ var CardsView = (function() {
   }
 
   function runApp(e) {
-    console.log('elo!', e.target.dataset.origin);
     // Handle close events
     if (e.target.classList.contains('close-card')) {
       var element = e.target.parentNode;
       cardsList.removeChild(element);
       closeApp(element, true);
+      alignCurrentCard();
     } else if ('origin' in e.target.dataset) {
       Applications.installedApps[e.target.dataset.origin].launch();
       screenElement.classList.remove('cards-view');

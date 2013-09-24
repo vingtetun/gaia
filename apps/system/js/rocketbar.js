@@ -99,12 +99,12 @@ var Rocketbar = {
     this.results.innerHTML = '';
     this.bar.classList.add('open');
 
-    this.showRunningApps();
+    //this.showRunningApps();
     
     if (focus) {
-      this.input.focus();
-      this.results.classList.add('open');
-      //CardsView.showCardSwitcher();
+      //this.input.focus();
+      //this.results.classList.add('open');
+      CardsView.showCardSwitcher();
     }
     
 
@@ -154,8 +154,8 @@ var Rocketbar = {
    * @param {Event} evt The focus event.
    */
   handleFocus: function rocketbar_handleFocus(evt) {
-    document.getElementById('screen').classList.remove('cards-view');
-    document.getElementById('cards-view').classList.remove('active');
+    //document.getElementById('screen').classList.remove('cards-view');
+    //document.getElementById('cards-view').classList.remove('active');
     // Don't show app:// URLs of packaged apps
     if (!this.currentlyOnPackagedApp) {
       this.input.value = this.currentLocation;

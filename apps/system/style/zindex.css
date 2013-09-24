@@ -48,7 +48,7 @@
   z-index: 4097;
 }
 #screen.cards-view > [data-z-index-level="cards-view"] {
-  z-index: 4096;
+  z-index: 4093;
 }
 
 #screen > [data-z-index-level="keyboard-frame"] {

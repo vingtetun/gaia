@@ -97,6 +97,7 @@ var Rocketbar = {
    */
   open: function rocketbar_open(focus) {
     this.results.innerHTML = '';
+    this.input.value = '';
     this.bar.classList.add('open');
 
     //this.showRunningApps();
@@ -157,11 +158,11 @@ var Rocketbar = {
     //document.getElementById('screen').classList.remove('cards-view');
     //document.getElementById('cards-view').classList.remove('active');
     // Don't show app:// URLs of packaged apps
-    if (!this.currentlyOnPackagedApp) {
-      this.input.value = this.currentLocation;
-    } else {
+    //if (!this.currentlyOnPackagedApp) {
+    //  this.input.value = this.currentLocation;
+    //} else {
       this.input.value = '';
-    }
+    //}
     this.input.select();
 
     this.results.classList.add('open');
@@ -174,13 +175,13 @@ var Rocketbar = {
    * @param {Event} evt Blur event.
    */
   handleBlur: function rocketbar_handleBlur(evt) {
-    if (this.currentTitle) {
-      this.input.value = this.currentTitle;
-    } else if (this.currentlyOnPackagedApp) {
-      this.input.value = this.currentLocation;
-    } else {
+    //if (this.currentTitle) {
+    //  this.input.value = this.currentTitle;
+    //} else if (this.currentlyOnPackagedApp) {
+    //  this.input.value = this.currentLocation;
+    //} else {
       this.input.value = '';
-    }
+    //}
   },
 
   /**

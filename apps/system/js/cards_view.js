@@ -363,7 +363,6 @@ var CardsView = (function() {
       if (app) {
         app.launch();
       } else {
-        console.log('dispacz!!!!!!!!', e.target.dataset.origin);
         var event = new CustomEvent('openWebSheet', { 'detail': e.target.dataset.origin });
         window.dispatchEvent(event);
       }

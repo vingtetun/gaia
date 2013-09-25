@@ -345,7 +345,6 @@ var Rocketbar = {
    *  Show rocketbar results for a list of places.
    */
   showSiteResults: function rocketbar_showSiteResults(results) {
-    console.log(JSON.stringify(results));
     results.forEach(function(result) {
       this.renderSingleSiteResult(result);
     }, this);

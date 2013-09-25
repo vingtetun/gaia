@@ -366,8 +366,7 @@ var CardsView = (function() {
         var event = new CustomEvent('openWebSheet', { 'detail': e.target.dataset.origin });
         window.dispatchEvent(event);
       }
-      screenElement.classList.remove('cards-view');
-      cardsView.classList.remove('active');
+      this.hideCardSwitcher(true);
     }
   }
 
@@ -428,6 +427,7 @@ var CardsView = (function() {
   getOffOrigin.cache = {};
 
   function hideCardSwitcher(removeImmediately) {
+    console.log('hide!!!!!');
     // events to handle
     window.removeEventListener('lock', CardsView);
     window.removeEventListener('tap', CardsView);
@@ -887,7 +887,7 @@ var CardsView = (function() {
       case 'lock':
       case 'attentionscreenshow':
         attentionScreenApps = AttentionScreen.getAttentionScreenOrigins();
-        hideCardSwitcher();
+        hideCardSwitcher(true);
         break;
 
       case 'attentionscreenhide':

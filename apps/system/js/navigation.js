@@ -214,6 +214,7 @@ var WindowManager = (function() {
     }
 
     current = GroupedNavigation.insertSheet(current, app.manifestURL, newHistory);
+
     if (iframe) {
       appendIframe(iframe, newHistory);
     } else {

@@ -41,7 +41,6 @@ PagesIntro = {
   
   show: function() {
     this.init();
-    CardsView.hideCardSwitcher();
     this.element.classList.add('active');
   },
   

@@ -427,7 +427,6 @@ var CardsView = (function() {
   getOffOrigin.cache = {};
 
   function hideCardSwitcher(removeImmediately) {
-    console.log('hide!!!!!');
     // events to handle
     window.removeEventListener('lock', CardsView);
     window.removeEventListener('tap', CardsView);

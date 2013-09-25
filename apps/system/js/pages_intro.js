@@ -3,7 +3,6 @@ PagesIntro = {
   
   resultListener: function(evt) {
     var url = evt.target.dataset.siteUrl;
-    console.log(url);
     if (url) {
       this.hide();
       WindowManager.openNewSheet(url);

@@ -99,14 +99,15 @@ var Rocketbar = {
     this.results.innerHTML = '';
     this.input.value = '';
     this.bar.classList.add('open');
-
+    CardsView.showCardSwitcher();
+    
     //this.showRunningApps();
     
-    if (focus) {
+    //if (focus) {
       //this.input.focus();
       //this.results.classList.add('open');
-      CardsView.showCardSwitcher();
-    }
+      
+    //}
     
 
   },
@@ -118,6 +119,7 @@ var Rocketbar = {
    * @param {function} callback Called after the transition
    */
   close: function rocketbar_close(evenIfFocused, callback) {
+    CardsView.hideCardSwitcher();
     this.progress.classList.remove('loading');
     document.getElementById('screen').classList.remove('cards-view');
     document.getElementById('cards-view').classList.remove('active');
@@ -343,7 +345,6 @@ var Rocketbar = {
    *  Show rocketbar results for a list of places.
    */
   showSiteResults: function rocketbar_showSiteResults(results) {
-    console.log(JSON.stringify(results));
     results.forEach(function(result) {
       this.renderSingleSiteResult(result);
     }, this);

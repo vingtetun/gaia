@@ -166,6 +166,12 @@ var WindowManager = (function() {
   var navigate = [];
   var current = 0;
 
+  function openWebSheet(url) {
+    current = GroupedNavigation.requestApp(current, url);
+    var appHistory = GroupedNavigation.getSheet(current);
+    declareSheetAsCurrent(appHistory, true);
+  }
+  
   function openApp(manifestURL, origin, iframe) {
     var app = Applications.getByManifestURL(manifestURL);
     if (!app)
@@ -208,7 +214,6 @@ var WindowManager = (function() {
     }
 
     current = GroupedNavigation.insertSheet(current, app.manifestURL, newHistory);
-
     if (iframe) {
       appendIframe(iframe, newHistory);
     } else {
@@ -316,6 +321,12 @@ var WindowManager = (function() {
     e.preventDefault();
   });
 
+  window.addEventListener('openWebSheet', function onOpenWebSheet(e) {
+    if (e.detail) {
+      openWebSheet(e.detail);
+    }
+  });
+  
   window.addEventListener('mozChromeEvent', function(e) {
     if (e.detail.type != 'activity-done')
       return;

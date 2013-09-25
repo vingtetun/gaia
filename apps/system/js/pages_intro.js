@@ -35,20 +35,22 @@ PagesIntro = {
     }, this);
   },
   
-  init: function(){
+  init: function() {
     Places.getHistory(10, this.showResults.bind(this));
   },
   
   show: function() {
+    console.log('elo!');
     this.init();
+    CardsView.hideCardSwitcher();
     this.element.classList.add('active');
   },
   
-  hide: function(){
+  hide: function() {
     this.element.classList.remove('active');
   },
   
-  isVisible: function(){
+  isVisible: function() {
     return this.element.classList.contains('active');
   }
   

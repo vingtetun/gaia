@@ -359,7 +359,13 @@ var CardsView = (function() {
       closeApp(element, true);
       alignCurrentCard();
     } else if ('origin' in e.target.dataset) {
-      Applications.installedApps[e.target.dataset.origin].launch();
+      var app = Applications.installedApps[e.target.dataset.origin];
+      if (app) {
+        app.launch();
+      } else {
+        var event = new CustomEvent('openWebSheet', { 'detail': e.target.dataset.origin });
+        window.dispatchEvent(event);
+      }
       screenElement.classList.remove('cards-view');
       cardsView.classList.remove('active');
     }
@@ -422,9 +428,6 @@ var CardsView = (function() {
   getOffOrigin.cache = {};
 
   function hideCardSwitcher(removeImmediately) {
-    if (!cardSwitcherIsShown())
-      return;
-
     // events to handle
     window.removeEventListener('lock', CardsView);
     window.removeEventListener('tap', CardsView);
@@ -451,7 +454,7 @@ var CardsView = (function() {
       cardsView.addEventListener('transitionend', removeCards);
     }
     
-    Rocketbar.close(true);
+    //Rocketbar.close(true);
     
   }
 
@@ -919,6 +922,6 @@ var CardsView = (function() {
 
 window.addEventListener('attentionscreenshow', CardsView);
 window.addEventListener('attentionscreenhide', CardsView);
-window.addEventListener('holdhome', CardsView);
-window.addEventListener('home', CardsView);
+//window.addEventListener('holdhome', CardsView);
+//window.addEventListener('home', CardsView);
 window.addEventListener('appopen', CardsView);

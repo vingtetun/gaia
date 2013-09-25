@@ -458,7 +458,7 @@ var CardsView = (function() {
       cardsView.addEventListener('transitionend', removeCards);
     }
     
-    Rocketbar.close(true);
+    //Rocketbar.close(true);
     
   }
 
@@ -926,6 +926,6 @@ var CardsView = (function() {
 
 window.addEventListener('attentionscreenshow', CardsView);
 window.addEventListener('attentionscreenhide', CardsView);
-window.addEventListener('holdhome', CardsView);
-window.addEventListener('home', CardsView);
+//window.addEventListener('holdhome', CardsView);
+//window.addEventListener('home', CardsView);
 window.addEventListener('appopen', CardsView);

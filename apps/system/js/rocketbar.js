@@ -119,10 +119,8 @@ var Rocketbar = {
    * @param {function} callback Called after the transition
    */
   close: function rocketbar_close(evenIfFocused, callback) {
-    CardsView.hideCardSwitcher();
+    CardsView.hideCardSwitcher(true);
     this.progress.classList.remove('loading');
-    document.getElementById('screen').classList.remove('cards-view');
-    document.getElementById('cards-view').classList.remove('active');
     var focus = (this.input == document.activeElement);
     if (!focus || evenIfFocused) {
       this.results.classList.remove('open');
@@ -405,6 +403,7 @@ var Rocketbar = {
     }
 
     if (history.location === 'about:blank') {
+      CardsView.hideCardSwitcher();
       PagesIntro.show();
       this.open();
       this.input.value = '';

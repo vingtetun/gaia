@@ -403,7 +403,6 @@ var Rocketbar = {
     }
 
     if (history.location === 'about:blank') {
-      CardsView.hideCardSwitcher();
       PagesIntro.show();
       this.open();
       this.input.value = '';
@@ -454,12 +453,11 @@ var Rocketbar = {
     if (this.currentlyOnPackagedApp) {
       return;
     }
-
+    
     this._clearEarlyHide();
-
+    
     if (status) {
       this.progress.classList.add('loading');
-
       this.open(false);
       this._earlyHideID = setTimeout((function() {
         this.close(false);

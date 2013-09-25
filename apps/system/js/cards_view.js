@@ -359,7 +359,14 @@ var CardsView = (function() {
       closeApp(element, true);
       alignCurrentCard();
     } else if ('origin' in e.target.dataset) {
-      Applications.installedApps[e.target.dataset.origin].launch();
+      var app = Applications.installedApps[e.target.dataset.origin];
+      if (app) {
+        app.launch();
+      } else {
+        console.log('dispacz!!!!!!!!', e.target.dataset.origin);
+        var event = new CustomEvent('openWebSheet', { 'detail': e.target.dataset.origin });
+        window.dispatchEvent(event);
+      }
       screenElement.classList.remove('cards-view');
       cardsView.classList.remove('active');
     }

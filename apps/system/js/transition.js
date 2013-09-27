@@ -99,6 +99,45 @@ var TransitionManager = (function() {
   });
 })();
 
+function unSynthetize(evt) {
+  var type = evt.type;
+  var identifiers = [];
+  var xs = [];
+  var ys = [];
+  var rxs = [];
+  var rys = [];
+  var rs = [];
+  var fs = [];
+
+  for (var i = 0; i < evt.touches.length; i++) {
+    var t = evt.touches[i];
+
+    identifiers.push(t.identifier);
+    xs.push(t.pageX);
+    ys.push(t.pageY);
+    rxs.push(t.radiusX);
+    rys.push(t.radiusY);
+    rs.push(t.rotationAngle);
+    fs.push(t.force);
+  }
+
+  if (type == "touchend") {
+    for (var i = 0; i < evt.changedTouches.length; i++) {
+      var t = evt.changedTouches[i];
+
+      identifiers.push(t.identifier);
+      xs.push(t.pageX);
+      ys.push(t.pageY);
+      rxs.push(t.radiusX);
+      rys.push(t.radiusY);
+      rs.push(t.rotationAngle);
+      fs.push(t.force);
+    }
+  }
+
+  return [type, identifiers, xs, ys, rxs, rys, rs, fs, xs.length];
+}
+
 var PanelSwitcher = {
   previous: document.getElementById('left-panel'),
   next: document.getElementById('right-panel'),
@@ -111,21 +150,32 @@ var PanelSwitcher = {
   },
 
   lastX: 0,
+  startX: 0,
+  lastY: 0,
+  startY: 0,
   lastDate: null,
   lastProgress: 0,
   out: null,
   in: null,
   overflowing: false,
   pageInfoVisible: false,
+
+  _shouldForward: false,
+  _thouchStart: null,
+  _currentHistory: null,
+
   handleEvent: function navigation_handleEvent(e) {
     var forward = (e.target == this.next);
     var diffX = this.lastX - this.startX;
+    var diffY = this.lastY - this.startY;
     var progress = Math.abs(diffX / window.innerWidth);
     switch(e.type) {
       case 'touchstart':
+        this._touchStart = e;
         this.pageInfoVisible = PagesIntro.isVisible();
         if (this.pageInfoVisible) PagesIntro.hide();
         this.lastX = this.startX = e.touches[0].pageX;
+        this.lastY = this.startY = e.touches[0].pageY;
         this.lastDate = Date.now();
 
         var history = (forward ? WindowManager.getNext() :
@@ -134,20 +184,56 @@ var PanelSwitcher = {
         this.overflowing = !history;
 
         this.in = history ? history.wrapper : null;
-        this.out = WindowManager.getCurrent().wrapper;
+        this._currentHistory = WindowManager.getCurrent();
+        this.out = this._currentHistory.wrapper;
 
         this.prepareForManipulation(this.in, forward, this.overflowing);
         this.prepareForManipulation(this.out, forward, this.overflowing);
 
         break;
       case 'touchmove':
+        if (this._shouldForward) {
+          this._currentHistory.iframe.sendTouchEvent.apply(null, unSynthetize(e));
+          return;
+        }
+
         this.lastX = e.touches[0].pageX;
+        this.lastY = e.touches[0].pageY;
         this.lastProgress = progress;
         this.lastDate = Date.now();
 
-        this.move(progress);
+        if ((Math.abs(diffY) > Math.abs(diffX)*2) && (Math.abs(diffY) > 5)) {
+          this.snapInPlace(this.in, 0);
+          this.snapInPlace(this.out, 0);
+          this._shouldForward = true;
+          this._currentHistory.iframe.sendTouchEvent.apply(null, unSynthetize(this._touchStart));
+          this._currentHistory.iframe.sendTouchEvent.apply(null, unSynthetize(e));
+        } else {
+          this.move(progress);
+        }
         break;
       case 'touchend':
+        if (this._shouldForward || (Math.abs(diffX) < 5)) {
+          var iframe = this._currentHistory.iframe;
+          var simpleTap = !this._shouldForward;
+          var relevantTouch = e.changedTouches[0];
+          if (simpleTap) {
+            iframe.sendTouchEvent.apply(null, unSynthetize(this._touchStart));
+            iframe.sendMouseEvent('mousedown', relevantTouch.pageX, relevantTouch.pageY, 0, 1, 0);
+            setTimeout(function fakeTap() {
+              iframe.sendTouchEvent.apply(null, unSynthetize(e));
+              iframe.sendMouseEvent('mouseup', relevantTouch.pageX, relevantTouch.pageY, 0, 1, 0);
+            }, 80);
+          } else {
+            iframe.sendTouchEvent.apply(null, unSynthetize(e));
+          }
+
+          this._shouldForward = false;
+          this.snapInPlace(this.in, 0);
+          this.snapInPlace(this.out, 0);
+          return;
+        }
+
         var deltaT = Date.now() - this.lastDate;
         var deltaP = Math.abs(progress - this.lastProgress);
         var inertia = (deltaP / deltaT) * 100;
@@ -161,7 +247,7 @@ var PanelSwitcher = {
         if (snapBack && this.pageInfoVisible) {
           PagesIntro.show();
         }
-        
+
         var progressToAnimate = snapBack ? progress : (1 - progress);
         var durationLeft = Math.min((progressToAnimate / deltaP) * deltaT, progressToAnimate * 500);
 
@@ -174,6 +260,8 @@ var PanelSwitcher = {
         this.snapInPlace(this.out, durationLeft);
 
         this.out = this.in = null;
+        this._shouldForward = false;
+        this._touchStart = null;
         break;
     }
   },

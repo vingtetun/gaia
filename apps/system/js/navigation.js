@@ -381,6 +381,11 @@ var WindowManager = (function() {
 
     if (prev) {
       if (prev.isHomescreen) {
+        // Removing the homescreen sheet from history
+        // We keep the frame arround so we make sure it's full size before
+        var iframe = prev.iframe;
+        iframe.style.width = window.innerWidth + 'px';
+        iframe.style.height = window.innerHeight + 'px';
         current = GroupedNavigation.removeGroup(current, homescreenManifestURL);
         return;
       }

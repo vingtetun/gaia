@@ -1,5 +1,5 @@
 'use strict';
-/* global AppWindowManager, LockScreen, SettingsListener */
+/* global AppWindowManager, SettingsListener */
 
 var Rocketbar = {
 
@@ -317,14 +317,11 @@ var Rocketbar = {
 
     window.dispatchEvent(new CustomEvent('rocketbarhidden'));
 
-    var port = this._port;
-    if (port) {
-      setTimeout(function nextTick() {
-        port.postMessage({
-          action: 'clear'
-        });
+    setTimeout(function nextTick() {
+      this._port.postMessage({
+        action: 'clear'
       });
-    }
+    }.bind(this));
   },
 
   /**
@@ -332,7 +329,7 @@ var Rocketbar = {
    * @param {Boolean} isTaskManager, true if we are opening in task manager.
    */
   render: function(isTaskManager) {
-    if (LockScreen.locked) {
+    if (window.lockScreen && window.lockScreen.locked) {
       return;
     }
 

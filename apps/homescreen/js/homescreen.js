@@ -69,10 +69,7 @@ var Homescreen = (function() {
     var target = evt.target;
 
     if ('isIcon' in target.dataset) {
-      // Grid or Dock manager will resolve the current event
-      var manager = target.parentNode === DockManager.page.olist ? DockManager :
-                                                                   GridManager;
-      manager.contextmenu(evt);
+      GridManager.contextmenu(evt);
       if (Homescreen.isInEditMode()) {
         iconGrid.addEventListener('click', onClickHandler);
       }

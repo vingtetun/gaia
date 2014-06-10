@@ -555,7 +555,7 @@ Icon.prototype = {
     draggableElem.className = 'draggable';
     if (this.descriptor.type !== GridItemsFactory.TYPE.COLLECTION) {
       // Collections cannot be appended to others so this operation isn't needed
-      this.savePostion(draggableElem.dataset);
+      this.savePosition(draggableElem.dataset);
     }
 
     // For some reason, cloning and moving a node re-triggers the blob
@@ -590,26 +590,16 @@ Icon.prototype = {
   },
 
   /*
-   * Saves the current container (page or dock) and  position.
+   * Saves the current page index and  position.
    *
-   * * pageType -> 'dock' or 'page' types
-   * * pageIndex -> index of page (no needed for dock)
-   * * iconIndex -> index of icon inside page or dock container
+   * * pageIndex -> index of page
+   * * iconIndex -> index of icon inside page
    *
    * @param{Object} Source object to set results
    */
-  savePostion: function icon_savePosition(obj) {
-    var page;
-
-    if (this.container.parentNode === DockManager.page.olist) {
-      page = DockManager.page;
-      obj.pageType = 'dock';
-    } else {
-      page = GridManager.pageHelper.getCurrent();
-      obj.pageType = 'page';
-      obj.pageIndex = GridManager.pageHelper.getCurrentPageNumber();
-    }
-
+  savePosition: function icon_savePosition(obj) {
+    var page = GridManager.pageHelper.getCurrent();
+    obj.pageIndex = GridManager.pageHelper.getCurrentPageNumber();
     obj.iconIndex = page.getIconIndex(this.container);
   },
 

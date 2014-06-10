@@ -15,8 +15,6 @@ var Homescreen = (function() {
       return;
     }
 
-    PaginationBar.init('.paginationScroller');
-
     initialized = true;
 
     var swipeSection = Configurator.getSection('swipe');
@@ -44,13 +42,9 @@ var Homescreen = (function() {
           // nothing to do here, just prevent any other actions
         } else if (Homescreen.isInEditMode()) {
           exitFromEditMode();
-        } else {
-          GridManager.goToLandingPage();
         }
-        GridManager.ensurePanning();
       });
 
-      PaginationBar.show();
       if (document.location.hash === '#root') {
         // Switch to the first page only if the user has not already
         // start to pan while home is loading

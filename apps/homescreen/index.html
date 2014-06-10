@@ -6,7 +6,6 @@
 
     <link rel="stylesheet" type="text/css" href="style/homescreen.css">
     <link rel="stylesheet" type="text/css" href="style/grid.css">
-    <link rel="stylesheet" type="text/css" href="style/dock.css">
     <link rel="stylesheet" type="text/css" href="everything.me/css/everything.me.css">
 
     <!-- Shared code -->
@@ -40,9 +39,7 @@
     <script type="text/javascript" defer src="js/state.js"></script>
     <script type="text/javascript" defer src="js/icon_retriever.js"></script>
     <script type="text/javascript" defer src="js/page.js"></script>
-    <script type="text/javascript" defer src="js/pagbar.js"></script>
     <script type="text/javascript" defer src="js/icon_manager.js"></script>
-    <script type="text/javascript" defer src="js/dock.js"></script>
     <script type="text/javascript" defer src="js/grid.js"></script>
     <script type="text/javascript" defer src="everything.me/js/everything.me.js"></script>
     <script type="text/javascript" defer src="js/homescreen.js"></script>
@@ -58,7 +55,6 @@
 
   <body data-mode="normal">
     <div id="search-overlay"></div>
-    <div id="bg-overlay"></div>
     <!-- This markup is just to detect text overflow with app names
          because of pages are hidden after rendering -->
     <div id="fake-icon" aria-hidden="true">
@@ -73,17 +69,10 @@
 
     <section is="loading-dialog" id="loading-dialog"></section>
 
-    <header id="paginationBar">
-      <div class="paginationScroller" role="slider" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-controls="icongrid"></div>
-    </header>
-
     <section is="search-page" id="search-page"></section>
 
     <div id="icongrid" class="apps" role="main"></div>
 
-    <footer id="footer">
-      <div class="dockWrapper"></div>
-    </footer>
     <div id="repaint-helper"></div>
   </body>
 </html>

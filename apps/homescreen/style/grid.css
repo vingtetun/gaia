@@ -5,20 +5,15 @@
 }
 
 /* pages */
-.apps > div:first-child {
-  transform: translateX(0);
-}
-
 .apps > div {
-  position: absolute;
   width: 100%;
-  height: calc(100% - 7.6rem);
   text-align: center;
   margin: 0 auto;
-  overflow: hidden;
+  overflow-x: hidden;
 
-  transform: translateX(99.99%);
-  will-change: transform;
+  /* XXX */
+  outline: 1px solid red;
+  outline-offset: -1px;
 }
 
 .apps ol {
@@ -39,6 +34,7 @@
   display: inline-block;
   float: left;
   text-align: center;
+  margin-bottom: 1.2rem;
 }
 
 /* Maximum 16 icons for page by default */

@@ -77,7 +77,6 @@ var Homescreen = (function() {
         iconGrid.addEventListener('click', onClickHandler);
       }
     } else if (!Homescreen.isInEditMode()) {
-      GridManager.cancelPanning();
       // No long press over an icon neither edit mode
       evt.preventDefault();
       var contextMenuEl = document.getElementById('contextmenu-dialog');

@@ -33,7 +33,8 @@ var GridManager = (function() {
 
   function tap(evt) {
     IconManager.cancelActive();
-    pageHelper.getCurrent().tap(evt.target, IconManager.removeActive);
+    var page = pageHelper.getPageFor(evt.target);
+    page.tap(evt.target, IconManager.removeActive);
   }
 
   function contextmenu(evt) {
@@ -167,6 +168,17 @@ var GridManager = (function() {
 
     getPage: function(index) {
       return pages[index];
+    },
+
+    getPageFor: function(target) {
+      var pages = container.querySelectorAll('ol');
+      for (var i = 0; i < pages.length; i++) {
+        if (pages[i] === target.parentNode) {
+          return this.getPage(i);
+        }
+      }
+
+      return null;
     },
 
     /*
@@ -409,7 +421,6 @@ var GridManager = (function() {
       BookmarksManager.updateHomescreenRevisionId();
       BookmarksManager.attachListeners();
       bookmarksById = null;
-      ensurePagesOverflow(removeEmptyPages);
     });
 
     appMgr.oninstall = function oninstall(event) {

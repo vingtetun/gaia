@@ -149,3 +149,40 @@ body[data-mode = 'edit'] .apps ol > li[data-type = "bookmark"] > div > span > sp
 #contextmenu-dialog, #confirm-dialog {
   display: none;
 }
+
+#curtain {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  content: "";
+
+  background-color: #333333;
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+  will-change: opacity;
+}
+
+body[data-curtain="true"] #curtain {
+  opacity: 1;
+}
+
+#edit-header {
+  position: absolute;
+  top: 0;
+  width: 100%;
+
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+  will-change: opacity;
+}
+
+body[data-curtain='true'] #edit-header {
+  opacity: 1;
+  z-index: 11000;
+}
+body[data-mode='edit'] #edit-header {
+  z-index: 11000;
+}

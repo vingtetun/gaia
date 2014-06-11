@@ -118,6 +118,8 @@ var Homescreen = (function() {
       ConfirmDialog.hide();
     }
   }
+  var exitEditButton = document.getElementById('exit-edit-mode');
+  exitEditButton.addEventListener('click', exitFromEditMode);
 
   document.addEventListener('visibilitychange', function mozVisChange() {
     if (document.hidden && Homescreen.isInEditMode()) {
@@ -144,6 +146,29 @@ var Homescreen = (function() {
   window.addEventListener('offline', function onOnline(evt) {
     onConnectionChange(false);
   });
+
+  var curtain = document.getElementById('curtain');
+  function setMode(newMode) {
+    var commit = function() {
+      mode = document.body.dataset.mode = newMode;
+    };
+
+    if (newMode == 'edit') {
+      window.dispatchEvent(new CustomEvent('homescreen-editmode-start'));
+      document.body.dataset.curtain = true;
+    } else {
+      window.dispatchEvent(new CustomEvent('homescreen-editmode-end'));
+      document.body.dataset.curtain = false;
+    }
+
+    var safetyTimeout = setTimeout(commit, 1500);
+    curtain.addEventListener('transitionend', function trWait() {
+      curtain.removeEventListener('transitionend', trWait);
+
+      clearTimeout(safetyTimeout);
+      commit();
+    });
+  }
 
   return {
     /*
@@ -188,8 +213,6 @@ var Homescreen = (function() {
 
     init: initialize,
 
-    setMode: function(newMode) {
-      mode = document.body.dataset.mode = newMode;
-    }
+    setMode: setMode
   };
 })();

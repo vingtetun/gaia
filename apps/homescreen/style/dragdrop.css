@@ -10,8 +10,9 @@
   width: 100%;
 	margin-top: .4rem;
 	margin-bottom: .4rem;
-  -moz-transform: scale(1.25);
-  -moz-transition: -moz-transform .4s;
+  transform: scale(1.5);
+  will-change: transform;
+  transition: transform .4s;
 }
 
 .draggable > div > span.options {
@@ -76,12 +77,11 @@ body[data-dragging] ol > li,
 }
 
 body[data-mode = 'edit'] ol > li.hidden {
-  opacity: 0;
+  visibility: hidden;
 }
 
 body[data-mode = 'edit'] ol > li[data-is-collection = 'true'] > div > img {
   transform: scale(1);
-  transition: transform .3s;
 }
 
 body[data-dragging] ol > li[data-is-collection = 'true'] > div > img {

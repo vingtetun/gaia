@@ -16,6 +16,7 @@
     <script type="text/javascript" src="shared/js/l10n.js"></script>
     <script type="text/javascript" defer src="shared/js/screen_layout.js"></script>
     <script type="text/javascript" defer src="shared/js/manifest_helper.js"></script>
+    <link rel="stylesheet" href="shared/style/headers.css">
     <!-- <script type="text/javascript" src="shared/js/settings_listener.js"></script> -->
     <script type="text/javascript" defer src="shared/js/async_storage.js"></script>
     <script defer type="text/javascript" src="shared/js/icc_helper.js"></script>
@@ -82,6 +83,13 @@
         </form>
       </div>
     </div>
+    <section id="curtain"></section>
+    <section id="edit-header" class="skin-dark" role="region">
+      <header>
+        <menu type="toolbar"><a href="#" data-l10n-id="edit-dialog-done" id="exit-edit-mode">Done</a></menu>
+        <h1 data-l10n-id="edit-mode">Edit</h1>
+      </header>
+    </section>
 
     <div id="repaint-helper"></div>
   </body>

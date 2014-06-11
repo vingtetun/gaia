@@ -45,12 +45,6 @@ var Homescreen = (function() {
         }
       });
 
-      if (document.location.hash === '#root') {
-        // Switch to the first page only if the user has not already
-        // start to pan while home is loading
-        GridManager.goToLandingPage();
-      }
-
       document.body.addEventListener('contextmenu', onContextMenu);
       IconManager.init(Configurator.getSection('tap_effect_delay'));
 

@@ -34,7 +34,9 @@ var GridManager = (function() {
   function tap(evt) {
     IconManager.cancelActive();
     var page = pageHelper.getPageFor(evt.target);
-    page.tap(evt.target, IconManager.removeActive);
+    if (page) {
+      page.tap(evt.target, IconManager.removeActive);
+    }
   }
 
   function contextmenu(evt) {
@@ -174,6 +176,30 @@ var GridManager = (function() {
       var pages = container.querySelectorAll('ol');
       for (var i = 0; i < pages.length; i++) {
         if (pages[i] === target.parentNode) {
+          return this.getPage(i);
+        }
+      }
+
+      return null;
+    },
+
+    getPageIndexFor: function(target) {
+      var pages = container.querySelectorAll('ol');
+      for (var i = 0; i < pages.length; i++) {
+        if (pages[i] === target) {
+          return i;
+        }
+      }
+
+      return -1;
+    },
+
+    getPageForPosition: function(x, y) {
+      var pages = container.querySelectorAll('.page');
+      for (var i = 0; i < pages.length; i++) {
+        var rect = pages[i].getBoundingClientRect();
+        if (x >= rect.left && x <= rect.left + rect.width &&
+            y >= rect.top && y <= rect.y + rect.top) {
           return this.getPage(i);
         }
       }

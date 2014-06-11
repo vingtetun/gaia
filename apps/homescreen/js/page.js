@@ -598,8 +598,8 @@ Icon.prototype = {
    * @param{Object} Source object to set results
    */
   savePosition: function icon_savePosition(obj) {
-    var page = GridManager.pageHelper.getCurrent();
-    obj.pageIndex = GridManager.pageHelper.getCurrentPageNumber();
+    var page = GridManager.pageHelper.getPageFor(this.container);
+    obj.pageIndex = GridManager.pageHelper.getPageIndexFor(page.container);
     obj.iconIndex = page.getIconIndex(this.container);
   },
 
@@ -1078,13 +1078,6 @@ Page.prototype = {
     return misplaced;
   },
 
-  insertBeforeLastIcon: function pg_insertBeforeLastIcon(icon) {
-    var olist = this.olist;
-    if (olist.children.length > 0) {
-      olist.insertBefore(icon.container, olist.lastChild);
-    }
-  },
-
   /*
    * Returns the last icon of the page
    */
@@ -1205,11 +1198,7 @@ Page.prototype = {
    * @param {Object} icon the icon to be added.
    */
   appendIconVisible: function pg_appendIconVisible(icon) {
-    if (this.getNumIcons() >= this.maxIcons) {
-      this.insertBeforeLastIcon(icon);
-    } else {
-      this.appendIcon(icon);
-    }
+    this.appendIcon(icon);
   },
 
   containsIcon: function pg_containsIcon(icon) {

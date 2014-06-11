@@ -25,11 +25,6 @@ var DragDropManager = (function() {
   var MOVE_COLLECTION_THRESHOLD = 1500;
 
   /*
-   * Drop feature is disabled (in the borders of the icongrid)
-   */
-  var isDisabledDrop = false;
-
-  /*
    * Drag feature is disabled during re-arrange
    */
   var isDisabledDrag = false;
@@ -55,24 +50,10 @@ var DragDropManager = (function() {
 
   var pageHelper;
 
+  var dragStartPage;
+
   // Current and start positions
   var cx, cy, sx, sy;
-
-  /*
-   * Sets the isTranslatingPages variable
-   *
-   * @param {Boolean} the value
-   */
-  function setDisabledCheckingLimits(value) {
-    isDisabledCheckingLimits = value;
-    if (value) {
-      disabledCheckingLimitsTimeout = setTimeout(
-        function dg_disabledCheckingLimitsTimeout() {
-          isDisabledCheckingLimits = false;
-          checkLimits();
-        }, CHECK_LIMITS_DELAY);
-    }
-  }
 
   var isTouch = 'ontouchstart' in window;
   var touchmove = isTouch ? 'touchmove' : 'mousemove';
@@ -86,26 +67,7 @@ var DragDropManager = (function() {
   var transitioning = false;
 
   function onNavigationEnd() {
-    transitioning = isDisabledDrop = false;
-  }
-
-  function overIconGrid() {
-    isDisabledDrop = false;
-    var curPageObj = pageHelper.getCurrent();
-
-    if (!isDisabledCheckingLimits) {
-      // XXX fux
-      if (true) {
-        isDisabledDrop = true;
-        DragLeaveEventManager.send(curPageObj, function end(done) {
-          pageHelper.getPrevious().appendIconVisible(draggableIcon);
-          setDisabledCheckingLimits(true);
-          transitioning = true;
-          GridManager.goToPreviousPage(onNavigationEnd);
-          done();
-        });
-      }
-    }
+    transitioning = false;
   }
 
   /*
@@ -120,7 +82,20 @@ var DragDropManager = (function() {
       return;
     }
 
-    overIconGrid();
+    if (isDisabledCheckingLimits) {
+      return;
+    }
+
+    var curPageObj = pageHelper.getPageForPosition(cx, cy);
+    if (curPageObj === dragStartPage) {
+      return;
+    }
+
+    DragLeaveEventManager.send(dragStartPage, function end(done) {
+      curPageObj.appendIconVisible(draggableIcon);
+      dragStartPage = curPageObj;
+      done();
+    });
   }
 
   /*
@@ -129,6 +104,8 @@ var DragDropManager = (function() {
    * {Object} This is the DOMElement which was tapped and hold
    */
   function onStart(elem) {
+    dragStartPage = GridManager.pageHelper.getPageFor(elem);
+
     overlapElem = elem;
     draggableIcon = GridManager.getIcon(elem.dataset);
     draggableIconIsCollection = overlapElem.dataset.isCollection === 'true';
@@ -138,16 +115,13 @@ var DragDropManager = (function() {
   }
 
   /*
-   * This method is invoked when dragging is finished. It checks if
-   * there is overflow or not in a page and removes the last page when
-   * is empty
+   * This method is invoked when dragging is finished. It
+   * removes empty pages.
    */
   function stop(callback) {
     clearTimeout(disabledCheckingLimitsTimeout);
     isDisabledCheckingLimits = false;
-    isDisabledDrop = false;
     transitioning = false;
-    var page = getPage();
 
     // We ensure that there is not an icon lost on the grid
     var ensureCallbackID = window.setTimeout(function() {
@@ -155,6 +129,7 @@ var DragDropManager = (function() {
       sendDragStopToDraggableIcon(callback);
     }, ENSURE_DRAG_END_DELAY);
 
+    var page = getPage(cx, cy);
     DragLeaveEventManager.send(page, function(done) {
       if (ensureCallbackID !== null) {
         window.clearTimeout(ensureCallbackID);
@@ -195,7 +170,7 @@ var DragDropManager = (function() {
       var dataset = draggableIcon.draggableElem.dataset;
       var page =
         GridManager.pageHelper.getPage(parseInt(dataset.pageIndex, 10));
-      if (page === GridManager.pageHelper.getCurrent()) {
+      if (page === GridManager.pageHelper.getPageForPosition(cx, cy)) {
         draggableIcon.remove();
       }
 
@@ -355,7 +330,11 @@ var DragDropManager = (function() {
 
     window.mozRequestAnimationFrame(move);
 
-    var page = getPage();
+    var page = getPage(x, y);
+    if (!page) {
+      return;
+    }
+
     if (isDisabledDrag || !page.ready) {
       if (overlapingTimeout !== null) {
         clearTimeout(overlapingTimeout);
@@ -403,7 +382,7 @@ var DragDropManager = (function() {
     }
 
     checkLimits(overlapElem);
-    if (isDisabledDrop || !getPage().ready) {
+    if (!getPage(x, y).ready) {
       if (overlapingTimeout !== null) {
         clearTimeout(overlapingTimeout);
         overlapingTimeout = null;
@@ -435,13 +414,15 @@ var DragDropManager = (function() {
     clearOverCollectionTimeout();
     window.removeEventListener(touchmove, onMove);
     window.removeEventListener(touchend, onEnd);
+
     stop(function dg_stop() {
       window.dispatchEvent(new CustomEvent('dragend'));
+      GridManager.onDragStop();
     });
   }
 
-  function getPage() {
-    return pageHelper.getCurrent();
+  function getPage(x, y) {
+    return pageHelper.getPageForPosition(x, y);
   }
 
   // It implements a stack of re-arrange operations in order to avoid
@@ -533,7 +514,7 @@ var DragDropManager = (function() {
       GridManager.onDragStart();
       sx = initCoords.x;
       sy = initCoords.y;
-      isDisabledDrag = isDisabledDrop = false;
+      isDisabledDrag = false;
       originElem = evt.target;
       onStart(originElem.classList.contains('options') ? originElem.parentNode :
                                                          originElem);

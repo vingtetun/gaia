@@ -741,7 +741,7 @@ function Page(container, icons, numberOfIcons) {
   if (icons)
     this.render(icons);
   this.iconsWhileDragging = [];
-  this.maxIcons = numberOfIcons || GridManager.pageHelper.maxIconsPerPage;
+  this.maxIcons = numberOfIcons;
 }
 
 Page.prototype = {
@@ -765,37 +765,11 @@ Page.prototype = {
    *               List of Icon objects.
    */
   render: function pg_render(icons) {
-    // By default the page is hidden unless it is the current page.
-    this.container.setAttribute('aria-hidden', true);
     this.olist = document.createElement('ol');
     for (var i = 0, icon; icon = icons[i++];) {
       this.appendIcon(icon);
     }
     this.container.appendChild(this.olist);
-  },
-
-  /*
-   * Applies a translation effect to the page
-   *
-   * @param{int} scroll X
-   * @param{int} duration
-   */
-  moveByWithEffect: function pg_moveByWithEffect(scrollX, duration) {
-    var container = this.movableContainer;
-    var style = container.style;
-    style.MozTransform = 'translateX(' + scrollX + 'px)';
-    style.MozTransition = '-moz-transform ' + duration + 'ms ease';
-  },
-
-  /*
-   * Applies a translation to the page
-   *
-   * @param{int} scroll X
-   */
-  moveBy: function pg_moveBy(scrollX) {
-    var style = this.movableContainer.style;
-    style.MozTransform = 'translateX(' + scrollX + 'px)';
-    style.MozTransition = '';
   },
 
   ready: true,

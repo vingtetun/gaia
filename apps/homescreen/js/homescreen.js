@@ -17,16 +17,8 @@ var Homescreen = (function() {
 
     initialized = true;
 
-    var swipeSection = Configurator.getSection('swipe');
     var options = {
-      gridSelector: '.apps',
-      dockSelector: '.dockWrapper',
-      tapThreshold: Configurator.getSection('tap_threshold'),
-      // It defines the threshold to consider a gesture like a swipe. Number
-      // in the range 0.0 to 1.0, both included, representing the screen width
-      swipeThreshold: swipeSection.threshold,
-      swipeFriction: swipeSection.friction,
-      swipeTransitionDuration: swipeSection.transition_duration
+      gridSelector: '.apps'
     };
 
     GridManager.init(options, function gm_init() {
@@ -37,10 +29,7 @@ var Homescreen = (function() {
           return;
         }
 
-        // this happens when the user presses the 'home' button
-        if (Homescreen.didEvmePreventHomeButton()) {
-          // nothing to do here, just prevent any other actions
-        } else if (Homescreen.isInEditMode()) {
+        if (Homescreen.isInEditMode()) {
           exitFromEditMode();
         }
       });
@@ -173,11 +162,6 @@ var Homescreen = (function() {
 
     isInEditMode: function() {
       return mode === 'edit';
-    },
-
-    didEvmePreventHomeButton: function() {
-      return EvmeFacade && EvmeFacade.onHomeButtonPress &&
-              EvmeFacade.onHomeButtonPress();
     },
 
     init: initialize,

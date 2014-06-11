@@ -118,11 +118,12 @@ var GridManager = (function() {
   }
 
   function removeEmptyPages() {
-    pages.forEach(function checkIsEmpty(page, index) {
-      if (page.getNumIcons() === 0) {
-        pageHelper.remove(index);
+    for (var i = pages.length - 1; i >= 0; i--) {
+      if (pages[i].getNumIcons() === 0) {
+        pageHelper.remove(i);
+        markDirtyState();
       }
-    });
+    }
   }
 
   var container;
@@ -162,9 +163,14 @@ var GridManager = (function() {
       var state = pages.slice(0);
       for (var i = 0; i < state.length; i++) {
         var page = state[i];
+        var icons = page.getIconDescriptors();
+        if (icons.length === 0) {
+          continue;
+        }
+
         state[i] = {
           index: i,
-          icons: page.getIconDescriptors()
+          icons: icons
         };
       }
       HomeState.saveGrid(state);
@@ -476,6 +482,7 @@ var GridManager = (function() {
       pageHelper.addPage([]);
 
       var apps = event.target.result;
+
       apps.forEach(function eachApp(app) {
         delete iconsByManifestURL[app.manifestURL];
         // XXX fux
@@ -744,12 +751,12 @@ var GridManager = (function() {
         index = getFirstPageWithEmptySpace(gridPageOffset);
       }
 
-      var iconLst = [icon];
-      while (iconLst.length > 0) {
-        icon = iconLst.shift();
+      var iconList = [icon];
+      while (iconList.length > 0) {
+        icon = iconList.shift();
         index = icon.descriptor.desiredScreen || index;
         if (index < pages.length) {
-          iconLst = iconLst.concat(pages[index].getMisplacedIcons(index));
+          iconList = iconList.concat(pages[index].getMisplacedIcons(index));
           pages[index].appendIcon(icon);
         } else {
           pageHelper.addPage([icon]);
@@ -941,6 +948,7 @@ var GridManager = (function() {
 
     onDragStop: function gm_onDragStop() {
       delete document.body.dataset.dragging;
+      removeEmptyPages();
     },
 
     /*

@@ -142,8 +142,6 @@ var EverythingME = {
 
       elLoader.classList.add('show');
 
-      PaginationBar.hide();
-
       // add temporary Collection close listeners
       var closeButton = elCollection.querySelector('.close');
       closeButton.addEventListener('click', EverythingME.onCollectionClosed);
@@ -201,7 +199,6 @@ var EverythingME = {
       e.target.removeEventListener('transitionend', end);
 
       elCollection.style.display = 'none';
-      PaginationBar.show();
     });
 
     elCollection.classList.remove('visible');

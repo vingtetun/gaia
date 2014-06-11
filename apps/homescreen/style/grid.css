@@ -18,7 +18,7 @@
   background-position: bottom center;
 }
 
-.apps > div:first-child {
+.apps > div:nth-child(2) {
   margin: 0 auto;
 }
 
@@ -84,7 +84,7 @@ ol > li.active > div > img {
 /* text label */
 .apps ol > li > div > span > span {
   font-size: 1rem;
-  line-height: 1rem; /* maintain constant line height even if font fallback
+  line-height: 1.4rem; /* maintain constant line height even if font fallback
                         gives us different fonts for non-Latin labels */
   text-shadow: 0 0.1rem 0.2rem rgba(0,0,0,1);
 }

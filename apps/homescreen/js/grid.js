@@ -35,7 +35,8 @@ var GridManager = (function() {
 
   function tap(evt) {
     IconManager.cancelActive();
-    var page = pageHelper.getPageFor(evt.target);
+    var page = pageHelper.getPageFor(evt.target) ||
+               pageHelper.getPageFor(evt.target.parentNode);
     if (page) {
       page.tap(evt.target, IconManager.removeActive);
     }
@@ -137,7 +138,6 @@ var GridManager = (function() {
      */
     addPage: function(icons, numberOficons) {
       var pageElement = document.createElement('div');
-      // XXX fux
       var page = new Page(pageElement, icons, MAX_NUMBER_OF_ICONS);
       pages.push(page);
 
@@ -358,6 +358,10 @@ var GridManager = (function() {
     // See also pageHelper.saveAll().
     for (var i = 0; i < container.children.length; i++) {
       var pageElement = container.children[i];
+      if (!pageElement.classList.contains('page')) {
+        continue;
+      }
+
       var page = new Page(pageElement, null);
       pages.push(page);
     }

@@ -50,10 +50,6 @@ var DragDropManager = (function() {
   // Current and start positions
   var cx, cy, sx, sy;
 
-  var isTouch = 'ontouchstart' in window;
-  var touchmove = isTouch ? 'touchmove' : 'mousemove';
-  var touchend = isTouch ? 'touchend' : 'mouseup';
-
   var transitioning = false;
 
   function onNavigationEnd() {
@@ -396,8 +392,8 @@ var DragDropManager = (function() {
       clearTimeout(overlapingTimeout);
     }
     clearOverCollectionTimeout();
-    window.removeEventListener(touchmove, onMove);
-    window.removeEventListener(touchend, onEnd);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onEnd);
 
     stop(function dg_stop() {
       window.dispatchEvent(new CustomEvent('dragend'));
@@ -492,8 +488,8 @@ var DragDropManager = (function() {
      * @param {Object} DOM event
      */
     start: function ddm_start(evt, initCoords) {
-      window.addEventListener(touchend, onEnd);
-      window.addEventListener(touchmove, onMove);
+      window.addEventListener('touchend', onEnd);
+      window.addEventListener('touchmove', onMove);
       DragLeaveEventManager.init();
       GridManager.onDragStart();
       sx = initCoords.x;

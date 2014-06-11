@@ -31,6 +31,28 @@ var Homescreen = (function() {
 
         if (Homescreen.isInEditMode()) {
           exitFromEditMode();
+        } else if (!document.hidden) {
+          var step;
+          var scrollable = iconGrid;
+
+          var doScroll = function() {
+            var scrollY = scrollable.scrollTop;
+            step = step || (scrollY / 20);
+
+            if (!scrollY) {
+              return;
+            }
+
+            if (scrollY <= step) {
+              scrollable.scrollTop = 0;
+              return;
+            }
+
+            scrollable.scrollTop -= step;
+            window.requestAnimationFrame(doScroll);
+          };
+
+          doScroll();
         }
       });
 

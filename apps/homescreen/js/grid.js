@@ -122,7 +122,6 @@ var GridManager = (function() {
     for (var i = pages.length - 1; i >= 0; i--) {
       if (pages[i].getNumIcons() === 0) {
         pageHelper.remove(i);
-        markDirtyState();
       }
     }
   }
@@ -953,6 +952,10 @@ var GridManager = (function() {
     onDragStop: function gm_onDragStop() {
       delete document.body.dataset.dragging;
       removeEmptyPages();
+
+      // If the last page has been consumed, let's create a new
+      // one in advance.
+      pageHelper.addPage([]);
     },
 
     /*

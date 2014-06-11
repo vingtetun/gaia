@@ -16,14 +16,24 @@
   background-size: 50% 0.2rem;
   background-repeat: no-repeat;
   background-position: bottom center;
+
+  min-height: 10.5rem;
 }
 
 .apps > div:nth-child(2) {
   margin: 0 auto;
 }
 
-.apps > div:last-child {
+body:not([data-mode="edit"]) .apps > div:nth-last-child(2) {
   background-image: none;
+}
+
+.apps > div.page:last-child {
+  background-image: none;
+}
+
+body:not([data-mode="edit"]) .apps > div:last-child {
+  min-height: 0;
 }
 
 .apps ol {

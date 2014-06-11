@@ -19,6 +19,8 @@ var GridManager = (function() {
 
   var pages = [];
 
+  var MAX_NUMBER_OF_ICONS = 50;
+
   var _ = navigator.mozL10n.get;
 
   var startEvent = null;
@@ -135,7 +137,7 @@ var GridManager = (function() {
     addPage: function(icons, numberOficons) {
       var pageElement = document.createElement('div');
       // XXX fux
-      var page = new Page(pageElement, icons, 16);
+      var page = new Page(pageElement, icons, MAX_NUMBER_OF_ICONS);
       pages.push(page);
 
       pageElement.className = 'page';
@@ -199,7 +201,7 @@ var GridManager = (function() {
       for (var i = 0; i < pages.length; i++) {
         var rect = pages[i].getBoundingClientRect();
         if (x >= rect.left && x <= rect.left + rect.width &&
-            y >= rect.top && y <= rect.y + rect.top) {
+            y >= rect.top && y <= rect.top + rect.height) {
           return this.getPage(i);
         }
       }
@@ -886,10 +888,7 @@ var GridManager = (function() {
     // Initialize the grid from the state saved in IndexedDB.
     HomeState.init(function eachPage(pageState) {
       var pageIcons = convertDescriptorsToIcons(pageState);
-      // XXX fux
-      var numberOfIcons = 16;
-
-      pageHelper.addPage(pageIcons, numberOfIcons);
+      pageHelper.addPage(pageIcons, MAX_NUMBER_OF_ICONS);
     }, function onSuccess() {
       initApps(callback);
     }, function onError(error) {

@@ -30,11 +30,6 @@ var DragDropManager = (function() {
   var isDisabledDrag = false;
 
   /*
-   * Checking limits is disabled
-   */
-  var isDisabledCheckingLimits = false;
-
-  /*
    * Timeout of the checking limits function
    */
   var disabledCheckingLimitsTimeout = null;
@@ -59,11 +54,6 @@ var DragDropManager = (function() {
   var touchmove = isTouch ? 'touchmove' : 'mousemove';
   var touchend = isTouch ? 'touchend' : 'mouseup';
 
-  var getTouch = (function getTouchWrapper() {
-    return isTouch ? function(e) { return e.touches[0] } :
-                     function(e) { return e };
-  })();
-
   var transitioning = false;
 
   function onNavigationEnd() {
@@ -79,10 +69,6 @@ var DragDropManager = (function() {
    */
   function checkLimits() {
     if (transitioning) {
-      return;
-    }
-
-    if (isDisabledCheckingLimits) {
       return;
     }
 
@@ -104,7 +90,7 @@ var DragDropManager = (function() {
    * {Object} This is the DOMElement which was tapped and hold
    */
   function onStart(elem) {
-    dragStartPage = GridManager.pageHelper.getPageFor(elem);
+    dragStartPage = pageHelper.getPageFor(elem);
 
     overlapElem = elem;
     draggableIcon = GridManager.getIcon(elem.dataset);
@@ -120,7 +106,6 @@ var DragDropManager = (function() {
    */
   function stop(callback) {
     clearTimeout(disabledCheckingLimitsTimeout);
-    isDisabledCheckingLimits = false;
     transitioning = false;
 
     // We ensure that there is not an icon lost on the grid
@@ -168,9 +153,8 @@ var DragDropManager = (function() {
       container.classList.add('hidden');
       // Calculating original position (page index and position)
       var dataset = draggableIcon.draggableElem.dataset;
-      var page =
-        GridManager.pageHelper.getPage(parseInt(dataset.pageIndex, 10));
-      if (page === GridManager.pageHelper.getPageForPosition(cx, cy)) {
+      var page = pageHelper.getPage(parseInt(dataset.pageIndex, 10));
+      if (page === pageHelper.getPageForPosition(cx, cy)) {
         draggableIcon.remove();
       }
 
@@ -325,8 +309,8 @@ var DragDropManager = (function() {
    * @param {Object} DOMElement behind draggable icon
    */
   function onMove(evt) {
-    var x = cx = getTouch(evt).pageX;
-    var y = cy = getTouch(evt).pageY;
+    var x = cx = evt.touches[0].pageX;
+    var y = cy = evt.touches[0].pageY;
 
     window.mozRequestAnimationFrame(move);
 

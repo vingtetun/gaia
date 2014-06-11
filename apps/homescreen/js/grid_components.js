@@ -120,10 +120,10 @@ Collection.prototype = {
     // Enriching features...
     features.id = this.id;
 
-    console.log(features);
     new MozActivity({
       name: 'view-collection',
       data: {
+        id: features['provider_id'],
         name: features['name']
       }
     });

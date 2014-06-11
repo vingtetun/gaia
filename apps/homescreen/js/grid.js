@@ -151,7 +151,8 @@ var GridManager = (function() {
       for (var i = 0; i < state.length; i++) {
         var page = state[i];
         var icons = page.getIconDescriptors();
-        if (icons.length === 0) {
+        if (icons.length === 0 && i == state.length - 1) {
+          state.pop();
           continue;
         }
 

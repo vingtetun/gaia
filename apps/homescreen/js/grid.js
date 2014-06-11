@@ -61,6 +61,7 @@ var GridManager = (function() {
         break;
 
       case 'touchmove':
+      case 'touchcancel':
         touchmove(evt);
         break;
 
@@ -334,6 +335,7 @@ var GridManager = (function() {
   function initUI(selector) {
     window.addEventListener('touchstart', handleEvent);
     window.addEventListener('touchmove', handleEvent);
+    window.addEventListener('touchcancel', handleEvent);
     window.addEventListener('click', handleEvent);
 
     container = document.querySelector(selector);

@@ -431,6 +431,7 @@ var DragDropManager = (function() {
     clearOverCollectionTimeout();
     window.removeEventListener('touchmove', onMove);
     window.removeEventListener('touchend', onEnd);
+    window.removeEventListener('touchcancel', onEnd);
 
     stop(function dg_stop() {
       window.dispatchEvent(new CustomEvent('dragend'));
@@ -525,8 +526,9 @@ var DragDropManager = (function() {
      * @param {Object} DOM event
      */
     start: function ddm_start(evt, initCoords) {
-      window.addEventListener('touchend', onEnd);
       window.addEventListener('touchmove', onMove);
+      window.addEventListener('touchend', onEnd);
+      window.addEventListener('touchcancel', onEnd);
       DragLeaveEventManager.init();
       GridManager.onDragStart();
       sx = initCoords.x;

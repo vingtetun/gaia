@@ -133,11 +133,6 @@ ol > li.active > div > img {
   top: 0.1rem;
 }
 
-/* the panels are panning */
-body[data-transitioning] .loading:after {
-  animation-name: none;
-}
-
 /* the icon is being dragged */
 .draggable .loading:after {
   animation-name: none;

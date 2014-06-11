@@ -120,9 +120,13 @@ Collection.prototype = {
     // Enriching features...
     features.id = this.id;
 
-    window.dispatchEvent(new CustomEvent('collectionlaunch', {
-      'detail': features
-    }));
+    console.log(features);
+    new MozActivity({
+      name: 'view-collection',
+      data: {
+        name: features['name']
+      }
+    });
   },
 
   migrateURL: function sc_migratePath(url) {

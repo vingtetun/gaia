@@ -68,6 +68,18 @@ var DragDropManager = (function() {
       return;
     }
 
+    // If the user finger is closed to the top/bottom borders of
+    // the screen, let's scroll a little bit.
+    if (cy < 30) {
+      startAutoscroll(-1);
+      return;
+    } else if (cy > (window.innerHeight - 30)) {
+      startAutoscroll(+1);
+      return;
+    }
+
+    stopAutoscroll();
+
     var curPageObj = pageHelper.getPageForPosition(cx, cy);
     if (curPageObj === dragStartPage) {
       return;
@@ -78,6 +90,25 @@ var DragDropManager = (function() {
       dragStartPage = curPageObj;
       done();
     });
+  }
+
+  var autoscrollInterval;
+
+  function startAutoscroll(direction) {
+    stopAutoscroll();
+
+    var container = document.querySelector('.scrollable');
+    autoscrollInterval = setInterval(function() {
+      container.scrollTop += (direction * 20);
+      cy += (direction * 20);
+    }, 20);
+  }
+
+  function stopAutoscroll() {
+    if (autoscrollInterval) {
+      clearInterval(autoscrollInterval);
+      autoscrollInterval = 0;
+    }
   }
 
   /*
@@ -129,6 +160,8 @@ var DragDropManager = (function() {
    *                  finishes
    */
   function sendDragStopToDraggableIcon(callback) {
+    stopAutoscroll();
+
     if (draggableIconIsCollection ||
           overlapElem.dataset.isCollection !== 'true') {
       // If we are dragging an app or bookmark or we aren't over a collection
@@ -362,7 +395,8 @@ var DragDropManager = (function() {
     }
 
     checkLimits(overlapElem);
-    if (!getPage(x, y).ready) {
+    var page = getPage(cx, cy);
+    if (!page || !page.ready) {
       if (overlapingTimeout !== null) {
         clearTimeout(overlapingTimeout);
         overlapingTimeout = null;

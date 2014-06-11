@@ -51,33 +51,6 @@
   opacity: 0;
 }
 
-@-moz-keyframes shake {
-  0% { -moz-transform: scale(1); }
-  25% { -moz-transform: scale(1.05); }
-  50% { -moz-transform: scale(1); }
-  75% { -moz-transform: scale(0.95); }
-  100% { -moz-transform: scale(1); }
-}
-
-@-moz-keyframes none {}
-
-/* Image and label have shaking effect */
-body[data-mode = 'edit'] ol > li > div > img,
-#collection[data-mode = 'edit'] .evme-apps ul.static li .icon {
-  -moz-animation-name: shake;
-  -moz-animation-duration: .8s;
-  -moz-transform-origin: 50% 50%;
-  -moz-animation-iteration-count: infinite;
-  -moz-animation-timing-function: ease-out;
-}
-
-body[data-transitioning] ol > li > div > img,
-body[data-dragging] ol > li > div > img,
-#collection[data-transitioning] .evme-apps ul.static li .icon,
-#collection[data-dragging] .evme-apps ul.static li .icon {
-  -moz-animation-name: none;
-}
-
 #collection .evme-apps ul.static[data-rearranging] li {
   transition-duration: 0s !important;
 }
@@ -131,3 +104,6 @@ body[data-dragging] #footer li[data-is-collection = 'true'].hover > span.options
 .evmeScope #collection[data-mode='edit'] .evme-apps ul.static li span.remove {
   display: block;
 }
+
+
+

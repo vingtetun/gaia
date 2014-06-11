@@ -25,6 +25,7 @@
 }
 
 body:not([data-mode="edit"]) .apps > div:nth-last-child(2) {
+  padding-bottom: 0;
   background-image: none;
 }
 
@@ -33,6 +34,7 @@ body:not([data-mode="edit"]) .apps > div:nth-last-child(2) {
 }
 
 body:not([data-mode="edit"]) .apps > div:last-child {
+  padding-bottom: 0;
   min-height: 0;
 }
 

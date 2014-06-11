@@ -105,19 +105,6 @@ var GridManager = (function() {
     haveLocale = true;
   }
 
-  function getFirstPageWithEmptySpace(pageOffset) {
-    // XXX TODO something
-    /*
-    pageOffset = pageOffset !== null && pageOffset ? pageOffset : 0;
-    for (var i = pageOffset, page; page = pages[i++];) {
-      if (page.hasEmptySlot()) {
-        return i - 1;
-      }
-    }
-    return pages.length;
-    */
-  }
-
   function removeEmptyPages() {
     for (var i = pages.length - 1; i >= 0; i--) {
       if (pages[i].getNumIcons() === 0) {
@@ -485,11 +472,9 @@ var GridManager = (function() {
       pageHelper.addPage([]);
 
       var apps = event.target.result;
-
       apps.forEach(function eachApp(app) {
         delete iconsByManifestURL[app.manifestURL];
-        // XXX fux
-        processApp(app, null, 0);
+        processApp(app, null, 0 /* Start at the beginning */);
       });
 
       for (var manifestURL in iconsByManifestURL) {
@@ -746,12 +731,12 @@ var GridManager = (function() {
         icon.descriptor.desiredPos = svApp.location;
         if (!Configurator.isSimPresentOnFirstBoot && index < pages.length &&
             !pages[index].hasEmptySlot()) {
-          index = getFirstPageWithEmptySpace(index);
+          index = pages.length - 2;
         } else {
           icon.descriptor.desiredScreen = index;
         }
       } else {
-        index = getFirstPageWithEmptySpace(gridPageOffset);
+        index = pages.length - 2;
       }
 
       var iconList = [icon];

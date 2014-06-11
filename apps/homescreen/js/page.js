@@ -799,9 +799,10 @@ Page.prototype = {
 
     var iconList = this.olist.children;
     if (originIcon && targetIcon && iconList.length > 1) {
-      if (this.iconsWhileDragging.length === 0)
+      if (this.iconsWhileDragging.length != iconList.length)
         this.iconsWhileDragging = Array.prototype.slice.call(iconList, 0,
                                                              iconList.length);
+
       this.animate(this.iconsWhileDragging, originIcon.container,
                    targetIcon.container);
     } else {

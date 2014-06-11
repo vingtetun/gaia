@@ -70,10 +70,10 @@ var DragDropManager = (function() {
 
     // If the user finger is closed to the top/bottom borders of
     // the screen, let's scroll a little bit.
-    if (cy < 30) {
+    if (cy < 50) {
       startAutoscroll(-1);
       return;
-    } else if (cy > (window.innerHeight - 30)) {
+    } else if (cy > (window.innerHeight - 40)) {
       startAutoscroll(+1);
       return;
     }
@@ -81,13 +81,16 @@ var DragDropManager = (function() {
     stopAutoscroll();
 
     var curPageObj = pageHelper.getPageForPosition(cx, cy);
-    if (curPageObj === dragStartPage) {
+    if (curPageObj === dragStartPage || !curPageObj) {
       return;
     }
 
     DragLeaveEventManager.send(dragStartPage, function end(done) {
-      curPageObj.appendIconVisible(draggableIcon);
-      dragStartPage = curPageObj;
+      var currentPage = pageHelper.getPageForPosition(cx, cy);
+      if (currentPage) {
+        currentPage.appendIconVisible(draggableIcon);
+        dragStartPage = currentPage;
+      }
       done();
     });
   }
@@ -101,7 +104,7 @@ var DragDropManager = (function() {
     autoscrollInterval = setInterval(function() {
       container.scrollTop += (direction * 20);
       cy += (direction * 20);
-    }, 20);
+    }, 10);
   }
 
   function stopAutoscroll() {
@@ -338,12 +341,12 @@ var DragDropManager = (function() {
    * @param {Object} DOMElement behind draggable icon
    */
   function onMove(evt) {
-    var x = cx = evt.touches[0].pageX;
-    var y = cy = evt.touches[0].pageY;
+    cx = evt.touches[0].pageX;
+    cy = evt.touches[0].pageY;
 
     window.mozRequestAnimationFrame(move);
 
-    var page = getPage(x, y);
+    var page = getPage(cx, cy);
     if (!page) {
       return;
     }
@@ -363,15 +366,15 @@ var DragDropManager = (function() {
 
     if (overlapElem.classList.contains('page')) {
       // We are on the grid but not icon
-      newOverlapElem = document.elementFromPoint(x, y);
+      newOverlapElem = document.elementFromPoint(cx, cy);
       addHoverClass(newOverlapElem);
     } else {
       // Avoid calling document.elementFromPoint if we are over the same icon
       var rectObject = overlapElem.getBoundingClientRect();
       if (overlapElem.classList.contains('page') ||
-          x < rectObject.left || x > rectObject.right ||
-          y < rectObject.top || y > rectObject.bottom) {
-        newOverlapElem = document.elementFromPoint(x, y);
+          cx < rectObject.left || cx > rectObject.right ||
+          cy < rectObject.top || cy > rectObject.bottom) {
+        newOverlapElem = document.elementFromPoint(cx, cy);
         addHoverClass(newOverlapElem);
       }
     }
@@ -380,11 +383,11 @@ var DragDropManager = (function() {
     // the user's finger goes below the soft buttons.
     if (newOverlapElem) {
       overlapElem = newOverlapElem;
-      handleMove(page, x, y);
+      handleMove(page);
     }
   }
 
-  function handleMove(page, x, y) {
+  function handleMove(page) {
     var classList = overlapElem.classList;
     if (!classList) {
       if (overlapingTimeout !== null) {
@@ -408,7 +411,7 @@ var DragDropManager = (function() {
       clearTimeout(overlapingTimeout);
       if (classList.contains('page')) {
         var lastIcon = page.getLastIcon();
-        if (lastIcon && y > lastIcon.getTop() && draggableIcon !== lastIcon) {
+        if (lastIcon && cy > lastIcon.getTop() && draggableIcon !== lastIcon) {
           overlapingTimeout = setTimeout(function() {
             page.drop(draggableIcon, lastIcon);
           }, REARRANGE_DELAY);

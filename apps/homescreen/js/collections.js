@@ -70,6 +70,7 @@ Collection.prototype = {
           var collectionIndex = Collection.prototype.generateIndex(e.target.id);
           var icon = GridManager.getIconForCollection(collectionIndex);
           icon && icon.app.uninstall();
+          markDirtyState();
           break;
       }
       updateHomescreenRevisionId();

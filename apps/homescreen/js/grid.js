@@ -463,7 +463,7 @@ var GridManager = (function() {
           }
         };
 
-        // At this point we are going to propagate our bookmarks to system
+        // At this point we are going to propagate our collections to system
         collections.forEach(function(id) {
           collectionsById[id].getDescriptor(function(descriptor) {
             CollectionsDatabase.add(descriptor)
@@ -494,18 +494,14 @@ var GridManager = (function() {
           delete collectionsById[id];
         }
         // Adding or updating collection
-        var app = new Collection(systemCollections[id]);
-        createOrUpdateIconForApp(app, null, 0, 0);
+        GridManager.install(new Collection(systemCollections[id]));
       });
 
       // Deleting collections that are not stored in the datastore. The
       // homescreen won't show collections that are not in the system
       Object.keys(collectionsById).forEach(function(id) {
         var icon = getIconForCollection(collectionsById[id].collectionId);
-        if (icon) {
-          icon.remove();
-          markDirtyState();
-        }
+        icon && icon.app.uninstall();
       });
 
       done();
@@ -610,7 +606,7 @@ var GridManager = (function() {
           if (haveLocale) {
             descriptor.localizedName = _(app.manifest.name);
           }
-          collectionsById[app.id] = app;
+          collectionsById[app.collectionId] = app;
         } else {
           bookmarksById[app.id] = app;
         }

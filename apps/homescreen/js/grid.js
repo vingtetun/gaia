@@ -103,6 +103,10 @@ var GridManager = (function() {
       bookmarkIcons[bookmarkURL].translate();
     }
 
+    for (var collectionId in collectionsIcons) {
+      collectionsIcons[collectionId].translate();
+    }
+
     haveLocale = true;
   }
 
@@ -225,11 +229,20 @@ var GridManager = (function() {
   var appsByOrigin;
   // Map 'id' for bookmarks -> bookmark object.
   var bookmarksById;
+  // Map 'id' for collections -> bookmark object.
+  var collectionsById;
+  var collectionsIcons;
+
 
   function rememberIcon(icon) {
     var descriptor = icon.descriptor;
     if (descriptor.bookmarkURL) {
       bookmarkIcons[descriptor.bookmarkURL] = icon;
+      return;
+    }
+
+    if (descriptor.collectionId) {
+      collectionsIcons[descriptor.collectionId] = icon;
       return;
     }
     var iconsForApp = appIcons[descriptor.manifestURL];
@@ -245,6 +258,10 @@ var GridManager = (function() {
       delete bookmarkIcons[descriptor.bookmarkURL];
       return;
     }
+    if (descriptor.collectionId) {
+      delete collectionsIcons[descriptor.collectiondId];
+      return;
+    }
     var iconsForApp = appIcons[descriptor.manifestURL];
     if (!iconsForApp)
       return;
@@ -253,8 +270,13 @@ var GridManager = (function() {
   }
 
   function getIcon(descriptor) {
-    if (descriptor.bookmarkURL)
+    if (descriptor.bookmarkURL) {
       return bookmarkIcons[descriptor.bookmarkURL];
+    }
+
+    if (descriptor.collectionId) {
+      return collectionsIcons[descriptor.collectionId];
+    }
 
     var iconsForApp = appIcons[descriptor.manifestURL];
     return iconsForApp && iconsForApp[descriptor.entry_point || ''];
@@ -271,6 +293,10 @@ var GridManager = (function() {
 
   function getIconForBookmark(bookmarkURL) {
     return bookmarkIcons[bookmarkURL];
+  }
+
+  function getIconForCollection(collectionId) {
+    return collectionsIcons[collectionId];
   }
 
   /**
@@ -317,18 +343,6 @@ var GridManager = (function() {
     }
     return null;
   }
-
-  function getCollections() {
-    var apps = [], app;
-    for (var origin in appsByOrigin) {
-      app = appsByOrigin[origin];
-      if (app.type === GridItemsFactory.TYPE.COLLECTION) {
-        apps.push(app);
-      }
-    }
-    return apps;
-  }
-
 
   /*
    * Initialize the UI.
@@ -432,6 +446,72 @@ var GridManager = (function() {
     }, done);
   }
 
+  function processCollections(done) {
+    CollectionsManager.getHomescreenRevisionId(function(homescreenRevisionId) {
+      if (!homescreenRevisionId) {
+        // We have to populate the datastore with collections already installed.
+        // Just the first time after updating the device from 1.4 to 2.0 version
+        var collections = Object.keys(collectionsById);
+        var numberCollections = collections.length;
+        if (numberCollections === 0) {
+          return;
+        }
+
+        var onProccessed = function() {
+          if (--numberCollections === 0) {
+            mergeCollections(done);
+          }
+        };
+
+        // At this point we are going to propagate our bookmarks to system
+        collections.forEach(function(id) {
+          collectionsById[id].getDescriptor(function(descriptor) {
+            CollectionsDatabase.add(descriptor)
+                               .then(onProccessed, onProccessed);
+          });
+        });
+      } else {
+        CollectionsDatabase.getRevisionId().then(function(systemRevisionId) {
+          if (homescreenRevisionId !== systemRevisionId) {
+            // Not synchronized (bookmarks added/modified/deleted while it was
+            // not running)
+            mergeCollections(done);
+          } else {
+            // Same revision in system and home, nothing to do here...
+            done();
+          }
+        }, done);
+      }
+    });
+  }
+
+  function mergeCollections(done) {
+    CollectionsDatabase.getAll().then(function(systemCollections) {
+      // We are going to iterate over system bookmarks
+      Object.keys(systemCollections).forEach(function(id) {
+        if (collectionsById[id]) {
+          // Deleting from the list because it should not be removed from grid
+          delete collectionsById[id];
+        }
+        // Adding or updating collection
+        var app = new Collection(systemCollections[id]);
+        createOrUpdateIconForApp(app, null, 0, 0);
+      });
+
+      // Deleting collections that are not stored in the datastore. The
+      // homescreen won't show collections that are not in the system
+      Object.keys(collectionsById).forEach(function(id) {
+        var icon = getIconForCollection(collectionsById[id].collectionId);
+        if (icon) {
+          icon.remove();
+          markDirtyState();
+        }
+      });
+
+      done();
+    }, done);
+  }
+
   /*
    * Initialize the mozApps event handlers and synchronize our grid
    * state with the applications known to the system.
@@ -448,6 +528,12 @@ var GridManager = (function() {
       BookmarksManager.updateHomescreenRevisionId();
       BookmarksManager.attachListeners();
       bookmarksById = null;
+    });
+
+    processCollections(function done() {
+      CollectionsManager.updateHomescreenRevisionId();
+      CollectionsManager.attachListeners();
+      collectionsById = null;
     });
 
     appMgr.oninstall = function oninstall(event) {
@@ -524,6 +610,7 @@ var GridManager = (function() {
           if (haveLocale) {
             descriptor.localizedName = _(app.manifest.name);
           }
+          collectionsById[app.id] = app;
         } else {
           bookmarksById[app.id] = app;
         }
@@ -668,7 +755,8 @@ var GridManager = (function() {
       isHosted: isHosted(app),
       hasOfflineCache: hasOfflineCache(app),
       type: app.type,
-      id: app.id
+      id: app.id,
+      collectionId: app.collectionId
     };
 
     if (haveLocale) {
@@ -878,6 +966,8 @@ var GridManager = (function() {
     appIcons = Object.create(null);
     appsByOrigin = Object.create(null);
     bookmarksById = Object.create(null);
+    collectionsById = Object.create(null);
+    collectionsIcons = Object.create(null);
 
     initUI(options.gridSelector);
 
@@ -976,8 +1066,11 @@ var GridManager = (function() {
     uninstall: function gm_uninstall(app) {
       delete appsByOrigin[app.origin];
 
-      if (app.type === GridItemsFactory.TYPE.COLLECTION ||
-          app.type === GridItemsFactory.TYPE.BOOKMARK) {
+      if (app.type === GridItemsFactory.TYPE.COLLECTION) {
+        var icon = collectionsIcons[app.collectionId];
+        icon.remove();
+        delete collectionsIcons[app.collectionId];
+      } else if (app.type === GridItemsFactory.TYPE.BOOKMARK) {
         var icon = bookmarkIcons[app.bookmarkURL];
         icon.remove();
         delete bookmarkIcons[app.bookmarkURL];
@@ -1022,11 +1115,11 @@ var GridManager = (function() {
 
     getIconForBookmark: getIconForBookmark,
 
+    getIconForCollection: getIconForCollection,
+
     getApp: getApp,
 
     getApps: getApps,
-
-    getCollections: getCollections,
 
     localize: localize,
 

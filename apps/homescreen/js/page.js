@@ -556,6 +556,8 @@ Icon.prototype = {
     if (this.descriptor.type !== GridItemsFactory.TYPE.COLLECTION) {
       // Collections cannot be appended to others so this operation isn't needed
       this.savePosition(draggableElem.dataset);
+    } else {
+      draggableElem.classList.add('collection');
     }
 
     // For some reason, cloning and moving a node re-triggers the blob

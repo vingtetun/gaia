@@ -84,6 +84,10 @@ body[data-mode = 'edit'] ol > li[data-is-collection = 'true'] > div > img {
 
 body[data-dragging] ol > li[data-is-collection = 'true'] > div > img {
   transform: scale(0.8);
+  background: transparent;
+  outline-width: 0.28rem;
+  outline-offset: 5px;
+  -moz-outline-radius: 60%;
 }
 
 body[data-dragging] ol > li[data-is-collection = 'true'].hover > div::before {

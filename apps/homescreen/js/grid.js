@@ -971,9 +971,16 @@ var GridManager = (function() {
     IconRetriever.init();
 
     // Initialize the grid from the state saved in IndexedDB.
+    var showBodyTimeout;
+    var showBodyFunction = function() {
+      document.body.hidden = false;
+    };
+
     HomeState.init(function eachPage(pageState) {
       var pageIcons = convertDescriptorsToIcons(pageState);
       pageHelper.addPage(pageIcons, MAX_NUMBER_OF_ICONS);
+      clearTimeout(showBodyTimeout);
+      showBodyTimeout = window.setTimeout(showBodyFunction, 50);
     }, function onSuccess() {
       initApps(callback);
     }, function onError(error) {

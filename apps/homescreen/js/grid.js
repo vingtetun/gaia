@@ -819,12 +819,12 @@ var GridManager = (function() {
         icon.descriptor.desiredPos = svApp.location;
         if (!Configurator.isSimPresentOnFirstBoot && index < pages.length &&
             !pages[index].hasEmptySlot()) {
-          index = pages.length - 2;
+          index = Math.max(pages.length - 2, 0);
         } else {
           icon.descriptor.desiredScreen = index;
         }
       } else {
-        index = pages.length - 2;
+        index = Math.max(pages.length - 2, 0);
       }
 
       var iconList = [icon];

@@ -78,7 +78,12 @@ body[data-dragging] li.start-dragging span.options {
 
 body[data-dragging] ol > li,
 #collection[data-dragging] .evme-apps ul.static li {
+  will-change: opacity, transform;
   opacity: 0.7;
+}
+
+body[data-dragging] .apps > div.page {
+  will-change: transform;
 }
 
 body[data-mode = 'edit'] ol > li.hidden {

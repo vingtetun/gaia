@@ -15,20 +15,10 @@ var Homescreen = (function() {
       return;
     }
 
-    PaginationBar.init('.paginationScroller');
-
     initialized = true;
 
-    var swipeSection = Configurator.getSection('swipe');
     var options = {
-      gridSelector: '.apps',
-      dockSelector: '.dockWrapper',
-      tapThreshold: Configurator.getSection('tap_threshold'),
-      // It defines the threshold to consider a gesture like a swipe. Number
-      // in the range 0.0 to 1.0, both included, representing the screen width
-      swipeThreshold: swipeSection.threshold,
-      swipeFriction: swipeSection.friction,
-      swipeTransitionDuration: swipeSection.transition_duration
+      gridSelector: '.apps'
     };
 
     GridManager.init(options, function gm_init() {
@@ -39,23 +29,32 @@ var Homescreen = (function() {
           return;
         }
 
-        // this happens when the user presses the 'home' button
-        if (Homescreen.didEvmePreventHomeButton()) {
-          // nothing to do here, just prevent any other actions
-        } else if (Homescreen.isInEditMode()) {
+        if (Homescreen.isInEditMode()) {
           exitFromEditMode();
-        } else {
-          GridManager.goToLandingPage();
-        }
-        GridManager.ensurePanning();
-      });
+        } else if (!document.hidden) {
+          var step;
+          var scrollable = iconGrid;
 
-      PaginationBar.show();
-      if (document.location.hash === '#root') {
-        // Switch to the first page only if the user has not already
-        // start to pan while home is loading
-        GridManager.goToLandingPage();
-      }
+          var doScroll = function() {
+            var scrollY = scrollable.scrollTop;
+            step = step || (scrollY / 20);
+
+            if (!scrollY) {
+              return;
+            }
+
+            if (scrollY <= step) {
+              scrollable.scrollTop = 0;
+              return;
+            }
+
+            scrollable.scrollTop -= step;
+            window.requestAnimationFrame(doScroll);
+          };
+
+          doScroll();
+        }
+      });
 
       document.body.addEventListener('contextmenu', onContextMenu);
       IconManager.init(Configurator.getSection('tap_effect_delay'));
@@ -75,15 +74,11 @@ var Homescreen = (function() {
     var target = evt.target;
 
     if ('isIcon' in target.dataset) {
-      // Grid or Dock manager will resolve the current event
-      var manager = target.parentNode === DockManager.page.olist ? DockManager :
-                                                                   GridManager;
-      manager.contextmenu(evt);
+      GridManager.contextmenu(evt);
       if (Homescreen.isInEditMode()) {
         iconGrid.addEventListener('click', onClickHandler);
       }
     } else if (!Homescreen.isInEditMode()) {
-      GridManager.cancelPanning();
       // No long press over an icon neither edit mode
       evt.preventDefault();
       var contextMenuEl = document.getElementById('contextmenu-dialog');
@@ -123,6 +118,8 @@ var Homescreen = (function() {
       ConfirmDialog.hide();
     }
   }
+  var exitEditButton = document.getElementById('exit-edit-mode');
+  exitEditButton.addEventListener('click', exitFromEditMode);
 
   document.addEventListener('visibilitychange', function mozVisChange() {
     if (document.hidden && Homescreen.isInEditMode()) {
@@ -149,6 +146,35 @@ var Homescreen = (function() {
   window.addEventListener('offline', function onOnline(evt) {
     onConnectionChange(false);
   });
+
+  var curtain = document.getElementById('curtain');
+  function setMode(newMode, callback) {
+    if (mode == newMode) {
+      callback && callback();
+      return;
+    }
+
+    var commit = function() {
+      mode = document.body.dataset.mode = newMode;
+      callback && callback();
+    };
+
+    if (newMode == 'edit') {
+      window.dispatchEvent(new CustomEvent('homescreen-editmode-start'));
+      document.body.dataset.curtain = true;
+    } else {
+      window.dispatchEvent(new CustomEvent('homescreen-editmode-end'));
+      document.body.dataset.curtain = false;
+    }
+
+    var safetyTimeout = setTimeout(commit, 1500);
+    curtain.addEventListener('transitionend', function trWait() {
+      curtain.removeEventListener('transitionend', trWait);
+
+      clearTimeout(safetyTimeout);
+      commit();
+    });
+  }
 
   return {
     /*
@@ -191,15 +217,8 @@ var Homescreen = (function() {
       return mode === 'edit';
     },
 
-    didEvmePreventHomeButton: function() {
-      return EvmeFacade && EvmeFacade.onHomeButtonPress &&
-              EvmeFacade.onHomeButtonPress();
-    },
-
     init: initialize,
 
-    setMode: function(newMode) {
-      mode = document.body.dataset.mode = newMode;
-    }
+    setMode: setMode
   };
 })();

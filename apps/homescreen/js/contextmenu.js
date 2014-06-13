@@ -34,7 +34,21 @@ var ContextMenuDialog = (function() {
 
   function addCollection() {
     hide(function() {
-      window.dispatchEvent(new CustomEvent('suggestcollections'));
+      // XXX fux
+      var maxIconSize = 60;
+      var activity = new MozActivity({
+        name: 'create-collection',
+        data: {
+          type: 'folder',
+          maxIconSize: maxIconSize
+        }
+      });
+
+      activity.onerror = function onerror(e) {
+        if (this.error.name !== 'ActivityCanceled') {
+          alert(this.error.name);
+        }
+      };
     });
   }
 

@@ -2,23 +2,43 @@
   width: 100%;
   height: 100%;
 	z-index: 1;
+
+  background: transparent;
+  transition: background 0.5s ease-in;
 }
 
 /* pages */
-.apps > div:first-child {
-  transform: translateX(0);
+.apps > div.page {
+  width: 100%;
+  text-align: center;
+  margin: 2.3rem auto 0 auto;
+  padding-bottom: 2.3rem;
+  overflow-x: hidden;
+
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-size: 50% 0.2rem;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+
+  min-height: 10.5rem;
 }
 
-.apps > div {
-  position: absolute;
-  width: 100%;
-  height: calc(100% - 7.6rem);
-  text-align: center;
+.apps > div:nth-child(2) {
   margin: 0 auto;
-  overflow: hidden;
+}
 
-  transform: translateX(99.99%);
-  will-change: transform;
+body:not([data-curtain="true"]) .apps > div:nth-last-child(2) {
+  padding-bottom: 0;
+  background-image: none;
+}
+
+body:not([data-curtatin="true"]) .apps > div.page:last-child {
+  background-image: none;
+}
+
+body:not([data-curtain="true"]) .apps > div:last-child {
+  padding-bottom: 0;
+  min-height: 0;
 }
 
 .apps ol {
@@ -39,16 +59,7 @@
   display: inline-block;
   float: left;
   text-align: center;
-}
-
-/* Maximum 16 icons for page by default */
-.apps ol > li:nth-child(17) {
-  display: none;
-}
-
-/* Maximum 12 icons for first page by default when ev.me is available */
-body.searchPageEnabled .apps div:first-child ol > li:nth-child(13) {
-  display: none;
+  margin: 0.8rem 0;
 }
 
 /* Container -> icon + label */
@@ -81,14 +92,14 @@ body.searchPageEnabled .apps div:first-child ol > li:nth-child(13) {
 	text-overflow: '';
 }
 
-ol > li.active > div > img {
+body:not([data-mode='edit']) ol > li.active > div > img {
   filter: url('app_tapped_filter.svg#blur');
 }
 
 /* text label */
 .apps ol > li > div > span > span {
-  font-size: 1.3rem;
-  line-height: 2rem; /* maintain constant line height even if font fallback
+  font-size: 1rem;
+  line-height: 1.4rem; /* maintain constant line height even if font fallback
                         gives us different fonts for non-Latin labels */
   text-shadow: 0 0.1rem 0.2rem rgba(0,0,0,1);
 }
@@ -135,11 +146,6 @@ ol > li.active > div > img {
 
 .apps .loading:after {
   top: 0.1rem;
-}
-
-/* the panels are panning */
-body[data-transitioning] .loading:after {
-  animation-name: none;
 }
 
 /* the icon is being dragged */

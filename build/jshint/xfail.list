@@ -194,6 +194,7 @@ apps/homescreen/everything.me/modules/Results/providers/StaticApps.js
 apps/homescreen/everything.me/modules/SearchHistory/SearchHistory.js
 apps/homescreen/everything.me/modules/Searchbar/Searchbar.js
 apps/homescreen/js/bookmark.js
+apps/homescreen/js/collections.js
 apps/homescreen/js/components/status.js
 apps/homescreen/js/configurator.js
 apps/homescreen/js/contextmenu.js

@@ -10,14 +10,9 @@
   width: 100%;
 	margin-top: .4rem;
 	margin-bottom: .4rem;
-  -moz-transform: scale(1.25);
-  -moz-transition: -moz-transform .4s;
-}
-
-.draggable > div > span.options {
-  left: .5rem;
-  top: -0.3rem;
-  margin: 0;
+  transform: scale(1.5);
+  will-change: transform;
+  transition: transform .4s;
 }
 
 /* label wrapper */
@@ -51,41 +46,14 @@
   opacity: 0;
 }
 
-@-moz-keyframes shake {
-  0% { -moz-transform: scale(1); }
-  25% { -moz-transform: scale(1.05); }
-  50% { -moz-transform: scale(1); }
-  75% { -moz-transform: scale(0.95); }
-  100% { -moz-transform: scale(1); }
-}
-
-@-moz-keyframes none {}
-
-/* Image and label have shaking effect */
-body[data-mode = 'edit'] ol > li > div > img,
-#collection[data-mode = 'edit'] .evme-apps ul.static li .icon {
-  -moz-animation-name: shake;
-  -moz-animation-duration: .8s;
-  -moz-transform-origin: 50% 50%;
-  -moz-animation-iteration-count: infinite;
-  -moz-animation-timing-function: ease-out;
-}
-
-body[data-transitioning] ol > li > div > img,
-body[data-dragging] ol > li > div > img,
-#collection[data-transitioning] .evme-apps ul.static li .icon,
-#collection[data-dragging] .evme-apps ul.static li .icon {
-  -moz-animation-name: none;
-}
-
 #collection .evme-apps ul.static[data-rearranging] li {
   transition-duration: 0s !important;
 }
 
 /* for elementFromPoint to return the draggable li and not child nodes */
 body[data-dragging] span.options,
-#collection[data-dragging] .evme-apps ul.static li img,
-#collection[data-dragging] .evme-apps ul.static li span {
+.evme-apps ul.static li img,
+.evme-apps ul.static li span {
   pointer-events: none;
 }
 
@@ -97,22 +65,36 @@ body[data-mode = 'edit'] ol > li[data-dragging],
   transition: none;
 }
 
+body[data-mode = 'edit'] ol > li.start-dragging,
+#collection[data-mode = 'edit'] .evme-apps ul.static li.start-dragging {
+  opacity: 1;
+  transform: scale(1.5);
+  transition: transform 0.3s linear;
+}
+
+body[data-dragging] li.start-dragging span.options {
+  visibility: hidden;
+}
+
 body[data-dragging] ol > li,
 #collection[data-dragging] .evme-apps ul.static li {
   opacity: 0.7;
 }
 
 body[data-mode = 'edit'] ol > li.hidden {
-  opacity: 0;
+  visibility: hidden;
 }
 
 body[data-mode = 'edit'] ol > li[data-is-collection = 'true'] > div > img {
   transform: scale(1);
-  transition: transform .3s;
 }
 
-body[data-dragging] ol > li[data-is-collection = 'true'] > div > img {
+body[data-dragging] ol > li[data-is-collection = 'true']:not(.start-dragging) > div > img {
   transform: scale(0.8);
+  background: transparent;
+  outline-width: 0.28rem;
+  outline-offset: 5px;
+  -moz-outline-radius: 60%;
 }
 
 body[data-dragging] ol > li[data-is-collection = 'true'].hover > div::before {
@@ -131,3 +113,6 @@ body[data-dragging] #footer li[data-is-collection = 'true'].hover > span.options
 .evmeScope #collection[data-mode='edit'] .evme-apps ul.static li span.remove {
   display: block;
 }
+
+
+

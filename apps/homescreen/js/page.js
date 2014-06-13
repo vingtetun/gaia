@@ -555,7 +555,9 @@ Icon.prototype = {
     draggableElem.className = 'draggable';
     if (this.descriptor.type !== GridItemsFactory.TYPE.COLLECTION) {
       // Collections cannot be appended to others so this operation isn't needed
-      this.savePostion(draggableElem.dataset);
+      this.savePosition(draggableElem.dataset);
+    } else {
+      draggableElem.classList.add('collection');
     }
 
     // For some reason, cloning and moving a node re-triggers the blob
@@ -571,45 +573,45 @@ Icon.prototype = {
     };
     draggableElem.appendChild(icon);
 
-    if (this.descriptor.removable === true) {
-      this.appendOptions(icon);
-    }
-
     var container = this.container;
-    container.dataset.dragging = 'true';
-
     var rectangle = container.getBoundingClientRect();
-    var style = draggableElem.style;
-    style.left = rectangle.left + 'px';
-    style.top = rectangle.top + 'px';
-    this.initXCenter = (rectangle.left + rectangle.right) / 2;
-    this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
-    this.initHeight = rectangle.bottom - rectangle.top;
 
-    document.body.appendChild(draggableElem);
+    var commit = (function() {
+      container.dataset.dragging = 'true';
+
+      var style = draggableElem.style;
+      style.left = rectangle.left + 'px';
+      style.top = rectangle.top + 'px';
+      this.initXCenter = (rectangle.left + rectangle.right) / 2;
+      this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
+      this.initHeight = rectangle.bottom - rectangle.top;
+
+      document.body.appendChild(draggableElem);
+
+      container.classList.remove('start-dragging');
+    }).bind(this);
+
+    var safetyTimeout = setTimeout(commit, 500);
+    container.classList.add('start-dragging');
+    container.addEventListener('transitionend', function trWait() {
+      container.removeEventListener('transitionend', trWait);
+
+      clearTimeout(safetyTimeout);
+      commit();
+    });
   },
 
   /*
-   * Saves the current container (page or dock) and  position.
+   * Saves the current page index and  position.
    *
-   * * pageType -> 'dock' or 'page' types
-   * * pageIndex -> index of page (no needed for dock)
-   * * iconIndex -> index of icon inside page or dock container
+   * * pageIndex -> index of page
+   * * iconIndex -> index of icon inside page
    *
    * @param{Object} Source object to set results
    */
-  savePostion: function icon_savePosition(obj) {
-    var page;
-
-    if (this.container.parentNode === DockManager.page.olist) {
-      page = DockManager.page;
-      obj.pageType = 'dock';
-    } else {
-      page = GridManager.pageHelper.getCurrent();
-      obj.pageType = 'page';
-      obj.pageIndex = GridManager.pageHelper.getCurrentPageNumber();
-    }
-
+  savePosition: function icon_savePosition(obj) {
+    var page = GridManager.pageHelper.getPageFor(this.container);
+    obj.pageIndex = GridManager.pageHelper.getPageIndexFor(page.container);
     obj.iconIndex = page.getIconIndex(this.container);
   },
 
@@ -751,7 +753,7 @@ function Page(container, icons, numberOfIcons) {
   if (icons)
     this.render(icons);
   this.iconsWhileDragging = [];
-  this.maxIcons = numberOfIcons || GridManager.pageHelper.maxIconsPerPage;
+  this.maxIcons = numberOfIcons;
 }
 
 Page.prototype = {
@@ -775,37 +777,11 @@ Page.prototype = {
    *               List of Icon objects.
    */
   render: function pg_render(icons) {
-    // By default the page is hidden unless it is the current page.
-    this.container.setAttribute('aria-hidden', true);
     this.olist = document.createElement('ol');
     for (var i = 0, icon; icon = icons[i++];) {
       this.appendIcon(icon);
     }
     this.container.appendChild(this.olist);
-  },
-
-  /*
-   * Applies a translation effect to the page
-   *
-   * @param{int} scroll X
-   * @param{int} duration
-   */
-  moveByWithEffect: function pg_moveByWithEffect(scrollX, duration) {
-    var container = this.movableContainer;
-    var style = container.style;
-    style.MozTransform = 'translateX(' + scrollX + 'px)';
-    style.MozTransition = '-moz-transform ' + duration + 'ms ease';
-  },
-
-  /*
-   * Applies a translation to the page
-   *
-   * @param{int} scroll X
-   */
-  moveBy: function pg_moveBy(scrollX) {
-    var style = this.movableContainer.style;
-    style.MozTransform = 'translateX(' + scrollX + 'px)';
-    style.MozTransition = '';
   },
 
   ready: true,
@@ -835,9 +811,10 @@ Page.prototype = {
 
     var iconList = this.olist.children;
     if (originIcon && targetIcon && iconList.length > 1) {
-      if (this.iconsWhileDragging.length === 0)
+      if (this.iconsWhileDragging.length != iconList.length)
         this.iconsWhileDragging = Array.prototype.slice.call(iconList, 0,
                                                              iconList.length);
+
       this.animate(this.iconsWhileDragging, originIcon.container,
                    targetIcon.container);
     } else {
@@ -1088,13 +1065,6 @@ Page.prototype = {
     return misplaced;
   },
 
-  insertBeforeLastIcon: function pg_insertBeforeLastIcon(icon) {
-    var olist = this.olist;
-    if (olist.children.length > 0) {
-      olist.insertBefore(icon.container, olist.lastChild);
-    }
-  },
-
   /*
    * Returns the last icon of the page
    */
@@ -1215,11 +1185,7 @@ Page.prototype = {
    * @param {Object} icon the icon to be added.
    */
   appendIconVisible: function pg_appendIconVisible(icon) {
-    if (this.getNumIcons() >= this.maxIcons) {
-      this.insertBeforeLastIcon(icon);
-    } else {
-      this.appendIcon(icon);
-    }
+    this.appendIcon(icon);
   },
 
   containsIcon: function pg_containsIcon(icon) {

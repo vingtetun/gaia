@@ -283,32 +283,6 @@ var GridManager = (function() {
     return iconsForApp && iconsForApp[descriptor.entry_point || ''];
   }
 
-  var cachedSize = null;
-  function getIconSize() {
-    if (cachedSize) {
-      return cachedSize;
-    }
-
-    for (var key in appIcons) {
-      var icons = appIcons[key];
-      for (var entryPoint in icons) {
-        var icon = icons[entryPoint];
-        if (!icon.container) {
-          break;
-        }
-
-        var rect = icon.container.getBoundingClientRect();
-        cachedSize = {
-          width: rect.width,
-          height: rect.height
-        };
-        return cachedSize;
-      }
-    }
-
-    return cachedSize;
-  }
-
   function getIconByOrigin(origin, entryPoint) {
     var app = appsByOrigin[origin];
     return app ? getIcon(buildDescriptor(app, entryPoint)) : undefined;
@@ -1131,8 +1105,6 @@ var GridManager = (function() {
     markDirtyState: markDirtyState,
 
     getIcon: getIcon,
-
-    getIconSize: getIconSize,
 
     getIconByOrigin: getIconByOrigin,
 

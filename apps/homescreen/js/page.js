@@ -573,19 +573,18 @@ Icon.prototype = {
     };
     draggableElem.appendChild(icon);
 
-
     var container = this.container;
+    var rectangle = container.getBoundingClientRect();
+
     var commit = (function() {
       container.dataset.dragging = 'true';
 
-      var size = GridManager.getIconSize();
-      this.initXCenter = x; // close enough
-      this.initYCenter = y;
-      this.initHeight = size.height;
-
       var style = draggableElem.style;
-      style.left = x - (size.width / 2) + 'px';
-      style.top = y - (size.height / 2) + 'px';
+      style.left = rectangle.left + 'px';
+      style.top = rectangle.top + 'px';
+      this.initXCenter = (rectangle.left + rectangle.right) / 2;
+      this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
+      this.initHeight = rectangle.bottom - rectangle.top;
 
       document.body.appendChild(draggableElem);
 

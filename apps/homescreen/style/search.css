@@ -4,6 +4,10 @@
   background-color: rgba(0, 0, 0, 0.14);
 }
 
+body[data-curtain='true'] #search {
+  visibility: hidden;
+}
+
 #search-form {
   pointer-events: none;
   position: absolute;

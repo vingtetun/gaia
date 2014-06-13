@@ -43,13 +43,14 @@ var GridManager = (function() {
   }
 
   function contextmenu(evt) {
-    Homescreen.setMode('edit');
-    IconManager.removeActive();
-    LazyLoader.load(['style/dragdrop.css', 'js/dragdrop.js'], function() {
-      DragDropManager.init();
-      DragDropManager.start(evt, {
-        'x': startEvent.pageX,
-        'y': startEvent.pageY
+    Homescreen.setMode('edit', function ready() {
+      IconManager.removeActive();
+      LazyLoader.load(['style/dragdrop.css', 'js/dragdrop.js'], function() {
+        DragDropManager.init();
+        DragDropManager.start(evt, {
+          'x': startEvent.pageX,
+          'y': startEvent.pageY
+        });
       });
     });
   }

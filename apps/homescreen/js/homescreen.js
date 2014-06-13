@@ -148,9 +148,15 @@ var Homescreen = (function() {
   });
 
   var curtain = document.getElementById('curtain');
-  function setMode(newMode) {
+  function setMode(newMode, callback) {
+    if (mode == newMode) {
+      callback && callback();
+      return;
+    }
+
     var commit = function() {
       mode = document.body.dataset.mode = newMode;
+      callback && callback();
     };
 
     if (newMode == 'edit') {

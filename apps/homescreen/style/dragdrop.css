@@ -72,6 +72,10 @@ body[data-mode = 'edit'] ol > li.start-dragging,
   transition: transform 0.3s linear;
 }
 
+body[data-dragging] li.start-dragging span.options {
+  visibility: hidden;
+}
+
 body[data-dragging] ol > li,
 #collection[data-dragging] .evme-apps ul.static li {
   opacity: 0.7;
@@ -85,7 +89,7 @@ body[data-mode = 'edit'] ol > li[data-is-collection = 'true'] > div > img {
   transform: scale(1);
 }
 
-body[data-dragging] ol > li[data-is-collection = 'true'] > div > img {
+body[data-dragging] ol > li[data-is-collection = 'true']:not(.start-dragging) > div > img {
   transform: scale(0.8);
   background: transparent;
   outline-width: 0.28rem;

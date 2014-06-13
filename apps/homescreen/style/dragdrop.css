@@ -65,6 +65,13 @@ body[data-mode = 'edit'] ol > li[data-dragging],
   transition: none;
 }
 
+body[data-mode = 'edit'] ol > li.start-dragging,
+#collection[data-mode = 'edit'] .evme-apps ul.static li.start-dragging {
+  opacity: 1;
+  transform: scale(1.5);
+  transition: transform 0.3s linear;
+}
+
 body[data-dragging] ol > li,
 #collection[data-dragging] .evme-apps ul.static li {
   opacity: 0.7;

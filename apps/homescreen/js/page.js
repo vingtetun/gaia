@@ -573,19 +573,33 @@ Icon.prototype = {
     };
     draggableElem.appendChild(icon);
 
+
     var container = this.container;
-    container.dataset.dragging = 'true';
+    var commit = (function() {
+      container.dataset.dragging = 'true';
 
-    var size = GridManager.getIconSize();
+      var size = GridManager.getIconSize();
+      this.initXCenter = x; // close enough
+      this.initYCenter = y;
+      this.initHeight = size.height;
 
-    var style = draggableElem.style;
-    style.left = this.initX - (size.width / 2) + 'px';
-    style.top = this.initY - (size.height / 2) + 'px';
-    this.initXCenter = this.initX; // close enough
-    this.initYCenter = this.initY;
-    this.initHeight = size.height;
+      var style = draggableElem.style;
+      style.left = x - (size.width / 2) + 'px';
+      style.top = y - (size.height / 2) + 'px';
 
-    document.body.appendChild(draggableElem);
+      document.body.appendChild(draggableElem);
+
+      container.classList.remove('start-dragging');
+    }).bind(this);
+
+    var safetyTimeout = setTimeout(commit, 500);
+    container.classList.add('start-dragging');
+    container.addEventListener('transitionend', function trWait() {
+      container.removeEventListener('transitionend', trWait);
+
+      clearTimeout(safetyTimeout);
+      commit();
+    });
   },
 
   /*

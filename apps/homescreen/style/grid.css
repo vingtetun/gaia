@@ -92,7 +92,7 @@ body:not([data-curtain="true"]) .apps > div:last-child {
 	text-overflow: '';
 }
 
-ol > li.active > div > img {
+body:not([data-mode='edit']) ol > li.active > div > img {
   filter: url('app_tapped_filter.svg#blur');
 }
 

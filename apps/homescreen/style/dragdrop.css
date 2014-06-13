@@ -16,9 +16,7 @@
 }
 
 .draggable > div > span.options {
-  left: .5rem;
-  top: -0.3rem;
-  margin: 0;
+  visibility: hidden;
 }
 
 /* label wrapper */

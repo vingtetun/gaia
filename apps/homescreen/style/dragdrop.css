@@ -15,10 +15,6 @@
   transition: transform .4s;
 }
 
-.draggable > div > span.options {
-  visibility: hidden;
-}
-
 /* label wrapper */
 .draggable > div > span {
   margin-top: -0.05rem;
@@ -56,8 +52,8 @@
 
 /* for elementFromPoint to return the draggable li and not child nodes */
 body[data-dragging] span.options,
-#collection[data-dragging] .evme-apps ul.static li img,
-#collection[data-dragging] .evme-apps ul.static li span {
+.evme-apps ul.static li img,
+.evme-apps ul.static li span {
   pointer-events: none;
 }
 

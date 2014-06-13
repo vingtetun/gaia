@@ -573,20 +573,17 @@ Icon.prototype = {
     };
     draggableElem.appendChild(icon);
 
-    if (this.descriptor.removable === true) {
-      this.appendOptions(icon);
-    }
-
     var container = this.container;
     container.dataset.dragging = 'true';
 
-    var rectangle = container.getBoundingClientRect();
+    var size = GridManager.getIconSize();
+
     var style = draggableElem.style;
-    style.left = rectangle.left + 'px';
-    style.top = rectangle.top + 'px';
-    this.initXCenter = (rectangle.left + rectangle.right) / 2;
-    this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
-    this.initHeight = rectangle.bottom - rectangle.top;
+    style.left = this.initX - (size.width / 2) + 'px';
+    style.top = this.initY - (size.height / 2) + 'px';
+    this.initXCenter = this.initX; // close enough
+    this.initYCenter = this.initY;
+    this.initHeight = size.height;
 
     document.body.appendChild(draggableElem);
   },

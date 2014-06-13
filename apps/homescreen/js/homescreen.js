@@ -59,6 +59,9 @@ var Homescreen = (function() {
       document.body.addEventListener('contextmenu', onContextMenu);
       IconManager.init(Configurator.getSection('tap_effect_delay'));
 
+      // Warming the cache up
+      GridManager.getIconSize();
+
       if (typeof onInit === 'function') {
         onInit();
       }

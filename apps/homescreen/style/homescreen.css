@@ -102,7 +102,7 @@ span.options {
 }
 
 body[data-mode = 'normal'] span.options {
-  display: none;
+  visibility: hidden;
 }
 
 /* Bookmark labels are editable in edit mode */

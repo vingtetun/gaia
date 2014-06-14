@@ -1,14 +1,13 @@
 .draggable {
   z-index: 11000; /* higher than collection */
   pointer-events: none;
-  position: fixed;
+  position: absolute;
   text-align: center;
   width: 8rem;
 }
 
 .draggable > div {
   width: 100%;
-	margin-top: .4rem;
 	margin-bottom: .4rem;
   transform: scale(1.5);
   will-change: transform;
@@ -17,7 +16,7 @@
 
 /* label wrapper */
 .draggable > div > span {
-  margin-top: -0.05rem;
+  margin-top: -0.1rem;
   /* shift left edge of text to center */
   left: 50%;
 }
@@ -35,8 +34,8 @@
 
 /* text label */
 .draggable > div > span > span {
-  font-size: 1.3rem;
-  line-height: 2rem;
+  font-size: 1rem;
+  line-height: 1.4rem;
   text-shadow: 0 0.1rem 0.2rem rgba(0,0,0,1);
   /* shift left edge of text half distance to left */
   margin-left: -106%;
@@ -76,30 +75,8 @@ body[data-dragging] li.start-dragging span.options {
   visibility: hidden;
 }
 
-body[data-dragging] ol > li,
-#collection[data-dragging] .evme-apps ul.static li {
-  will-change: opacity, transform;
-  opacity: 0.7;
-}
-
-body[data-dragging] .apps > div.page {
-  will-change: transform;
-}
-
 body[data-mode = 'edit'] ol > li.hidden {
   visibility: hidden;
-}
-
-body[data-mode = 'edit'] ol > li[data-is-collection = 'true'] > div > img {
-  transform: scale(1);
-}
-
-body[data-dragging] ol > li[data-is-collection = 'true']:not(.start-dragging) > div > img {
-  transform: scale(0.8);
-  background: transparent;
-  outline-width: 0.28rem;
-  outline-offset: 5px;
-  -moz-outline-radius: 60%;
 }
 
 body[data-dragging] ol > li[data-is-collection = 'true'].hover > div::before {

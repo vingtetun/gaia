@@ -987,12 +987,12 @@ var GridManager = (function() {
     HomeState.init(function eachPage(pageState) {
       var pageIcons = convertDescriptorsToIcons(pageState);
       pageHelper.addPage(pageIcons, MAX_NUMBER_OF_ICONS);
-      clearTimeout(showBodyTimeout);
-      showBodyTimeout = window.setTimeout(showBodyFunction, 50);
     }, function onSuccess() {
       initApps(callback);
+      showBodyTimeout = window.setTimeout(showBodyFunction, 1000);
     }, function onError(error) {
       initApps(callback);
+      showBodyTimeout = window.setTimeout(showBodyFunction, 1000);
     }, function eachSVApp(svApp) {
       GridManager.svPreviouslyInstalledApps.push(svApp);
     });

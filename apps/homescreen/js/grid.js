@@ -30,15 +30,23 @@ var GridManager = (function() {
   }
 
   function touchmove(evt) {
-    IconManager.removeActive();
+    var touch = evt.touches[0] || evt.changedTouches[0];
+    if (Math.abs(touch.pageX - startEvent.pageX) > 5 ||
+        Math.abs(touch.pageY - startEvent.pageY) > 5) {
+      IconManager.removeActive();
+    }
   }
 
   function tap(evt) {
-    IconManager.cancelActive();
-    var page = pageHelper.getPageFor(evt.target) ||
-               pageHelper.getPageFor(evt.target.parentNode);
-    if (page) {
-      page.tap(evt.target, IconManager.removeActive);
+    var touch = evt.changedTouches[0];
+    if (Math.abs(touch.pageX - startEvent.pageX) <= 5 &&
+        Math.abs(touch.pageY - startEvent.pageY) <= 5) {
+      IconManager.cancelActive();
+      var page = pageHelper.getPageFor(evt.target) ||
+                 pageHelper.getPageFor(evt.target.parentNode);
+      if (page) {
+        page.tap(evt.target, IconManager.removeActive);
+      }
     }
   }
 
@@ -66,7 +74,7 @@ var GridManager = (function() {
         touchmove(evt);
         break;
 
-      case 'click':
+      case 'touchend':
         tap(evt);
         break;
     }
@@ -352,7 +360,7 @@ var GridManager = (function() {
     window.addEventListener('touchstart', handleEvent);
     window.addEventListener('touchmove', handleEvent);
     window.addEventListener('touchcancel', handleEvent);
-    window.addEventListener('click', handleEvent);
+    window.addEventListener('touchend', handleEvent);
 
     container = document.querySelector(selector);
 

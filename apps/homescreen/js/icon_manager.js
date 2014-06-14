@@ -8,7 +8,7 @@ var IconManager = (function() {
   //  The numerical ID of the active timeout for icons
   var activeTimeout = null;
 
-  var activeDelay = 0;
+  var activeDelay = 100;
 
   var removeActive = noop;
 

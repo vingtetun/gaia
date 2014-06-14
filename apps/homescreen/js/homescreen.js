@@ -65,6 +65,32 @@ var Homescreen = (function() {
     });
   }
 
+  var delayedContextTimeout;
+  var touchstart;
+  function waitForContextMenu(evt, callback) {
+    touchstart = evt;
+    window.addEventListener('touchmove', checkThresholdForContextMenu);
+    window.addEventListener('touchend', cancelWaitForContextMenu);
+    window.addEventListener('touchcancel', cancelWaitForContextMenu);
+
+    delayedContextTimeout = setTimeout(callback, 500);
+  }
+
+  function checkThresholdForContextMenu(evt) {
+    var touch = evt.touches[0];
+    if (Math.abs(touch.pageX - touchstart.pageX) > 5 ||
+        Math.abs(touch.pageY - touchstart.pageY) > 5) {
+      cancelWaitForContextMenu();
+    }
+  }
+
+  function cancelWaitForContextMenu() {
+    clearTimeout(delayedContextTimeout);
+    window.removeEventListener('touchmove', checkThresholdForContextMenu);
+    window.removeEventListener('touchend', cancelWaitForContextMenu);
+    window.removeEventListener('touchcancel', cancelWaitForContextMenu);
+  }
+
   function onContextMenu(evt) {
     // See Bug 1011389 - [APZ] Click events are fired after a long press, even
     // if the user has moved the finger
@@ -73,36 +99,41 @@ var Homescreen = (function() {
 
     var target = evt.target;
 
-    if ('isIcon' in target.dataset) {
+    var targetIsIcon = 'isIcon' in target.dataset;
+    if (Homescreen.isInEditMode() && targetIsIcon) {
       GridManager.contextmenu(evt);
-      if (Homescreen.isInEditMode()) {
-        iconGrid.addEventListener('click', onClickHandler);
-      }
-    } else if (!Homescreen.isInEditMode()) {
-      // No long press over an icon neither edit mode
-      evt.preventDefault();
-      var contextMenuEl = document.getElementById('contextmenu-dialog');
-
-      var searchPage = Configurator.getSection('search_page');
-      if (searchPage && searchPage.enabled) {
-        LazyLoader.load(['style/contextmenu.css',
-                         'shared/style/action_menu.css',
-                         contextMenuEl,
-                         'js/contextmenu.js'
-                         ], function callContextMenu() {
-                          navigator.mozL10n.translate(contextMenuEl);
-                          ContextMenuDialog.show();
-                        }
-        );
-      } else {
-        // only wallpaper
-        LazyLoader.load(['shared/js/omadrm/fl.js', 'js/wallpaper.js'],
-                      function callWallpaper() {
-                        Wallpaper.contextmenu();
-                      });
-      }
+      iconGrid.addEventListener('click', onClickHandler);
+      return;
     }
+
+    waitForContextMenu(evt, function() {
+      if (targetIsIcon) {
+        GridManager.contextmenu(evt);
+      } else if (!Homescreen.isInEditMode()) {
+        var contextMenuEl = document.getElementById('contextmenu-dialog');
+
+        var searchPage = Configurator.getSection('search_page');
+        if (searchPage && searchPage.enabled) {
+          LazyLoader.load(['style/contextmenu.css',
+                           'shared/style/action_menu.css',
+                           contextMenuEl,
+                           'js/contextmenu.js'
+                           ], function callContextMenu() {
+                            navigator.mozL10n.translate(contextMenuEl);
+                            ContextMenuDialog.show();
+                          }
+          );
+        } else {
+          // only wallpaper
+          LazyLoader.load(['shared/js/omadrm/fl.js', 'js/wallpaper.js'],
+                        function callWallpaper() {
+                          Wallpaper.contextmenu();
+                        });
+        }
+      }
+    });
   }
+
   // dismiss edit mode by tapping in an area of the view where there is no icon
   function onClickHandler(evt) {
     if (!('isIcon' in evt.target.dataset)) {

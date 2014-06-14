@@ -588,7 +588,10 @@ Icon.prototype = {
 
       document.body.appendChild(draggableElem);
 
-      container.classList.remove('start-dragging');
+      // Avoid a flash by removing the class on the next paint.
+      mozRequestAnimationFrame(function() {
+        container.classList.remove('start-dragging');
+      });
     }).bind(this);
 
     var safetyTimeout = setTimeout(commit, 500);

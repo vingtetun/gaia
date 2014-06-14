@@ -9,8 +9,16 @@
 .draggable > div {
   width: 100%;
 	margin-bottom: .4rem;
-  transform: scale(1.5);
+  transform: scale(1);
   will-change: transform;
+}
+
+.draggable.start-dragging > div {
+  transform: scale(1.5);
+  transition: transform .15s linear;
+}
+
+body:not([data-dragging]) .draggable > div {
   transition: transform .4s;
 }
 
@@ -62,17 +70,6 @@ body[data-mode = 'edit'] ol > li[data-dragging],
   /* clear transition set by Result.css */
   /* the dragged li should instantly jump to position */
   transition: none;
-}
-
-body[data-mode = 'edit'] ol > li.start-dragging,
-#collection[data-mode = 'edit'] .evme-apps ul.static li.start-dragging {
-  opacity: 1;
-  transform: scale(1.5);
-  transition: transform 0.3s linear;
-}
-
-body[data-dragging] li.start-dragging span.options {
-  visibility: hidden;
 }
 
 body[data-mode = 'edit'] ol > li.hidden {

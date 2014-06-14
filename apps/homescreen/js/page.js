@@ -576,31 +576,19 @@ Icon.prototype = {
     var container = this.container;
     var rectangle = container.getBoundingClientRect();
 
-    var commit = (function() {
-      container.dataset.dragging = 'true';
+    container.dataset.dragging = 'true';
 
-      var style = draggableElem.style;
-      style.left = rectangle.left + 'px';
-      style.top = rectangle.top + 'px';
-      this.initXCenter = (rectangle.left + rectangle.right) / 2;
-      this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
-      this.initHeight = rectangle.bottom - rectangle.top;
+    var style = draggableElem.style;
+    style.left = rectangle.left + 'px';
+    style.top = rectangle.top + 'px';
+    this.initXCenter = (rectangle.left + rectangle.right) / 2;
+    this.initYCenter = (rectangle.top + rectangle.bottom) / 2;
+    this.initHeight = rectangle.bottom - rectangle.top;
 
-      document.body.appendChild(draggableElem);
+    document.body.appendChild(draggableElem);
 
-      // Avoid a flash by removing the class on the next paint.
-      mozRequestAnimationFrame(function() {
-        container.classList.remove('start-dragging');
-      });
-    }).bind(this);
-
-    var safetyTimeout = setTimeout(commit, 500);
-    container.classList.add('start-dragging');
-    container.addEventListener('transitionend', function trWait() {
-      container.removeEventListener('transitionend', trWait);
-
-      clearTimeout(safetyTimeout);
-      commit();
+    setTimeout(function() {
+      draggableElem.classList.add('start-dragging');
     });
   },
 

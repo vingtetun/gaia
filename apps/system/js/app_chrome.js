@@ -277,7 +277,8 @@
     // the necessary spec and implementation, we'll animate completely to
     // the expanded or collapsed state depending on whether it's at the
     // top or not.
-    if (this.scrollable.scrollTop >= this.scrollable.scrollTopMax) {
+    // XXX Seems like there is a rounding issue when panning backward.
+    if (this.scrollable.scrollTop >= this.scrollable.scrollTopMax - 1) {
       this.element.classList.remove('maximized');
     } else {
       this.element.classList.add('maximized');

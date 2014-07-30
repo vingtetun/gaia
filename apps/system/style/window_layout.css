@@ -114,10 +114,10 @@
 
 .appWindow > div {
   position: absolute;
-  top: 2.4rem;
+  top: 3rem;
   left: 0;
   width: 100%;
-  height: calc(100% - 2.4rem);
+  height: calc(100% - 3rem);
 }
 
 .appWindow > div > iframe {
@@ -200,7 +200,7 @@
 }
 
 .appWindow > div.browser-container.scrollable > iframe {
-  top: 5rem;
+  top: 4.6rem;
   width: calc(100% - 1rem);
 }
 
@@ -229,8 +229,8 @@
  */
 .appWindow.searchWindow .activityWindow,
 .appWindow.searchWindow .popupWindow {
-  height: calc(100% + 7rem + 2.4rem);
-  top: calc(-7rem - 2.4rem);
+  height: calc(100% + 7rem + 3rem);
+  top: calc(-7rem - 3rem);
 }
 
 .appWindow.searchWindow > .titlebar {

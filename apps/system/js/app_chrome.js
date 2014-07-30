@@ -86,6 +86,8 @@
             '   <button type="button" class="stop-button"' +
             '     alt="Stop"></button>' +
             ' </div>' +
+            ' <button type="button" class="menu-button"' +
+            '   alt="Menu" data-disabled="disabled"></button>' +
             '</div>';
   };
 
@@ -275,10 +277,7 @@
     // the necessary spec and implementation, we'll animate completely to
     // the expanded or collapsed state depending on whether it's at the
     // top or not.
-    // XXX Open a bug since I wonder if there is scrollgrab rounding issue
-    // somewhere. While panning from the bottom to the top, there is often
-    // a scrollTop position of scrollTopMax - 1, which triggers the transition!
-    if (this.scrollable.scrollTop >= this.scrollable.scrollTopMax - 1) {
+    if (this.scrollable.scrollTop >= this.scrollable.scrollTopMax) {
       this.element.classList.remove('maximized');
     } else {
       this.element.classList.add('maximized');

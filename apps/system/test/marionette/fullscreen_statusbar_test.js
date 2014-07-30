@@ -35,7 +35,7 @@ marionette('Fullscreen status bar >', function() {
       var rect = statusbar.scriptWith(function(el) {
         return el.getBoundingClientRect();
       });
-      var expectedHeight = 24;
+      var expectedHeight = 30;
       return (rect.bottom >= expectedHeight);
     });
     assert(statusbar.displayed(), 'The status bar is visible');

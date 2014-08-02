@@ -280,16 +280,21 @@
 }
 
 /****************** Screenshot Overlay ******************/
-.appWindow > .screenshot-overlay {
-  visibility: hidden;
+.appWindow .screenshot-overlay {
   pointer-events: none;
+  width: 100%;
+  height: 100%;
 
   /* We need this to resize hi-res screenshot */
   background-size: cover;
 }
 
-.appWindow > .screenshot-overlay.visible {
-  visibility: visible;
+.appWindow.scrollable.render.active .screenshot-overlay {
+  background-color: white;
+}
+
+.appWindow .screenshot-overlay.visible {
+  z-index: 1;
 }
 
 .appWindow > .identification-overlay {
@@ -371,10 +376,6 @@
 
 .appWindow > .identification-overlay {
   z-index: 1024;
-}
-
-.appWindow > .screenshot-overlay {
-  z-index: 1023;
 }
 
 .appWindow > .chrome {

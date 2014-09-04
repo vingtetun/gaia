@@ -740,7 +740,7 @@
       if (Math.abs(dx) > this.threshold) {
         var progress = Math.abs(dx) / this.windowWidth;
         var time = Date.now() - this.gestureStart;
-        var inertia = progress / time * 100;
+        var inertia = progress / time * 200;
         var durationLeft = (1 - (progress + inertia)) * 300;
 
         // Snaping backward at the extremities
@@ -1044,6 +1044,7 @@
 
     this.stack.forEach(function(app, idx) {
       var card = this.cardsByAppID[app.instanceID];
+      card.element.style.zIndex = card.position;
       card.move(0, 0);
     }.bind(this));
   };
@@ -1062,14 +1063,34 @@
     var prevCard = this.prevCard || pseudoCard;
     var nextCard = this.nextCard || pseudoCard;
 
+    var self = this;
+    self.setAccessibilityAttributes();
+
+    // Let's update the display of cards
+    self.stack.forEach(function(app, idx) {
+      var card = self.cardsByAppID[app.instanceID];
+
+      if (idx >= self.currentPosition - 2 && idx <= self.currentPosition + 2) {
+        card.element.style.display = 'block';
+      } else {
+        card.element.style.display = 'none';
+      }
+    });
+
+    setTimeout(function() {
+      self.placeCards();
+      nextCard.element.style.transform =
+        'translateX(' + nextCard.element.dataset.x + 'px)';
+      prevCard.element.style.transform =
+        'translateX(' + prevCard.element.dataset.x + 'px)';
+    });
+
     var style = { transition: 'transform ' + (duration || 300) + 'ms'};
-
-    this.setAccessibilityAttributes();
-    this.placeCards();
-
-    currentCard.applyStyle(style);
-    nextCard.applyStyle(style);
-    prevCard.applyStyle(style);
+    setTimeout(function() {
+      currentCard.applyStyle(style);
+      nextCard.applyStyle(style);
+      prevCard.applyStyle(style);
+    });
 
     var onCardTransitionEnd = function transitionend() {
       currentCard.element.removeEventListener('transitionend',
@@ -1079,7 +1100,8 @@
       nextCard.applyStyle(zeroTransitionStyle);
       currentCard.applyStyle(zeroTransitionStyle);
 
-      callback && callback();
+
+      setTimeout(callback);
     };
 
     currentCard.element.addEventListener('transitionend', onCardTransitionEnd);
@@ -1103,8 +1125,8 @@
     }
 
     this.stack.forEach(function(app, idx) {
+      var card = this.cardsByAppID[app.instanceID];
       if (idx >= this.currentPosition - 2 && idx <= this.currentPosition + 2) {
-        var card = this.cardsByAppID[app.instanceID];
         card.move(Math.abs(deltaX) * sign);
       }
     }, this);

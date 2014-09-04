@@ -151,13 +151,14 @@
     var offset = this.position - this.manager.currentPosition;
     var positionX = deltaX + offset * (windowWidth * 0.55);
 
-    
-    this.element.dataset.x = positionX;
+    this.element.dataset.virtualX = positionX;
 
     positionX = Math.min(positionX,
                          windowWidth - (windowWidth * 0.25) - 0.001);
     positionX = Math.max(positionX,
                          -(windowWidth * 0.75) + 0.001);
+
+    this.element.dataset.realX = positionX;
 
     var style = { transform: '' };
 

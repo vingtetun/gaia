@@ -43,6 +43,8 @@
      */
     SCREENSHOT_PREVIEWS_SETTING_KEY: 'app.cards_view.screenshots.enabled',
 
+    DURATION: 250,
+
     /**
      * Cached value of the screenshots.enabled setting
      * @memberOf TaskManager.prototype
@@ -740,12 +742,12 @@
       if (Math.abs(dx) > this.threshold) {
         var progress = Math.abs(dx) / this.windowWidth;
         var time = Date.now() - this.gestureStart;
-        var inertia = progress / time * 200;
-        var durationLeft = (1 - (progress + inertia)) * 300;
+        var inertia = progress / time * 250;
+        var durationLeft = (1 - (progress + inertia)) * this.DURATION;
 
         // Snaping backward at the extremities
         if (this.onExtremity()) {
-          durationLeft = 300 - durationLeft;
+          durationLeft = this.DURATION - durationLeft;
         }
 
         durationLeft = Math.max(100, durationLeft);
@@ -1059,6 +1061,9 @@
     if (!currentCard) {
       return;
     }
+
+    duration = duration || this.DURATION;
+
     var pseudoCard = this.pseudoCard;
     var prevCard = this.prevCard || pseudoCard;
     var nextCard = this.nextCard || pseudoCard;
@@ -1077,22 +1082,21 @@
       }
     });
 
-    setTimeout(function() {
-      self.placeCards();
-      nextCard.element.style.transform =
-        'translateX(' + nextCard.element.dataset.x + 'px)';
-      prevCard.element.style.transform =
-        'translateX(' + prevCard.element.dataset.x + 'px)';
+    var style = { transition: 'transform ' + duration + 'ms linear'};
+    currentCard.applyStyle(style);
+
+    [prevCard, nextCard].forEach(function(card) {
+      var distance = Math.abs(card.element.dataset.virtualX -
+                              card.element.dataset.realX);
+      var delay = duration * distance /
+                  Math.abs(currentCard.element.dataset.realX);
+      var adjusted = { transition: 'transform ' +
+                                   (duration - delay) + 'ms linear ' +
+                                   delay + 'ms'};
+      card.applyStyle(adjusted);
     });
 
-    var style = { transition: 'transform ' + (duration || 300) + 'ms'};
-    setTimeout(function() {
-      currentCard.applyStyle(style);
-      nextCard.applyStyle(style);
-      prevCard.applyStyle(style);
-    });
-
-    var onCardTransitionEnd = function transitionend() {
+    var onCardTransitionEnd = function() {
       currentCard.element.removeEventListener('transitionend',
                                               onCardTransitionEnd);
       var zeroTransitionStyle = { transition: '' };
@@ -1100,11 +1104,15 @@
       nextCard.applyStyle(zeroTransitionStyle);
       currentCard.applyStyle(zeroTransitionStyle);
 
-
-      setTimeout(callback);
+      if (callback) {
+        setTimeout(callback);
+      }
     };
 
     currentCard.element.addEventListener('transitionend', onCardTransitionEnd);
+    setTimeout(function() {
+      self.placeCards();
+    });
 
     // done with delta
     this.deltaX = 0;

@@ -470,7 +470,20 @@ var StatusBar = {
     return window.innerWidth - urlBarWidth - 3;
   },
 
+  pauseUpdate: function sb_pauseUpdate() {
+    this._paused = true;
+  },
+
+  resumeUpdate: function sb_resumeUpdate() {
+    this._paused = false;
+    this._updateIconVisibility();
+  },
+
   _updateIconVisibility: function sb_updateIconVisibility() {
+    if (this._paused) {
+      return;
+    }
+
     // Let's refresh the minimized clone.
     this.cloneStatusbar();
 

@@ -342,6 +342,7 @@
     this.currentPosition = StackManager.position;
     this.newStackPosition = null;
     this.initialTouchPosition = null;
+    this.initialTouchDate = null;
 
     // Apply the filter. Noop if no filterName.
     if (this.filter(filterName)) {
@@ -585,7 +586,6 @@
 
   TaskManager.prototype.exitToApp = function(app,
                                              openAnimation) {
-
     if (!app) {
       // return if possible to previous app.
       // else homescreen
@@ -749,26 +749,33 @@
 
     if (!this.draggingCardUp) {
       if (Math.abs(dx) > this.threshold) {
-        var progress = Math.abs(dx) / this.windowWidth;
+        var speed = dx / (Date.now() - this.initialTouchDate);
+        var inertia = speed * 250;
+        var boosted = dx + inertia;
+
+        var progress = Math.abs(boosted) / this.windowWidth;
 
         // We're going to snap back to the center
         if (progress > 0.5) {
           progress -= 0.5;
         }
+
         var durationLeft = (1 - progress) * this.DURATION;
 
-        // Snaping backward at the extremities
-        if (this.onExtremity()) {
+        var switching = Math.abs(boosted) >= this.switchingCardThreshold;
+        if (this.onExtremity() || !switching) {
           durationLeft = this.DURATION - durationLeft;
         }
 
         durationLeft = Math.max(50, durationLeft);
 
         var current = this.currentDisplayed;
-        if (dx < 0 && current < this.cardsList.childNodes.length - 1) {
-          this.currentDisplayed = ++this.currentPosition;
-        } else if (dx > 0 && current > 0) {
-          this.currentDisplayed = --this.currentPosition;
+        if (switching) {
+          if (dx < 0 && current < this.cardsList.childNodes.length - 1) {
+            this.currentDisplayed = ++this.currentPosition;
+          } else if (dx > 0 && current > 0) {
+            this.currentDisplayed = --this.currentPosition;
+          }
         }
 
         this.alignCurrentCard(durationLeft);
@@ -1237,6 +1244,7 @@
     } else {
       this.initialTouchPosition = [evt.pageX, evt.pageY];
     }
+    this.initialTouchDate = Date.now();
   };
 
   /**

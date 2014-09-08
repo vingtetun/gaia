@@ -496,6 +496,19 @@ suite('system/TaskManager >', function() {
     });
 
     suite('display cardsview >', function() {
+      var realRAF;
+      suiteSetup(function() {
+        realRAF = window.mozRequestAnimationFrame;
+
+        window.mozRequestAnimationFrame = function(cb) {
+          cb();
+        };
+      });
+
+      suiteTeardown(function() {
+        window.mozRequestAnimationFrame = realRAF;
+      });
+
       setup(function(done) {
         taskManager.hide(true);
         MockAppWindowManager.mActiveApp = apps['http://sms.gaiamobile.org'];
@@ -503,6 +516,7 @@ suite('system/TaskManager >', function() {
           .then(function() { done(); }, failOnReject);
         taskManager.isTaskStrip = false;
         taskManager.show();
+        window.dispatchEvent(new CustomEvent('appclosed'));
       });
 
       teardown(function() {
@@ -516,8 +530,6 @@ suite('system/TaskManager >', function() {
       });
 
       test('cardsview should be active once app is closed', function() {
-        assert.isFalse(screenNode.classList.contains('cards-view'));
-        window.dispatchEvent(new CustomEvent('appclosed'));
         assert.isTrue(taskManager.isShown(), 'taskManager.isShown');
         assert.isTrue(screenNode.classList.contains('cards-view'));
       });
@@ -628,14 +640,20 @@ suite('system/TaskManager >', function() {
       });
 
       test('user can change swipe direction', function() {
+        this.sinon.useFakeTimers();
         var currentCard = taskManager.currentCard;
 
         // Simulate a swipe that goes to one side, then back again
         var el = currentCard.element;
         el.dispatchEvent(createTouchEvent('touchstart', el, 200, 500));
+        this.sinon.clock.tick(300);
         el.dispatchEvent(createTouchEvent('touchmove', el, 0, 500));
-        el.dispatchEvent(createTouchEvent('touchmove', el, 50, 500));
-        el.dispatchEvent(createTouchEvent('touchend', el, 100, 500));
+        this.sinon.clock.tick(300);
+        el.dispatchEvent(createTouchEvent('touchmove', el, 380, 500));
+        this.sinon.clock.tick(300);
+        el.dispatchEvent(createTouchEvent('touchmove', el, 190, 500));
+        this.sinon.clock.tick(300);
+        el.dispatchEvent(createTouchEvent('touchend', el, 180, 500));
 
         assert.isTrue(currentCard == taskManager.currentCard,
                       'current card remains unchanged');
@@ -1063,6 +1081,7 @@ suite('system/TaskManager >', function() {
 
   suite('exit >', function() {
     setup(function(done) {
+      this.sinon.useFakeTimers();
       taskManager.hide(true);
       MockAppWindowManager.mRunningApps = apps;
       MockAppWindowManager.mActiveApp = apps['http://sms.gaiamobile.org'];
@@ -1070,11 +1089,20 @@ suite('system/TaskManager >', function() {
         .then(function() { done(); }, failOnReject);
       taskManager.isTaskStrip = false;
       taskManager.show();
+      window.dispatchEvent(new CustomEvent('appclosed'));
+      this.sinon.clock.tick();
     });
 
     teardown(function() {
-      taskManager.hide(true);
+      this.sinon.clock.tick(500); // safety timeout
+      taskManager.hide();
     });
+
+    function fakeFinish(clock, app) {
+      clock.tick(100); // smooth timeout
+      app.element.dispatchEvent(new CustomEvent('_opened'));
+      clock.tick(); // timeout before close event is dispatched
+    }
 
     test('selected app is opened', function(done) {
       var targetApp = apps['http://game.gaiamobile.org'];
@@ -1086,6 +1114,7 @@ suite('system/TaskManager >', function() {
       .then(function() { done(); }, done);
 
       taskManager.exitToApp(targetApp);
+      fakeFinish(this.sinon.clock, targetApp);
     });
 
     test('when exitToApp is passed no app', function(done) {
@@ -1098,6 +1127,7 @@ suite('system/TaskManager >', function() {
       .then(function() { done(); }, done);
 
       taskManager.exitToApp();
+      fakeFinish(this.sinon.clock, activeApp);
     });
 
     test('active app is opened on home event', function(done) {
@@ -1111,6 +1141,7 @@ suite('system/TaskManager >', function() {
 
       var event = new CustomEvent('home');
       window.dispatchEvent(event);
+      fakeFinish(this.sinon.clock, activeApp);
     });
 
     test('newStackPosition is defined when app is selected', function(done) {
@@ -1129,8 +1160,8 @@ suite('system/TaskManager >', function() {
       .then(function() { done(); }, done);
 
       taskManager.exitToApp(targetApp);
+      fakeFinish(this.sinon.clock, targetApp);
     });
-
   });
 
   suite('filtering > ', function() {

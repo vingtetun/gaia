@@ -1,5 +1,5 @@
 /* global MockStackManager, MockNavigatorSettings, MockAppWindowManager,
-          TaskManager, Card, TaskCard, AppWindow, HomescreenLauncher,
+          TaskManager, Card, AppWindow, HomescreenLauncher,
           HomescreenWindow, MockScreenLayout, MocksHelper */
 'use strict';
 require('/shared/test/unit/mocks/mock_gesture_detector.js');
@@ -401,11 +401,8 @@ suite('system/TaskManager >', function() {
     });
     test('instantiable Cards', function(){
       var card = new Card();
-      var taskCard = new TaskCard();
       assert.ok(card && card instanceof window.Card,
                   'Card instantiation');
-      assert.ok(taskCard && taskCard instanceof window.TaskCard,
-                  'TaskCard instantiation');
     });
   });
 

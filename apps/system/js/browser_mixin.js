@@ -18,6 +18,53 @@
      */
     NEXTPAINT_TIMEOUT: 500,
 
+    waitFor: function bm_waitFor(type, callback) {
+      if (!callback) {
+        return;
+      }
+
+      if (!this.browser || !this.browser.element) {
+        callback();
+        return;
+      }
+
+      var frame = this.browser.element;
+      frame.addEventListener(type, function cb() {
+        dump("Receive event: " + type + "\n");
+        frame.removeEventListener(type, cb);
+        callback();
+      });
+    },
+
+    waitForLocationChange: function(callback) {
+      this.waitFor('mozbrowserlocationchange', callback);
+    },
+
+    waitForLoadEnd: function(callback) {
+      this.waitFor('mozbrowserloadend', callback);
+    },
+
+    waitForRemotePaint: function(callback) {
+      this.waitFor('MozAfterRemotePaint', callback);
+    },
+
+    waitForFrames(count, callback) {
+      if (!callback) {
+        return;
+      }
+
+      if (count === 0) {
+        callback();
+        return;
+      }
+
+      count--;
+
+      dump("Still waiting: " + count + " frames\n");
+      requestAnimationFrame(
+        this.waitForFrames.bind(this, count, callback));
+    },
+
     /**
      * Wait for a next paint event from mozbrowser iframe,
      * The callback would be called in this.NEXTPAINT_TIMEOUT ms

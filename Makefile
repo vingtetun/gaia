@@ -117,6 +117,8 @@ NOFTUPING?=0
 REMOTE_DEBUGGER?=0
 # Debug mode for build process
 BUILD_DEBUG?=0
+# Compile js file as bytecode
+USE_BYTECODE?=0
 
 # Enable PerformanceTiming logs
 PERF_LOGGING?=0
@@ -550,6 +552,7 @@ define BUILD_CONFIG
   "STAGE_DIR" : "$(STAGE_DIR)", \
   "GAIA_APP_TARGET" : "$(GAIA_APP_TARGET)", \
   "BUILD_DEBUG" : "$(BUILD_DEBUG)", \
+  "USE_BYTECODE" : "$(USE_BYTECODE)", \
   "VARIANT_PATH" : "$(VARIANT_PATH)", \
   "REBUILD": "$(REBUILD)", \
   "P" : "$(P)", \
@@ -826,6 +829,11 @@ caldav-server-install:
 .PHONY: raptor
 raptor: node_modules
 	PERF_LOGGING=1 DEVICE_DEBUG=1 GAIA_OPTIMIZE=1 NOFTU=1 SCREEN_TIMEOUT=0 GAIA_DISTRIBUTION_DIR=node_modules/raptor/dist PROFILE_FOLDER=profile-raptor make reset-gaia
+
+.PHONY: raptor-app
+raptor-app: node_modules
+	PERF_LOGGING=1 DEVICE_DEBUG=1 GAIA_OPTIMIZE=1 NOFTU=1 SCREEN_TIMEOUT=0 GAIA_DISTRIBUTION_DIR=node_modules/raptor/dist PROFILE_FOLDER=profile-raptor APP=$(APP) make install-gaia
+
 
 .PHONY: tests
 tests: app offline

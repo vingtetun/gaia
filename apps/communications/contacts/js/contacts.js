@@ -41,8 +41,7 @@ var Contacts = (function() {
   var detailsReady = false;
   var formReady = false;
 
-  var currentContact = {},
-      currentFbContact;
+  var currentContact = {};
 
   var contactsList;
   var contactsDetails;
@@ -240,27 +239,7 @@ var Contacts = (function() {
   };
 
   var contactListClickHandler = function originalHandler(id) {
-    initDetails(function onDetailsReady() {
-      ContactsService.get(id, function findCb(contact, fbContact) {
-
-        currentContact = contact;
-        currentFbContact = fbContact;
-
-        if (ActivityHandler.currentActivityIsNot(['import'])) {
-          if (ActivityHandler.currentActivityIs(['pick'])) {
-            ActivityHandler.dataPickHandler(currentFbContact || currentContact);
-          }
-          return;
-        }
-
-        contactsDetails.render(currentContact, currentFbContact);
-        if (contacts.Search && contacts.Search.isInSearchMode()) {
-          MainNavigation.go('view-contact-details', 'go-deeper-search');
-        } else {
-          MainNavigation.go('view-contact-details', 'go-deeper');
-        }
-      });
-    });
+    window.location.href = '/contacts/views/details/details.html#contact=' + id;
   };
 
   var updateContactDetail = function updateContactDetail(id) {
@@ -690,6 +669,29 @@ var Contacts = (function() {
 
   window.addEventListener('DOMContentLoaded', function onLoad() {
     window.removeEventListener('DOMContentLoaded', onLoad);
+  });
+
+  window.addEventListener('pageshow', function onPageshow() {
+    // #new handling
+    var contactID = sessionStorage.getItem('contactID');
+    var reason = sessionStorage.getItem('reason');
+    if (!contactID || (contactID.length && contactID.length ===0)) {
+      var pendingOp = sessionStorage.getItem('oncontactchange');
+
+      // Invoke oncontactchange manually
+      if (typeof pendingOp !== 'undefined') {
+        oncontactchange(JSON.parse(pendingOp));
+        sessionStorage.setItem('oncontactchange', null);
+        return;
+      }
+      return;
+    }
+    performOnContactChange({
+      contactID: contactID,
+      reason: reason
+    });
+    sessionStorage.setItem('contactID', null);
+    sessionStorage.setItem('reason', null);
   });
 
   return {

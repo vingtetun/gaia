@@ -21,7 +21,8 @@
   SearchWindow.REGISTERED_EVENTS = [
     // Let our parent AppWindow handle error events.
     'mozbrowsererror',
-    'mozbrowserlocationchange'
+    'mozbrowserlocationchange',
+    'mozbrowserloadend'
   ];
 
   SearchWindow.SUB_COMPONENTS = {

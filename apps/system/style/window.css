@@ -238,6 +238,75 @@
   opacity: 0.8;
 }
 
+/* XXX */
+.appWindow .transition-overlay[lolipoop] {
+  transform: scale(1.5);
+  transition: transform 0.2s ease;
+}
+/* XXX */
+
+.appWindow .transition-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+  background-size: cover;
+  pointer-events: none;
+  transform: translateX(0);
+  will-change: transform;
+  z-index: 1;
+
+  /* XXX */
+  transform: scale(0);
+  background-color: #27c8c2;
+  border-radius: 50%;
+}
+
+.appWindow iframe {
+  z-index: 0;
+}
+
+.appWindow .transition-overlay,
+.appWindow iframe {
+  will-change: transform;
+}
+
+.appWindow[transitioning] .transition-overlay {
+  transition: transform 0.25s ease;
+  transform: translateX(-99.9%);
+}
+
+.appWindow[transitioning][revert] .transition-overlay {
+  transform: translateX(99.9%);
+}
+
+/* XXX */
+.appWindow[lolipoop-after] .transition-overlay {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+/* XXX */
+
+.appWindow[before-transitioning] iframe {
+  transform: translateX(99.9%);
+  transition-duration: 0s;
+}
+
+.appWindow[before-transitioning][before-revert] iframe {
+  transform: translateX(-99.9%);
+  transition-duration: 0s;
+}
+
+.appWindow[transitioning] iframe {
+  transition: transform 0.25s ease;
+  transform: translateX(0);
+}
+
+.appWindow[transitioning][before-revert] iframe {
+  transition: transform 0.25s ease;
+  transform: translateX(0);
+}
+
 .appWindow.homescreen.fadeout .fade-overlay.hidden {
   visibility: hidden;
 }
@@ -334,7 +403,8 @@
   visibility: hidden;
 }
 
-.appWindow.collapsible:not(.active) .screenshot-overlay {
+.appWindow.collapsible:not(.active) .screenshot-overlay,
+.appWindow.collapsible:not(.active) .transition-overlay {
   margin-top: var(--rocketbar-urlbar-height);
 }
 
@@ -429,7 +499,7 @@
 }
 
 .appWindow > .touch-blocker {
-  z-index: 1026;
+  z-index: 1027;
 }
 
 .appWindow > .fade-overlay {
@@ -451,6 +521,17 @@
 .appWindow > .authentication-dialog {
   z-index: 100;
 }
+
+.appWindow > .browser-container iframe {
+  z-index: 1;
+}
+
+.appWindow > .browser-container .transition-overlay {
+  height: 100%;
+  width: 100%;
+  z-index: 2;
+}
+
 
 .appWindow.slideleft {
   animation: slideLeft var(--transition-duration) forwards
@@ -613,10 +694,12 @@
   }
 }
 
+/*
 #windows .appWindow.active iframe {
   transition-property: transform;
   transition-duration: var(--transition-duration);
 }
+*/
 
 #screen.locked #windows .appWindow.active iframe {
   transition-property: none;

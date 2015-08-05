@@ -11,6 +11,7 @@
  * independent and will communicate through events.
  */
 window.addEventListener('DOMContentLoaded', function() {
+  console.log('Loading details');
   LazyLoader.load(['/shared/js/l10n.js']).then(function() {
     LazyLoader.load([
       document.getElementById('view-contact-details')
@@ -40,10 +41,49 @@ window.onload = function() {
     DetailsUI.init();
     DetailsController.init();
 
-    window.addEventListener('renderdone', function fn() {
-      window.removeEventListener('renderdone', fn);
-      document.body.classList.remove('hidden');
-    });
+    function getParams() {
+      var params = {};
+      var raw = window.location.hash.split('#')[1] || '';
+      var pairs = raw.split('&');
+      for (var i = 0; i < pairs.length; i++) {
+
+        var data = pairs[i].split('=');
+        params[data[0]] = data[1];
+      }
+      return params;
+    }
+
+    function renderContact(id) {
+      return new Promise(function(resolve, reject) {
+        ContactsService.get(params.contact, function onSuccess(savedContact) {
+          ContactsService.getCount(count => {
+            resolve(savedContact, count);
+          });
+        }, function onError() {
+          console.error('Error retrieving contact');
+          reject();
+        });
+      });
+    }
+
+    // Get action from URL (new or update)
+
+    var params = null;
+    function updateRendering() {
+      params = getParams();
+
+      if (params.contact) {
+        renderContact(params.contact).then(function(savedContact, count) {
+          DetailsController.setContact(params.contact);
+          DetailsUI.render(savedContact, count, false);
+        });
+      }
+    }
+
+    window.addEventListener('hashchange', updateRendering);
+    updateRendering();
+
+    // TODO: Implement handler for open Vcards
 
     navigator.mozSetMessageHandler('activity', activity => {
       DetailsController.setActivity(activity);

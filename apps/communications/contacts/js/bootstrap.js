@@ -38,6 +38,7 @@
        '/shared/js/contact_photo_helper.js'].forEach((src) => {
         var scriptNode = document.createElement('script');
         scriptNode.src = src;
+        scriptNode.async = false;
         scriptNode.setAttribute('defer', true);
         document.head.appendChild(scriptNode);
       });

@@ -1688,7 +1688,7 @@
 
     var additionalLanguagesPromise;
 
-    if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
+    if (false && navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
       // if the environment supports langpacks, register extra languages…
       additionalLanguagesPromise =
         navigator.mozApps.getAdditionalLanguages().catch(function(e) {

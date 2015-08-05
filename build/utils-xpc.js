@@ -16,6 +16,25 @@ var utils = require('./utils.js');
 var subprocess = require('sdk/system/child_process/subprocess');
 var downloadMgr = require('./download-manager').getDownloadManager();
 
+const FileOutputStream = CC(
+  '@mozilla.org/network/file-output-stream;1',
+  'nsIFileOutputStream',
+  'init'
+);
+
+const BinaryOutputStream = CC(
+  '@mozilla.org/binaryoutputstream;1',
+  'nsIBinaryOutputStream',
+  'setOutputStream'
+);
+
+const ConverterOutputStream = CC(
+  '@mozilla.org/intl/converter-output-stream;1',
+  'nsIConverterOutputStream',
+  'init'
+);
+
+
 const UUID_FILENAME = 'uuid.json';
 
 /**
@@ -107,21 +126,33 @@ function getFileContent(file) {
  * @param content {string} - would write it as string to string
  */
 function writeContent(file, content) {
+  let flags = 0x02 | 0x08 | 0x20;
+  let os = new FileOutputStream(file, flags, parseInt('0666', 8), 0);
+
   try {
-    var fileStream = Cc['@mozilla.org/network/file-output-stream;1']
-                       .createInstance(Ci.nsIFileOutputStream);
-    fileStream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0);
+    let outputStream = null;
 
-    let converterStream = Cc['@mozilla.org/intl/converter-output-stream;1']
-                            .createInstance(Ci.nsIConverterOutputStream);
+    if (content instanceof Uint8Array) {
+      outputStream = new BinaryOutputStream(os);
+      outputStream.writeByteArray(content, content.length);
+    } else {
+      outputStream = new ConverterOutputStream(os, 'utf-8', 0, 0);
+      outputStream.writeString(content);
+    }
 
-    converterStream.init(fileStream, 'utf-8', 0, 0);
-    converterStream.writeString(content);
-    converterStream.close();
+    outputStream.close();
+
   } catch (e) {
-    utils.log('utils-xpc', 'writeContent error, file.path: ' + file.path);
-    utils.log('utils-xpc', 'parent file object exists: ' +
-      file.parent.exists());
+    utils.log(
+      'utils-xpc',
+      'writeContent error, file.path: ' + file.path
+    );
+
+    utils.log(
+      'utils-xpc',
+      'parent file object exists: ' + file.parent.exists()
+    );
+
     throw(e);
   }
 }
@@ -1087,6 +1118,20 @@ function getDocument(content) {
   return (new DOMParser()).parseFromString(content, 'text/html');
 }
 
+function getCommentsFor(node) {
+  var document = node.ownerDocument;
+  var options = Ci.nsIDOMNodeFilter.SHOW_COMMENT;
+  var walker = document.createTreeWalker(node, options, null, null);
+
+  var comments = [];
+  var comment;
+  while (comment = walker.nextNode()) {
+    comments.push(comment);
+  }
+
+  return comments;
+}
+
 /**
  * To add a new file with the data into the ZIP file. If the file exists,
  * it would be overwritten.
@@ -1285,6 +1330,15 @@ function normalizePath(path) {
   return OS.Path.normalize(path);
 }
 
+function getBytecode(path) {
+  let uri = getNewURI(path, null, null);
+  let charset = 'utf-8';
+  let principal = Services.scriptSecurityManager.getSystemPrincipal();
+
+  var buffer = Services.scriptloader.getBytecode(uri, principal, charset);
+  return new Uint8Array(buffer);
+}
+
 exports.Q = Promise;
 exports.ls = ls;
 exports.getFileContent = getFileContent;
@@ -1336,6 +1390,7 @@ exports.spawnProcess = spawnProcess;
 exports.processIsRunning = processIsRunning;
 exports.getProcessExitCode = getProcessExitCode;
 exports.getDocument = getDocument;
+exports.getCommentsFor = getCommentsFor;
 exports.getWebapp = getWebapp;
 exports.Services = Services;
 exports.concatenatedScripts = concatenatedScripts;
@@ -1351,3 +1406,5 @@ exports.relativePath = relativePath;
 exports.normalizePath = normalizePath;
 exports.getUUIDMapping = getUUIDMapping;
 exports.getMD5hash = getMD5hash;
+exports.getBytecode = getBytecode;
+exports.hasBytecodeSupport = true;

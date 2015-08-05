@@ -85,6 +85,27 @@ contacts.List = (function() {
     'und': '#'
   };
 
+  function addPreRenderDetails() {
+    var link = removePreRenderDetails();
+    if (!link) {
+      link = document.createElement('link');
+      link.id = 'preRenderDetails';
+      link.setAttribute('rel', 'prerender');
+      link.href = '/contacts/views/details/details.html';
+    }
+    document.head.appendChild(link);
+    console.log('Appended prerender link ', link);
+  }
+
+  function removePreRenderDetails() {
+    var link = document.getElementById('preRenderDetails');
+    if (link) {
+      document.head.removeChild(link);
+      return link;
+    }
+    return null;
+  }
+
   // Define the order in which groups should appear in the list.  We allow
   // arbitrary ordering here in anticipation of additional scripts being added.
   var GROUP_ORDER = (function getGroupOrder() {
@@ -867,6 +888,9 @@ contacts.List = (function() {
     // be selected just if we clicked on select all
     // and we didn't unselected any other contact
     selectAllPending = false;
+
+    // Allow prerender from here
+    addPreRenderDetails();
 
     loadVisibilityMonitor();
 

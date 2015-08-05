@@ -95,6 +95,20 @@
   const INVALID_CLASS = 'invalid';
   const DELETE_BUTTON_CLASS = 'img-delete-button';
 
+  function updateStrings(action) {
+    // Update strings properly based on action
+    switch(action) {
+      case 'new':
+        saveButton.setAttribute('data-l10n-id', 'done');
+        saveButton.textContent = navigator.mozL10n.get('done');
+        break;
+      case 'update':
+        saveButton.setAttribute('data-l10n-id', 'update');
+        saveButton.textContent = navigator.mozL10n.get('update');
+        break;
+    }
+  }
+
   function initContainers() {
     deleteContactButton = document.querySelector('#delete-contact');
     thumb = document.querySelector('#thumbnail-photo');
@@ -224,7 +238,6 @@
           }
 
           cachedInputs = null;
-          // textFieldsCache.clear();
           checkDisableButton();
           break;
       }
@@ -254,13 +267,15 @@
     contactForm.addEventListener('click', addFieldHandler);
   }
 
-  function init() {
+  function init(action) {
     // Cache l10n functionality
     _ = navigator.mozL10n.get;
     // Cache all DOM elements and reuse them
     initContainers();
     // Cache configuration for templates
     initConfigs();
+    // Udpate strings based on action
+    updateStrings(action);
     // Add listeners to DOM elements
     addListeners();
   }
@@ -322,10 +337,9 @@
     utils.dom.updatePhoto(currentPhoto, thumb);
   }
 
-  function render(params) {
+  function render(params, action) {
     formView.classList.remove('skin-organic');
     saveButton.setAttribute('disabled', 'disabled');
-    saveButton.setAttribute('data-l10n-id', 'done');
     deleteContactButton.parentNode.classList.add('hide');
     formTitle.setAttribute('data-l10n-id', 'addContact');
 
@@ -343,7 +357,13 @@
       params[field] && renderTemplate(field, params[field]);
     });
 
-    checkDisableButton();
+    if (action === 'update') {
+      saveButton.setAttribute('disabled', 'disabled');
+    } else {
+      checkDisableButton();
+    }
+
+    window.dispatchEvent(new CustomEvent('renderdone'));
   }
 
  /**
@@ -381,7 +401,6 @@
         // Otherwise marked as invalid in order not to submit it
         carrierInput.classList.add(INVALID_CLASS);
         cachedInputs = null;
-        // textFieldsCache.clear();
       }
     }
     else {

@@ -49,6 +49,12 @@ module.exports = {
 
   scriptParser: esprima,
 
+  hasBytecodeSupport: false,
+
+  getBytecode: function() {
+    return null;
+  },
+
   log: function() {
     var args = Array.prototype.slice.call(arguments);
     if (!args.length) {
@@ -218,6 +224,10 @@ module.exports = {
     // In order to use document.querySelector, we have to pass level for
     // jsdom-nogyp.
     return jsdom.jsdom(content, jsdom.level(3, 'core'));
+  },
+
+  getCommentsFor: function(node) {
+    throw new Error('Not Implemented.');
   },
 
   getXML: function(file) {

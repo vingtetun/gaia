@@ -344,7 +344,6 @@ HTMLOptimizer.prototype.aggregateJsResources = function() {
       utils.log('Failed to minify content: ' + e);
     }
 
-    // When BUILD_DEBUG is true, we'll do AST comparing in build time.
     if (this.config.BUILD_DEBUG &&
         !utils.jsComparator(originalContent, content)) {
       throw 'minified ' + script.src + ' has different AST with' +
@@ -397,6 +396,23 @@ HTMLOptimizer.prototype.writeAggregatedContent = function(conf) {
 
   // write the contents of the aggregated script
   utils.writeContent(target, conf.content);
+
+    if (this.config.USE_BYTECODE == 1 && utils.hasBytecodeSupport) {
+      let bytecode = utils.getBytecode('file://' + target.path);
+
+      if (this.config.BUILD_DEBUG) {
+        let name = target.leafName;
+        let oldSize = target.fileSize;
+        let newSize = bytecode.byteLength;
+        let delta = parseInt(newSize / oldSize * 100);
+        utils.log(
+          'bytecode',
+          name + ' (' + newSize + ' / ' + oldSize + ') = ~' + delta + '%'
+        );
+      }
+
+      utils.writeContent(target, bytecode);
+    }
 
   var file = doc.createElement(conf.fileType);
   var lastScript = conf.lastNode;
@@ -606,6 +622,91 @@ WebappOptimize.prototype.execute = function(config) {
 
   this.numOfFiles = files.length;
   files.forEach(this.processFile, this);
+
+  // Once all the pages has been optimized, let's run a final step on JS files.
+
+  var jsAggregationBlacklist = this.optimizeConfig.JS_AGGREGATION_BLACKLIST;
+  var appName = this.webapp.sourceDirectoryName;
+
+  dump("AppName: " + appName + "\n");
+
+  var excluded = [
+    'system',
+    'verticalhome'
+  ];
+
+  if (excluded.indexOf(appName) >= 0) {
+    return;
+  }
+
+  if (this.config.GAIA_OPTIMIZE === '1' &&
+      (!jsAggregationBlacklist[appName] &&
+         jsAggregationBlacklist[appName] !== '*')) {
+
+  var buildDirectoryFile = utils.getFile(this.webapp.buildDirectoryFilePath);
+  var excluded = new RegExp(buildDirectoryPath + '.*\/(tests?)');
+  var files = utils.ls(buildDirectoryFile, true).filter(function(file) {
+    return !(excluded.test(file.path.replace(/\\/g, '/'))) &&
+           file.path.endsWith('.js');
+  });
+
+  files.forEach(function(file) {
+try{
+    if (!file || !file.exists()) {
+      return;
+    }
+
+    var content = utils.getFileContent(file);
+    if (content.charCodeAt(0) > 256) {
+      return;
+    }
+
+    var originalSize = file.fileSize;
+    var originalContent = content;
+    try {
+      content = jsmin(content).code;
+    } catch (e) {
+      dump('File.path: ' + file.path + '\n');
+      utils.log('Failed to minify content: ' + e);
+      return;
+    }
+
+/*
+    if (this.config.BUILD_DEBUG &&
+      !utils.jsComparator(originalContent, content)) {
+      dump('minified ' + file.path + ' has different AST with' +
+            ' unminified script.');
+      return;
+    }
+*/
+
+
+    var originalSize = file.fileSize;
+    utils.writeContent(file, content);
+    dump("Minified: " + file.path + " " + file.fileSize + " (-" + (originalSize - file.fileSize) + ")\n"); 
+
+    if (this.config.USE_BYTECODE == 1 && utils.hasBytecodeSupport) {
+      let bytecode = utils.getBytecode('file://' + file.path);
+
+      if (this.config.BUILD_DEBUG) {
+        let name = file.leafName;
+        let oldSize = file.fileSize;
+        let newSize = bytecode.byteLength;
+        let delta = parseInt(newSize / oldSize * 100);
+        utils.log(
+          'bytecode',
+          name + ' (' + newSize + ' / ' + oldSize + ') = ~' + delta + '%'
+        );
+      }
+
+      utils.writeContent(file, bytecode);
+    }
+  } catch(e) {
+    dump('Exception (non-fatal): ' + e + '\n');
+  }
+  }, this);
+
+  }
 };
 
 function execute(options) {

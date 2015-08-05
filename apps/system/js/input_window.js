@@ -44,7 +44,10 @@
 
   InputWindow.prototype.constructor = InputWindow;
 
-  InputWindow.REGISTERED_EVENTS = ['mozbrowsererror'];
+  InputWindow.REGISTERED_EVENTS = [
+    'mozbrowsererror',
+    'mozbrowserloadend'
+  ];
 
   // use only the transition controller as the sub component
   InputWindow.SUB_COMPONENTS = {

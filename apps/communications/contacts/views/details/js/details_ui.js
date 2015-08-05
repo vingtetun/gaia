@@ -66,6 +66,22 @@
 
         window.addEventListener('toggleFavoriteDone',
           self.toggleFavoriteHandler.bind(self));
+
+        function onTouch(evt) {
+          var touch = evt.changedTouches[0];
+          dump(evt.type + "X = " + touch.clientX + ' Y = ' + touch.clientY + '\n');
+        }
+
+        function onMouse(e) {
+          dump(e.type + "X = " + e.clientX + ' Y = ' + e.clientY + '\n');
+        }
+
+        addEventListener('touchstart', onTouch);
+        addEventListener('touchend', onTouch);
+        addEventListener('touchmove', onTouch);
+        addEventListener('mousedown', onMouse);
+        addEventListener('mouseup', onMouse);
+        addEventListener('click', onMouse);
       }
 
       initContainers();

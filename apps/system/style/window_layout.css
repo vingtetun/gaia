@@ -124,6 +124,7 @@
   overflow: hidden;
 }
 
+.appWindow.collapsible:not(.scrollable) > div > .transition-overlay,
 .appWindow.collapsible:not(.scrollable) > div > iframe {
   height: calc(100% - var(--rocketbar-urlbar-height));
 }
@@ -200,6 +201,7 @@
   overflow-y: scroll;
 }
 
+.appWindow.collapsible > div.browser-container > .transition-overlay,
 .appWindow.collapsible > div.browser-container > iframe {
   top: var(--rocketbar-urlbar-height);
 }

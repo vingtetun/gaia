@@ -15,12 +15,15 @@
   'use strict';
 
   var _;
-  var _activity;
+  var _activity, _contact;
   const CONTACTS_APP_ORIGIN = location.origin;
 
   function close() {
     if (_activity) {
       _activity.postResult({});
+    } else if(_contact) {
+      sessionStorage.setItem('update', true);
+      window.history.back();
     } else {
       window.history.back();
     }
@@ -193,7 +196,21 @@
 
 
       function saveContactHandler(event) {
-        var contact = utils.misc.toMozContact(event.detail);
+        var contact;
+        var preContact = event.detail;
+        if (_contact) {
+          var readOnly = ['id', 'updated', 'published'];
+          for (var field in _contact) {
+            if (readOnly.indexOf(field) == -1) {
+              _contact[field] = preContact[field];
+            }
+          }
+
+          contact = _contact;
+        } else {
+          contact = utils.misc.toMozContact(preContact);
+        }
+
         LazyLoader.load(
           [
             '/contacts/style/match_service.css',
@@ -212,6 +229,9 @@
     },
     setActivity: function(activity) {
       _activity = activity;
+    },
+    setContact: function(contact) {
+      _contact = contact;
     }
   };
 }(window));

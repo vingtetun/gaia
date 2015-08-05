@@ -597,7 +597,8 @@
               <div class="fade-overlay"></div>
               <div class="touch-blocker"></div>
               <div class="browser-container">
-               <div class="screenshot-overlay"></div>
+                <div class="transition-overlay"></div>
+                <div class="screenshot-overlay"></div>
               </div>
            </div>`;
   };
@@ -636,6 +637,7 @@
     // into appWindow.
     this.frame = this.element;
     this.iframe = this.browser.element;
+
     this.iframe.dataset.frameType = 'window';
     this.iframe.dataset.frameOrigin = this.origin;
     this.iframe.dataset.url = this.config.url;
@@ -662,6 +664,7 @@
 
     this.screenshotOverlay = this.element.querySelector('.screenshot-overlay');
     this.fadeOverlay = this.element.querySelector('.fade-overlay');
+    this.transitionOverlay = this.element.querySelector('.transition-overlay');
 
     var overlay = '.identification-overlay';
     this.identificationOverlay = this.element.querySelector(overlay);
@@ -1031,12 +1034,137 @@
       }
     };
 
+  AppWindow.prototype.usePageTransition =
+    function aw_usePageTransition() {
+    return this.transitionOverlay && this.isVisible();
+  };
+
+  AppWindow.prototype.waitForPageTransitionReady =
+    function aw_waitForPageTransitionReady(callback) {
+    this.waitForFrames(4, callback);
+  };
+
+  AppWindow.prototype.waitForPageTransitionDone =
+    function aw_waitForPageTransitionDone(callback) {
+    this.waitFor('transitionend', callback);
+  };
+
   AppWindow.prototype._handle_mozbrowserloadstart =
     function aw__handle_mozbrowserloadstart(evt) {
       this.loading = true;
       this.inError = false;
       this._changeState('loading', true);
       this.publish('loading');
+
+      var self = this;
+      var direction = evt.detail.direction;
+      if (!this.usePageTransition() || !direction) {
+        this.waitForLocationChange(function() {
+          self.iframe.resumeRendering();
+        });
+        return;
+      }
+
+
+      var self = this;
+      var frame = self.iframe;
+      var loaded = false;
+      function waitForLoadEnd(callback) {
+        if (loaded) {
+          callback && requestAnimationFrame(callback);
+          return;
+        }
+
+        self.waitForLoadEnd(callback);
+      }
+
+      waitForLoadEnd(function() {
+        loaded = true;
+      });
+
+      // XXX
+
+      self.transitionOverlay.setAttribute('lolipoop', 'true');
+
+      self.transitionOverlay.addEventListener('transitionend', function foo(e) {
+        self.transitionOverlay.removeEventListener(e.type, foo);
+
+        waitForLoadEnd(function() {
+
+        var request = frame.resumeRendering();
+        request.onsuccess = request.onerror = function(evt) {
+          self.waitForRemotePaint(function() {
+
+          var target = self.element;
+          target.setAttribute('lolipoop-after', 'true');
+
+          self.transitionOverlay.addEventListener('transitionend', function foo2(e) {
+        self.transitionOverlay.removeEventListener(e.type, foo2);
+            self.transitionOverlay.removeAttribute('lolipoop', 'true');
+            target.removeAttribute('lolipoop-after');
+          });
+
+          });
+        }
+
+        });
+      });
+
+      return;
+
+      // XXX
+      self.waitForLocationChange(function() {
+      self.waitForFrames(3, function() {
+      self.getScreenshot(function(screenshot) {
+        var url = window.URL.createObjectURL(screenshot);
+        self.transitionOverlay.style.backgroundImage = 'url(' + url + ')'; 
+
+        var target = self.element;
+
+        dump("Direction: " + direction + "\n");
+
+        target.removeAttribute('transitioning');
+        target.removeAttribute('revert');
+
+        self.waitForPageTransitionReady(function() {
+          dump("Background Paint (done)\n");
+
+          self.waitForFrames(3, function() {
+            if (direction < 0) {
+              target.setAttribute('before-revert', true);
+            }
+            target.setAttribute('before-transitioning', true);
+
+            waitForLoadEnd(function() {
+              dump('Receive loadend...\n');
+              setTimeout(function() {
+                var request = frame.resumeRendering();
+                request.onsuccess = request.onerror = function(evt) {
+                  dump("resume rendering callback...\n");
+                  self.waitForRemotePaint(function() {
+                    self.waitForFrames(2, function() {
+                     if (direction < 0) {
+                       target.setAttribute('revert', true);
+                      }
+                      target.setAttribute('transitioning', true);
+
+
+                      self.waitForPageTransitionDone(function() {
+                        dump("Transition end...\n");
+                        target.removeAttribute('before-transitioning', true);
+                        target.removeAttribute('before-revert');
+                        self.transitionOverlay.style.backgroundImage = 'none';
+                      }); // waitForPageTransitionDone
+                    }); // waitForFrames
+                  });
+                };
+              }, 0);
+            });
+          }); // waitForFrames
+        });
+      }); // getScreenshot
+      }); // waitForFrames
+      }); // waitForLocationChange
     };
 
   AppWindow.prototype._handle_mozbrowsertitlechange =
@@ -1061,6 +1189,10 @@
           type: 'c',
           src: this.config.url
         });
+
+        if (!this.usePageTransition()) {
+          this.iframe.resumeRendering();
+        }
       }
       this.loading = false;
       this.loaded = true;
@@ -1160,6 +1292,7 @@
             color = detail.content;
           }
           this.themeColor = color;
+
 
           this.publish('themecolorchange');
           break;

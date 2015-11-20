@@ -144,7 +144,16 @@ View.prototype.render = function() {
   debug('Rendered');
 };
 
-View.prototype.fetch = SERVICE_WORKERS ?
+
+
+if (MUSIC_SERVICE) {
+  var RemoteMusicService = new RemoteProcess('music-service');
+}
+
+View.prototype.fetch = MUSIC_SERVICE ?
+  function(url) {
+      return RemoteMusicService.postMessage(url);
+  } : SERVICE_WORKERS ?
   function(url) {
     return window.fetch(encodeURI(url));
   } :

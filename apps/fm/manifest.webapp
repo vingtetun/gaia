@@ -1,45 +1,40 @@
 {
-  "name": "FM Radio",
-  "description": "Gaia FM Radio",
-  "type": "certified",
+  "version": "0.0.1",
+  "name": "Music Backend",
+  "description": "Gaia Music Backend",
   "launch_path": "/index.html",
+  "icons": {
+    "84": "/img/icons/music_84.png",
+    "126": "/img/icons/music_126.png",
+    "142": "/img/icons/music_142.png",
+    "189": "/img/icons/music_189.png",
+    "284": "/img/icons/music_284.png"
+  },
   "developer": {
     "name": "The Gaia Team",
     "url": "https://github.com/mozilla-b2g/gaia"
   },
+  "type": "certified",
   "permissions": {
-    "themeable":{},
-    "fmradio":{},
-    "settings":{ "access": "readonly" },
-    "speaker-control":{},
-    "audio-channel-content":{},
-    "moz-extremely-unstable-and-will-change-webcomponents":{}
+    "audio-channel-content": {},
+    "bluetooth": {},
+    "device-storage:music":    { "access": "readwrite" },
+    "device-storage:pictures": { "access": "readwrite" },
+    "nfc-share": {},
+    "settings": { "access": "readonly" },
+    "themeable": {},
+    "moz-extremely-unstable-and-will-change-webcomponents": {}
   },
-  "locales": {
-    "ar": {
-      "name": "FM Radio",
-      "description": "Gaia FM Radio"
-    },
-    "en-US": {
-      "name": "FM Radio",
-      "description": "Gaia FM Radio"
-    },
-    "fr": {
-      "name": "Radio FM",
-      "description": "Radio FM Gaia"
-    },
-    "zh-TW": {
-      "name": "收音机",
-      "description": "收音机"
+  "default_locale": "en",
+  "orientation": "default",
+  "messages": [
+    { "media-button": "/index.html" }
+  ],
+  "connections": {
+    "music-service": {
+      "handler_path": "index.html",
+      "description": "Music Backend Service",
+      "rules": {}
     }
-  },
-  "default_locale": "en-US",
-  "icons": {
-    "84": "/style/icons/fm_84.png",
-    "126": "/style/icons/fm_126.png",
-    "142": "/style/icons/fm_142.png",
-    "189": "/style/icons/fm_189.png",
-    "284": "/style/icons/fm_284.png"
-  },
-  "orientation": "default"
+  }
 }

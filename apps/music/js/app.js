@@ -46,7 +46,7 @@ if (navigator.mozSetMessageHandler) {
 
 var client = bridge.client({
   service: 'music-service',
-  endpoint: window,
+  endpoint: MUSIC_SERVICE ? new RemoteProcess('music-service') : window,
   timeout: false
 });
 

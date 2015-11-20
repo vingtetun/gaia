@@ -77,5 +77,8 @@
   "orientation": "default",
   "messages": [
     { "media-button": "/index.html" }
-  ]
+  ],
+  "background_color": "var(--header-background)",
+  "theme_group": "theme-media",
+  "theme_color": "var(--header-background)"
 }

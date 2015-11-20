@@ -13,8 +13,11 @@ exports.execute = function(options) {
 function createConfigFile(options) {
   var targetPath = utils.joinPath(options.STAGE_APP_DIR, 'js', 'config.js');
   var file = utils.getFile(targetPath);
+/*
   var content = 'var SERVICE_WORKERS = ' +
     (options.NGA_SERVICE_WORKERS === '1') + ';';
+*/
+  var content = 'var MUSIC_SERVICE = true; var SERVICE_WORKERS = false;';
 
   utils.writeContent(file, content);
 }

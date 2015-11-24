@@ -61,11 +61,10 @@ if (!SERVICE_WORKERS) (function() {
 })();
 
 function View() {
-  this.client = bridge.client({
-    service: 'music-service',
-    endpoint: window.parent,
-    timeout: false
-  });
+  this.client = bridge.client(
+    'music-service',
+    MUSIC_SERVICE ? new IACAdaptorClient('music-service') : window
+  );
 
   this.params = {};
 
@@ -144,16 +143,7 @@ View.prototype.render = function() {
   debug('Rendered');
 };
 
-
-
-if (MUSIC_SERVICE) {
-  var RemoteMusicService = new RemoteProcess('music-service');
-}
-
-View.prototype.fetch = MUSIC_SERVICE ?
-  function(url) {
-      return RemoteMusicService.postMessage(url);
-  } : SERVICE_WORKERS ?
+View.prototype.fetch = SERVICE_WORKERS ?
   function(url) {
     return window.fetch(encodeURI(url));
   } :

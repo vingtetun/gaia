@@ -44,11 +44,10 @@ if (navigator.mozSetMessageHandler) {
   navigator.mozSetMessageHandler('activity', activity => onActivity(activity));
 }
 
-var client = bridge.client({
-  service: 'music-service',
-  endpoint: MUSIC_SERVICE ? new RemoteProcess('music-service') : window,
-  timeout: false
-});
+var client = bridge.client(
+  'music-service',
+  MUSIC_SERVICE ? new IACAdaptorClient('music-service') : window.parent
+);
 
 client.on('play', () => isPlaying = true);
 

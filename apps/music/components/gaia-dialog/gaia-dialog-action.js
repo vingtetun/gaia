@@ -19,6 +19,9 @@ module.exports = component.register('gaia-dialog-action', {
       submit: this.shadowRoot.querySelector('.submit'),
       cancel: this.shadowRoot.querySelector('.cancel')
     };
+
+    this.els.dialog.addEventListener('closed',
+      GaiaDialogProto.hide.bind(this));
   },
 
   open: function(e) {
@@ -27,8 +30,9 @@ module.exports = component.register('gaia-dialog-action', {
   },
 
   close: function() {
-    return GaiaDialogProto.show.call(this)
-      .then(() => this.els.dialog.close());
+    // First close (hide) inner dialog and then the container.
+    return this.els.dialog.close()
+      .then(GaiaDialogProto.hide.bind(this));
   },
 
   template: `
@@ -43,15 +47,16 @@ module.exports = component.register('gaia-dialog-action', {
     <style>
 
     :host {
-      display: none;
-    }
-
-    :host[opened],
-    :host.animating {
-      display: block;
       position: fixed;
       width: 100%;
       height: 100%;
+      z-index: 999;
+
+      display: none;
+    }
+
+    gaia-dialog section {
+      max-width: 320px;
     }
 
     /** Button

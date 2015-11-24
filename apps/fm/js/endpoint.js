@@ -64,7 +64,8 @@ var service = bridge.service('music-service')
   .method('searchClose', searchClose)
 
   .listen()
-  .listen(new BroadcastChannel('music-service'));
+  .listen(new BroadcastChannel('music-service'))
+  .listen(new IACAdaptorService());
 
 document.addEventListener('DOMContentLoaded', function() {
   audio = document.getElementById('audio');
